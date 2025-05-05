@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>タイタンの冒険</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>タイタンの冒険</h1>
+
+  <div id="battleArea">
+    <img id="enemyImage" src="ghost.png" alt="敵の画像">
+    <h2 id="enemyName">モンスター名</h2>
+    <p id="enemyHP">HP: ???</p>
+    <p id="message">モンスターがあらわれた！</p>
+    <div id="reviveArea"></div>
+    <div id="itemMenu"></div>
+    <div id="summonMenu"></div>
+  </div>
+
+  <div id="bottomArea">
+    <div id="playerStatus">
+      <p>タイタン LV: <span id="playerLevel">1</span></p>
+      <p>HP: <span id="playerHP">20</span> / <span id="playerMaxHP">20</span></p>
+      <p>MP: <span id="playerMP">5</span> / <span id="playerMaxMP">5</span></p>
+      <p>EXP: <span id="playerEXP">0</span> / <span id="playerNextEXP">10</span></p>
+    </div>
+
+    <div id="commandMenu">
+      <button class="command" data-command="attack">▶ たたかう</button>
+      <button class="command" data-command="magic">まほう</button>
+      <button class="command" data-command="item">どうぐ</button>
+      <button class="command" data-command="escape">にげる</button>
+    </div>
+  </div>
+
+  <audio id="battleBGM" src="BGM157-131031-yaseinodaikettou-wav-nointro.wav" loop></audio>
+  <audio id="attackSound" src="sword_slash1.mp3"></audio>
+  <audio id="escapeSound" src="escape.mp3"></audio>
+  <audio id="levelUpSound" src="reberuup.mp3"></audio>
+  <audio id="zombieVoice" src="zombievoice1.mp3"></audio>
+  <audio id="slimeAttack" src="slime_attack.mp3"></audio>
+
+  <script src="game.js"></script>
+</body>
+</html>

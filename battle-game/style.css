@@ -1,0 +1,108 @@
+/* style.css 完全修正版 */
+
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #f0f8ff;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  background-color: #4169e1;
+  color: white;
+  padding: 10px 0;
+  margin: 0;
+  font-size: 24px;
+}
+
+#battleArea {
+  margin: 20px auto;
+  max-width: 400px;
+  position: relative;
+}
+
+#enemyImage {
+  width: 150px;
+  height: auto;
+}
+
+#commandMenu {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 20px auto;
+  max-width: 340px;
+}
+
+#commandMenu button,
+.itemButton,
+.closeButton,
+#summonMenu button {
+  padding: 14px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+  background-color: #4caf50;
+  color: white;
+  cursor: pointer;
+  width: 100%;
+}
+
+#commandMenu button:hover,
+.itemButton:hover,
+.closeButton:hover,
+#summonMenu button:hover {
+  background-color: #45a049;
+}
+
+#playerStatus {
+  margin: 20px auto;
+  background-color: #e6e6fa;
+  padding: 10px;
+  border-radius: 10px;
+  max-width: 340px;
+  font-size: 14px;
+}
+
+#message {
+  margin: 10px auto;
+  font-weight: bold;
+  max-width: 340px;
+  font-size: 16px;
+  color: #333;
+}
+
+#itemMenu,
+#summonMenu {
+  margin: 10px auto;
+  max-width: 340px;
+}
+
+.summon-sprite {
+  position: absolute;
+  height: 280px;
+  bottom: -50px; /* 徹底的に低く設定 */
+  z-index: 10;
+  transition: left 0.3s ease;
+}
+
+#reviveArea {
+  margin: 10px;
+}
+
+@media (max-width: 400px) {
+  #commandMenu {
+    grid-template-columns: 1fr;
+    max-width: 95%;
+  }
+
+  #enemyImage {
+    width: 120px;
+  }
+
+  .summon-sprite {
+    height: 230px;
+    bottom: -50px;
+  }
+}
