@@ -20,6 +20,7 @@ const container = document.getElementById('container');
 const characterImg = document.getElementById('character-img');
 const seikaiSound = document.getElementById('seikai-sound');
 const fuseikaiSound = document.getElementById('fuseikai-sound');
+const extraMusic = document.getElementById('extra-music');
 
 setCharacterImage();
 
@@ -32,11 +33,11 @@ fetch('questions.json')
 
 function setCharacterImage() {
     if (clearCount >= 3) {
-        characterImg.src = 'image3.png';
+        characterImg.src = 'image/image3.png';
     } else if (clearCount >= 2) {
-        characterImg.src = 'image2.png';
+        characterImg.src = 'image/image2.png';
     } else {
-        characterImg.src = 'image1.png';
+        characterImg.src = 'image/image1.png';
     }
 }
 
@@ -134,7 +135,12 @@ function showFinalResult() {
             "父: よく頑張ったな、少し休め。"
         ];
 
-        finalResultDiv.innerHTML = `<div class="paripi">🎉 PERFECT!!! YOU ARE AMAZING!!! 🎉<br>${heroMessages.join('<br>')}</div>`;
+        // ランダムに3つの異なるメッセージを選ぶ
+        const shuffledMessages = shuffleArray([...heroMessages]);
+        const selectedMessages = shuffledMessages.slice(0, 3);
+
+        finalResultDiv.innerHTML = `<div class="paripi">🎉 PERFECT!!! YOU ARE AMAZING!!! 🎉<br>${selectedMessages.join('<br>')}</div>`;
+        extraMusic.play();
     } else {
         finalResultDiv.textContent = `スコア：${score} / ${questions.length}`;
     }

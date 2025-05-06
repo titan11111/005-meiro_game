@@ -5,10 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>興味別 英語穴埋めクイズ</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        @keyframes flashy {
+            0% { transform: scale(1) rotate(0deg); opacity: 1; }
+            25% { transform: scale(1.3) rotate(15deg); opacity: 0.7; }
+            50% { transform: scale(1.5) rotate(-15deg); opacity: 1; }
+            75% { transform: scale(1.3) rotate(10deg); opacity: 0.7; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        .flashy {
+            animation: flashy 1.5s ease-in-out infinite;
+        }
+    </style>
 </head>
 <body>
     <div class="container" id="container">
-        <img id="character-img" src="image1.png" alt="キャラクター画像" width="200">
         <h1>興味別 英語穴埋めクイズ</h1>
         <div id="quiz-area">
             <div id="question-number">Q1</div>
@@ -18,12 +29,204 @@
             <div id="result"></div>
             <div id="info"></div>
             <div id="final-result"></div>
+            <img id="character-img" src="" alt="キャラクター画像" width="200" style="display:none; margin-top:20px;">
             <button id="retry-btn" class="btn">再挑戦する</button>
         </div>
     </div>
-    <audio id="bgm" src="Recharging.mp3" loop autoplay></audio>
-    <audio id="seikai-sound" src="seikai.mp3"></audio>
-    <audio id="fuseikai-sound" src="fuseikai.mp3"></audio>
-    <script src="script.js"></script>
+    <audio id="bgm" src="sound/Recharging.mp3" loop autoplay></audio>
+    <audio id="seikai-sound" src="sound/seikai.mp3"></audio>
+    <audio id="fuseikai-sound" src="sound/fuseikai.mp3"></audio>
+    <audio id="extra-music" src="sound/extra.mp3"></audio>
+    <script>
+    let allQuestions = [];
+    let correctlyAnswered = [];
+    let current = 0;
+    let score = 0;
+    let questions = [];
+    let clearCount = localStorage.getItem('clearCount') ? parseInt(localStorage.getItem('clearCount')) : 0;
+
+    const bgm = document.getElementById('bgm');
+    if (bgm) bgm.volume = 0.2;
+
+    const questionNumber = document.getElementById('question-number');
+    const questionText = document.getElementById('question-text');
+    const translationText = document.getElementById('translation-text');
+    const choicesDiv = document.getElementById('choices');
+    const resultDiv = document.getElementById('result');
+    const infoDiv = document.getElementById('info');
+    const retryBtn = document.getElementById('retry-btn');
+    const finalResultDiv = document.getElementById('final-result');
+    const characterImg = document.getElementById('character-img');
+    const seikaiSound = document.getElementById('seikai-sound');
+    const fuseikaiSound = document.getElementById('fuseikai-sound');
+    const extraMusic = document.getElementById('extra-music');
+
+    const victoryImages = ["image/image123.png", "image/step1.png"];
+
+    fetch('questions.json')
+        .then(response => response.json())
+        .then(data => {
+            allQuestions = data;
+            startGame();
+        })
+        .catch(error => {
+            console.error('Failed to load questions.json:', error);
+            if (finalResultDiv) finalResultDiv.textContent = "問題データの読み込みに失敗しました。";
+        });
+
+    function startGame() {
+        if (allQuestions.length === 0) return;
+        let available = allQuestions.filter(q => !correctlyAnswered.includes(q.id));
+        if (available.length < 10) available = allQuestions;
+        questions = shuffleArray([...available]).slice(0, 10);
+        current = 0;
+        score = 0;
+        if (finalResultDiv) finalResultDiv.textContent = "";
+        if (retryBtn) retryBtn.style.display = "none";
+        if (characterImg) {
+            characterImg.style.display = "none";
+            characterImg.classList.remove('flashy');
+        }
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const q = questions[current];
+        if (!q) return;
+        if (questionNumber) questionNumber.textContent = `Q${current + 1}`;
+        const blanked = q.sentence.replace(q.answer, "( ___ )");
+        if (questionText) questionText.textContent = blanked;
+        if (translationText) translationText.textContent = q.translation;
+        if (resultDiv) resultDiv.textContent = "";
+        if (infoDiv) infoDiv.innerHTML = "";
+        if (choicesDiv) choicesDiv.innerHTML = "";
+
+        const choices = getUniqueChoices(q.answer, 4);
+        choices.forEach(choice => {
+            const btn = document.createElement('button');
+            btn.className = 'choice-btn';
+            btn.textContent = choice;
+            btn.addEventListener('click', () => checkAnswer(choice, q));
+            choicesDiv.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selected, q) {
+        if (resultDiv) resultDiv.textContent = q.answer.toLowerCase();
+
+        if (selected === q.answer) {
+            score++;
+            if (seikaiSound) seikaiSound.play();
+            if (!correctlyAnswered.includes(q.id)) correctlyAnswered.push(q.id);
+        } else {
+            if (fuseikaiSound) fuseikaiSound.play();
+        }
+
+        Array.from(choicesDiv.children).forEach(btn => btn.disabled = true);
+
+        const fullSentence = q.sentence.replace("( ___ )", q.answer);
+
+        if (infoDiv) {
+            infoDiv.innerHTML = `
+                <div><strong>意味:</strong> ${q.meaning_ja}</div>
+                <div><strong>類義語:</strong> ${q.synonyms.join(', ')}</div>
+                <div><strong>反対語:</strong> ${q.antonyms.join(', ')}</div>
+            `;
+        }
+
+        speakWord(q.answer, () => {
+            setTimeout(() => {
+                speakSentence(fullSentence, () => {
+                    setTimeout(() => {
+                        current++;
+                        if (current >= questions.length) {
+                            showFinalResult();
+                        } else {
+                            showQuestion();
+                        }
+                    }, 500);
+                });
+            }, 1000);
+        });
+    }
+
+    if (retryBtn) retryBtn.addEventListener('click', startGame);
+
+    function showFinalResult() {
+        if (questionNumber) questionNumber.textContent = "";
+        if (questionText) questionText.textContent = "";
+        if (translationText) translationText.textContent = "";
+        if (choicesDiv) choicesDiv.innerHTML = "";
+        if (resultDiv) resultDiv.textContent = "";
+        if (infoDiv) infoDiv.innerHTML = "";
+
+        if (score === questions.length) {
+            clearCount++;
+            localStorage.setItem('clearCount', clearCount);
+
+            const randomImage = victoryImages[Math.floor(Math.random() * victoryImages.length)];
+            if (characterImg) {
+                characterImg.src = randomImage;
+                characterImg.style.display = "block";
+                characterImg.classList.add('flashy');
+            }
+
+            const heroMessages = [
+                "フリーレン: よくやったわね！",
+                "宿儺: 面白い…次も楽しませろ。",
+                "五条: やるじゃん！俺の弟子にしてやろうか？",
+                "デンケン: 魔法は努力の積み重ねだ。",
+                "ぼっち: あ、あの…すごい…！",
+                "弟: ジャンクフード食べる？お祝いだよ！",
+                "母: 美しい字を書けるように頑張ってね。",
+                "父: よく頑張ったな、少し休め。"
+            ];
+
+            const shuffledMessages = shuffleArray([...heroMessages]);
+            const combinedMessages = shuffledMessages.join('<br>');
+
+            if (finalResultDiv) finalResultDiv.innerHTML = `<div class="paripi">🎉 PERFECT!!! YOU ARE AMAZING!!! 🎉<br>${combinedMessages}</div>`;
+            if (extraMusic) extraMusic.play();
+        } else {
+            if (finalResultDiv) finalResultDiv.textContent = `スコア：${score} / ${questions.length}`;
+        }
+        if (retryBtn) retryBtn.style.display = "block";
+    }
+
+    function shuffleArray(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function getUniqueChoices(correct, count) {
+        const allAnswers = [...new Set(allQuestions.map(q => q.answer).filter(a => a !== correct))];
+        const choices = shuffleArray(allAnswers).slice(0, count - 1);
+        choices.push(correct);
+        return shuffleArray(choices);
+    }
+
+    function speakWord(word, callback) {
+        if (!window.speechSynthesis) {
+            callback();
+            return;
+        }
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'en-US';
+        utterance.volume = 1.0;
+        utterance.onend = callback;
+        speechSynthesis.speak(utterance);
+    }
+
+    function speakSentence(sentence, callback) {
+        if (!window.speechSynthesis) {
+            callback();
+            return;
+        }
+        const utterance = new SpeechSynthesisUtterance(sentence);
+        utterance.lang = 'en-US';
+        utterance.volume = 1.0;
+        utterance.onend = callback;
+        speechSynthesis.speak(utterance);
+    }
+    </script>
 </body>
 </html>
