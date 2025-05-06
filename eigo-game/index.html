@@ -16,9 +16,23 @@
         .flashy {
             animation: flashy 1.5s ease-in-out infinite;
         }
+        #start-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 9999;
+        }
     </style>
 </head>
 <body>
+    <div id="start-overlay">クリックして開始</div>
+
     <div class="container" id="container">
         <h1>興味別 英語穴埋めクイズ</h1>
         <div id="quiz-area">
@@ -33,10 +47,12 @@
             <button id="retry-btn" class="btn">再挑戦する</button>
         </div>
     </div>
-    <audio id="bgm" src="sound/Recharging.mp3" loop autoplay></audio>
+
+    <audio id="bgm" src="sound/Recharging.mp3" loop></audio>
     <audio id="seikai-sound" src="sound/seikai.mp3"></audio>
     <audio id="fuseikai-sound" src="sound/fuseikai.mp3"></audio>
     <audio id="extra-music" src="sound/extra.mp3"></audio>
+
     <script>
     let allQuestions = [];
     let correctlyAnswered = [];
@@ -46,7 +62,13 @@
     let clearCount = localStorage.getItem('clearCount') ? parseInt(localStorage.getItem('clearCount')) : 0;
 
     const bgm = document.getElementById('bgm');
-    if (bgm) bgm.volume = 0.2;
+    const startOverlay = document.getElementById('start-overlay');
+
+    startOverlay.addEventListener('click', () => {
+        startOverlay.style.display = 'none';
+        bgm.play().catch(err => console.log('Autoplay blocked:', err));
+        startGame();
+    });
 
     const questionNumber = document.getElementById('question-number');
     const questionText = document.getElementById('question-text');
@@ -67,7 +89,6 @@
         .then(response => response.json())
         .then(data => {
             allQuestions = data;
-            startGame();
         })
         .catch(error => {
             console.error('Failed to load questions.json:', error);
