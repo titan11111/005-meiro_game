@@ -16,23 +16,9 @@
         .flashy {
             animation: flashy 1.5s ease-in-out infinite;
         }
-        #start-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            cursor: pointer;
-            z-index: 9999;
-        }
     </style>
 </head>
 <body>
-    <div id="start-overlay">クリックして開始</div>
-
     <div class="container" id="container">
         <h1>興味別 英語穴埋めクイズ</h1>
         <div id="quiz-area">
@@ -45,13 +31,14 @@
             <div id="final-result"></div>
             <img id="character-img" src="" alt="キャラクター画像" width="200" style="display:none; margin-top:20px;">
             <button id="retry-btn" class="btn">再挑戦する</button>
+            <button id="play-bgm" class="btn">BGM再生</button>
         </div>
     </div>
 
-    <audio id="bgm" src="sound/Recharging.mp3" loop></audio>
-    <audio id="seikai-sound" src="sound/seikai.mp3"></audio>
-    <audio id="fuseikai-sound" src="sound/fuseikai.mp3"></audio>
-    <audio id="extra-music" src="sound/extra.mp3"></audio>
+    <audio id="bgm" src="eigo-game/sound/Recharging.mp3" loop></audio>
+    <audio id="seikai-sound" src="eigo-game/sound/seikai.mp3"></audio>
+    <audio id="fuseikai-sound" src="eigo-game/sound/fuseikai.mp3"></audio>
+    <audio id="extra-music" src="eigo-game/sound/extra.mp3"></audio>
 
     <script>
     let allQuestions = [];
@@ -62,12 +49,17 @@
     let clearCount = localStorage.getItem('clearCount') ? parseInt(localStorage.getItem('clearCount')) : 0;
 
     const bgm = document.getElementById('bgm');
-    const startOverlay = document.getElementById('start-overlay');
+    const playButton = document.getElementById('play-bgm');
 
-    startOverlay.addEventListener('click', () => {
-        startOverlay.style.display = 'none';
-        bgm.play().catch(err => console.log('Autoplay blocked:', err));
-        startGame();
+    playButton.addEventListener('click', () => {
+        if (bgm.paused) {
+            bgm.volume = 0.2;
+            bgm.play();
+            playButton.textContent = 'BGM停止';
+        } else {
+            bgm.pause();
+            playButton.textContent = 'BGM再生';
+        }
     });
 
     const questionNumber = document.getElementById('question-number');
@@ -83,12 +75,13 @@
     const fuseikaiSound = document.getElementById('fuseikai-sound');
     const extraMusic = document.getElementById('extra-music');
 
-    const victoryImages = ["image/image123.png", "image/step1.png"];
+    const victoryImages = ["eigo-game/image/image123.png", "eigo-game/image/step1.png"];
 
-    fetch('questions.json')
+    fetch('eigo-game/questions.json')
         .then(response => response.json())
         .then(data => {
             allQuestions = data;
+            startGame();
         })
         .catch(error => {
             console.error('Failed to load questions.json:', error);
