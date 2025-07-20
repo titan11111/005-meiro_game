@@ -449,10 +449,19 @@ function setupEventListeners() {
   document.getElementById("right").onclick = () => GameEngine.moveHero(1, 0);
 
   // タッチ操作（スマホ対応）
-  document.getElementById("up").addEventListener('touchstart', (e) => { e.preventDefault(); GameEngine.moveHero(0, -1); });
-  document.getElementById("down").addEventListener('touchstart', (e) => { e.preventDefault(); GameEngine.moveHero(0, 1); });
-  document.getElementById("left").addEventListener('touchstart', (e) => { e.preventDefault(); GameEngine.moveHero(-1, 0); });
-  document.getElementById("right").addEventListener('touchstart', (e) => { e.preventDefault(); GameEngine.moveHero(1, 0); });
+  const upBtn = document.getElementById("up");
+  const downBtn = document.getElementById("down");
+  const leftBtn = document.getElementById("left");
+  const rightBtn = document.getElementById("right");
+
+  upBtn.addEventListener('touchstart', (e) => { e.preventDefault(); GameEngine.moveHero(0, -1); });
+  upBtn.addEventListener('touchend', (e) => { e.preventDefault(); });
+  downBtn.addEventListener('touchstart', (e) => { e.preventDefault(); GameEngine.moveHero(0, 1); });
+  downBtn.addEventListener('touchend', (e) => { e.preventDefault(); });
+  leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); GameEngine.moveHero(-1, 0); });
+  leftBtn.addEventListener('touchend', (e) => { e.preventDefault(); });
+  rightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); GameEngine.moveHero(1, 0); });
+  rightBtn.addEventListener('touchend', (e) => { e.preventDefault(); });
 
   // キーボード操作
   document.addEventListener("keydown", (e) => {
