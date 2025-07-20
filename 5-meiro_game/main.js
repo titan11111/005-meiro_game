@@ -448,6 +448,12 @@ function setupEventListeners() {
   document.getElementById("left").onclick = () => GameEngine.moveHero(-1, 0);
   document.getElementById("right").onclick = () => GameEngine.moveHero(1, 0);
 
+  // タッチ操作（スマホ対応）
+  document.getElementById("up").addEventListener('touchstart', (e) => { e.preventDefault(); GameEngine.moveHero(0, -1); });
+  document.getElementById("down").addEventListener('touchstart', (e) => { e.preventDefault(); GameEngine.moveHero(0, 1); });
+  document.getElementById("left").addEventListener('touchstart', (e) => { e.preventDefault(); GameEngine.moveHero(-1, 0); });
+  document.getElementById("right").addEventListener('touchstart', (e) => { e.preventDefault(); GameEngine.moveHero(1, 0); });
+
   // キーボード操作
   document.addEventListener("keydown", (e) => {
     switch(e.key) {
