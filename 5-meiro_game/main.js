@@ -502,13 +502,6 @@ function setupEventListeners() {
     GameEngine.resizeCanvas();
     Renderer.draw();
   });
-
-  // タッチデバイス対応（ボタンの長押し防止）
-  document.querySelectorAll('.control-btn').forEach(btn => {
-    btn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-    });
-  });
 }
 
 // クイズデータ（main.jsに統合）
