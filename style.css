@@ -1,0 +1,427 @@
+/* リセットCSS */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Comic Sans MS', 'Arial', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #3a1f56 100%);
+  padding: 10px;
+  overflow-x: hidden;
+}
+
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 1000px;
+  background: linear-gradient(145deg, #ffffff, #f0f8ff);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  border: 3px solid #4a90e2;
+}
+
+.header {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #2c3e50;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header h1 {
+  font-size: 2em;
+  margin-bottom: 10px;
+  color: #81332a;
+  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.info {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 10px;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #4b755d;
+  flex-wrap: wrap;
+}
+
+.info span {
+  background: linear-gradient(135deg, #ffeaa7, #fab1a0);
+  padding: 8px 15px;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid #f39c12;
+}
+
+.maze-container {
+  width: 100%;
+  position: relative;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 1200px;
+}
+
+#mazeCanvas {
+  background: linear-gradient(45deg, #dfe6e9, #b2bec3);
+  border: 4px solid #2d3436;
+  border-radius: 10px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(135deg, #74b9ff, #0984e3);
+  color: white;
+  padding: 25px 35px;
+  border-radius: 20px;
+  font-size: 1.6em;
+  text-align: center;
+  display: none;
+  z-index: 10;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  border: 3px solid #ffffff;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.quiz {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 90%;
+  max-width: 450px;
+  background: linear-gradient(145deg, #ffeaa7, #fdcb6e);
+  border: 4px solid #e17055;
+  border-radius: 20px;
+  padding: 25px;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 20;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+}
+
+.hidden {
+  display: none !important;
+}
+
+#quiz-question {
+  margin-bottom: 25px;
+  font-weight: bold;
+  font-size: 1.4em;
+  color: #2d3436;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 15px;
+  border-radius: 15px;
+  border: 2px solid #e17055;
+}
+
+#quiz-options button {
+  display: block;
+  width: 100%;
+  margin: 12px 0;
+  padding: 15px;
+  background: linear-gradient(135deg, #00b894, #00a085);
+  color: white;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  font-size: 1.2em;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  border: 2px solid transparent;
+}
+
+#quiz-options button:hover {
+  background: linear-gradient(135deg, #00a085, #008f75);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  border-color: #ffffff;
+}
+
+#quiz-options button:active {
+  transform: translateY(-1px);
+}
+
+.controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.instruction {
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.instruction p {
+  font-size: 1.1em;
+  color: #2c3e50;
+  font-weight: bold;
+  background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.joystick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.horizontal-controls {
+  display: flex;
+  gap: 50px;
+}
+
+.control-btn {
+  width: 70px;
+  height: 70px;
+  font-size: 28px;
+  border: none;
+  background: linear-gradient(135deg, #fd79a8, #e84393);
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  border: 3px solid #ffffff;
+  font-weight: bold;
+}
+
+.control-btn:active {
+  background: linear-gradient(135deg, #e84393, #d63384);
+  transform: translateY(3px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.control-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+#loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2em;
+  z-index: 1000;
+  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+  font-weight: bold;
+}
+
+/* モーダル共通スタイル */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+
+.modal-content {
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  padding: 40px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+  max-width: 90%;
+  width: 450px;
+  border: 4px solid #4a90e2;
+}
+
+.modal-content h2 {  
+  font-size: 2.5em;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content p {
+  font-size: 1.3em;
+  margin-bottom: 30px;
+  color: #2c3e50;
+  font-weight: bold;
+}
+
+.modal-content button {
+  padding: 15px 30px;
+  font-size: 1.2em;
+  color: white;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: bold;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  border: 2px solid transparent;
+}
+
+.modal-content button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  border-color: #ffffff;
+}
+
+.modal-content button:active {
+  transform: translateY(-1px);
+}
+
+/* ゲームオーバーモーダル */
+#game-over-modal .modal-content h2 {
+  color: #e74c3c;
+}
+
+#game-over-modal .modal-content button {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+#game-over-modal .modal-content button:hover {
+  background: linear-gradient(135deg, #c0392b, #a93626);
+}
+
+/* ゲームクリアモーダル */
+#game-clear-modal .modal-content h2 {
+  color: #27ae60;
+}
+
+#game-clear-modal .modal-content button {
+  background: linear-gradient(135deg, #27ae60, #229954);
+}
+
+#game-clear-modal .modal-content button:hover {
+  background: linear-gradient(135deg, #229954, #1e8449);
+}
+
+#start-button {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2000;
+  font-size: 2em;
+  padding: 30px 60px;
+  background: linear-gradient(135deg, #74b9ff, #0984e3);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  cursor: pointer;
+  font-weight: bold;
+  display: block;
+}
+
+#start-button.hidden {
+  display: none !important;
+}
+
+/* スマホ対応 */
+@media (max-width: 768px) {
+  .header h1 {
+    font-size: 1.6em;
+  }
+  
+  .info {
+    gap: 15px;
+    font-size: 1em;
+  }
+  
+  .control-btn {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+  }
+  
+  .horizontal-controls {
+    gap: 40px;
+  }
+  
+  .modal-content {
+    padding: 30px 20px;
+    width: 90%;
+  }
+  
+  .modal-content h2 {
+    font-size: 2em;
+  }
+  
+  .instruction p {
+    font-size: 1em;
+    padding: 8px 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header h1 {
+    font-size: 1.4em;
+  }
+  
+  .info {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .control-btn {
+    width: 55px;
+    height: 55px;
+    font-size: 22px;
+  }
+  
+  .horizontal-controls {
+    gap: 35px;
+  }
+  
+  .quiz {
+    width: 95%;
+    padding: 20px;
+  }
+  
+  #quiz-question {
+    font-size: 1.2em;
+    padding: 12px;
+  }
+  
+  #quiz-options button {
+    font-size: 1.1em;
+    padding: 12px;
+  }
+}
