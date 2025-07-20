@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>色育成図鑑ゲーム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>🎨 色育成図鑑ゲーム 🎨</h1>
+            <p class="subtitle">油絵具の精霊たちと一緒に、新しい色の世界を発見しよう！</p>
+            
+            <div class="game-objective">
+                <div class="objective-card">
+                    <h3>🌟 ゲームの目的</h3>
+                    <p>基本の精霊たちを組み合わせて、<strong>50種類の新しい精霊</strong>を図鑑に登録しよう！</p>
+                </div>
+                <div class="progress-display">
+                    <div class="progress-info">
+                        <span id="currentCount">0</span> / <span id="targetCount">50</span> 種類発見済み
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <section class="basic-colors">
+                <h2>🌸 基本の精霊たち</h2>
+                <p class="section-description">これらの精霊たちが、あなたの色の冒険の始まりです</p>
+                <div class="color-grid" id="basicColors">
+                    </div>
+            </section>
+
+            <section class="mixing-area">
+                <h2>✨ 混色実験</h2>
+                <p class="section-description">2つの精霊を組み合わせて、どんな新しい精霊が生まれるか試してみよう！</p>
+                <div class="mix-container">
+                    <div class="color-slot" id="slot1">
+                        <span>精霊1をドロップ</span>
+                    </div>
+                    <div class="mix-symbol">✨</div>
+                    <div class="color-slot" id="slot2">
+                        <span>精霊2をドロップ</span>
+                    </div>
+                    <div class="mix-symbol">✨</div>
+                    <div class="result-slot" id="resultSlot">
+                        <span>？</span>
+                    </div>
+                </div>
+                <button id="mixButton" disabled>✨ 混色実験開始！ ✨</button>
+            </section>
+
+            <section class="result-area" id="resultArea" style="display: none;">
+                <h2>🎉 新しい精霊が生まれました！</h2>
+                <div class="new-spirit">
+                    <div class="spirit-color" id="newSpiritColor"></div>
+                    <p>この精霊に素敵な名前をつけてあげよう！</p>
+                    <input type="text" id="spiritName" placeholder="精霊の名前を入力してね">
+                    <button id="nameButton">✨ 名前を決定 ✨</button>
+                </div>
+            </section>
+
+            <section class="collection">
+                <h2>📚 精霊図鑑</h2>
+                <p class="section-description">発見した精霊たちがここに記録されます</p>
+                <div class="collection-grid" id="collectionGrid">
+                    </div>
+            </section>
+
+            <section class="achievement-area" id="achievementArea" style="display: none;">
+                <div class="achievement-card">
+                    <h2>🎊 おめでとうございます！ 🎊</h2>
+                    <p>50種類の精霊を発見して、色の世界の達人になりました！</p>
+                    <p>これで色育成図鑑ゲームをクリアです！</p>
+                    <button id="restartButton">✨ もう一度プレイ ✨</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

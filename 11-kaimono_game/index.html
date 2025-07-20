@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ミミック・マーケット</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="game-header">
+        <h1>ミミック・マーケット</h1>
+        <div class="stats">
+            <div class="money">💰 <span id="money">500</span>円</div>
+            <div class="trust">信頼度: <span id="trust">100</span>%</div>
+            <div class="day">Day <span id="day">1</span></div>
+            <div class="customers">来店: <span id="customers">0</span>/<span id="min-customers">4</span>人</div>
+        </div>
+    </header>
+
+    <main class="game-container">
+        <section class="customer-area">
+            <div class="customer">
+                <div class="customer-avatar">
+                    <img src="images/customer_1.png" alt="お客さん" id="customer-img">
+                </div>
+                <div class="customer-speech">
+                    <p id="customer-request">「腕時計が欲しいです」</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="inventory-area">
+            <h3>あなたの商品：</h3>
+            <div class="items-grid">
+                <div class="item" data-item="watch">
+                    <div class="item-icon">⌚</div>
+                    <div class="item-name">腕時計</div>
+                    <div class="item-quality" id="watch-quality">偽物</div>
+                </div>
+                <div class="item" data-item="bag">
+                    <div class="item-icon">👜</div>
+                    <div class="item-name">バッグ</div>
+                    <div class="item-quality" id="bag-quality">偽物</div>
+                </div>
+                <div class="item" data-item="shoes">
+                    <div class="item-icon">👟</div>
+                    <div class="item-name">靴</div>
+                    <div class="item-quality" id="shoes-quality">偽物</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="action-area">
+            <button id="sell-btn" class="action-btn sell-btn">
+                📦 そのまま渡す
+            </button>
+            <button id="lie-btn" class="action-btn lie-btn">
+                😈 本物だとウソをつく
+            </button>
+            <button id="upgrade-btn" class="action-btn upgrade-btn">
+                ✨ 本物に交換する (-100円)
+            </button>
+        </section>
+
+        <section class="result-area" id="result-area" style="display: none;">
+            <div class="result-box">
+                <h3 id="result-title">結果</h3>
+                <p id="result-message">メッセージがここに表示されます</p>
+                <button id="next-btn" class="next-btn">次のお客さん</button>
+            </div>
+        </section>
+
+        <section class="gameover-area" id="gameover-area" style="display: none;">
+            <div class="gameover-box">
+                <h2>ゲーム終了</h2>
+                <p id="final-score">最終スコア: 0円</p>
+                <p id="final-message">お疲れ様でした！</p>
+                <button id="restart-btn" class="restart-btn">もう一度プレイ</button>
+            </div>
+        </section>
+    </main>
+
+    <button class="help-btn" id="help-btn">❓</button>
+    
+    <div class="modal" id="help-modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" id="close-modal">&times;</span>
+            <h2>ゲームの遊び方</h2>
+            <div class="help-content">
+                <p><strong>目標：</strong>お客さんに商品を売ってお金を稼ごう！</p>
+                <p><strong>ルール：</strong></p>
+                <ul>
+                    <li>📦 <strong>そのまま渡す</strong>：偽物なら少しお金がもらえるが、信頼度が下がる。日が進むとペナルティが厳しくなる！</li>
+                    <li>😈 <strong>ウソをつく</strong>：偽物を本物と偽って売る。成功すれば大金、失敗すると信頼度が大幅に下がり、お客さんからシュールなコメントを浴びる。</li>
+                    <li>✨ <strong>本物に交換</strong>：100円かかるが、確実に成功して信頼度も上がる。</li>
+                </ul>
+                <p><strong>難易度：</strong>日が進むにつれて、お客さんの目利きレベルが上がり、価格変動も激しくなる。信頼度の減少も厳しくなるぞ！</p>
+                <p><strong>目標：</strong>5日間の営業で総売上を最大化しよう！信頼度が0になるとゲームオーバー、5日終了で結果発表だ！</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

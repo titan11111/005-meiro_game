@@ -1,0 +1,554 @@
+/* リセットとベース設定 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+  color: #ffffff;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* 星空アニメーション */
+.stars, .stars2, .stars3 {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.stars {
+  background: transparent url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="1" fill="white" opacity="0.8"/></svg>') repeat;
+  animation: stars 20s linear infinite;
+}
+
+.stars2 {
+  background: transparent url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="0.5" fill="white" opacity="0.6"/></svg>') repeat;
+  animation: stars 15s linear infinite;
+}
+
+.stars3 {
+  background: transparent url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="0.3" fill="white" opacity="0.4"/></svg>') repeat;
+  animation: stars 10s linear infinite;
+}
+
+@keyframes stars {
+  0% { transform: translateY(0px); }
+  100% { transform: translateY(-1000px); }
+}
+
+/* メインコンテナ */
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* ヘッダーセクション */
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.level-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.level-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 15px;
+  padding: 0.8rem 1.2rem;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.level-number {
+  display: block;
+  font-family: 'Orbitron', monospace;
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.level-text {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.exp-bar {
+  position: relative;
+  width: 150px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.exp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00d4ff 0%, #0099cc 100%);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+  width: 0%;
+}
+
+.exp-text {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-size: 0.7rem;
+  color: #ffffff;
+  opacity: 0.8;
+}
+
+.stats {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.stat-item {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stat-icon {
+  display: block;
+  font-size: 1.2rem;
+  margin-bottom: 0.3rem;
+}
+
+.stat-value {
+  display: block;
+  font-family: 'Orbitron', monospace;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #00d4ff;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.6rem;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* メインゲームエリア */
+.game-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.question-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  animation: slideInUp 0.6s ease;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.question-header {
+  margin-bottom: 1.5rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00ff88 0%, #00cc6a 100%);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+  width: 10%;
+}
+
+.question-counter {
+  text-align: center;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  color: #00ff88;
+  font-weight: 500;
+}
+
+.question-content {
+  text-align: center;
+}
+
+.question {
+  font-size: 1.3rem;
+  line-height: 1.6;
+  color: #ffffff;
+}
+
+.question p {
+  margin-bottom: 1rem;
+}
+
+.question strong {
+  color: #00ff88;
+  font-weight: 700;
+}
+
+/* 選択肢コンテナ */
+.choices-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.choice-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 15px;
+  padding: 1.2rem 1.5rem;
+  font-size: 1.1rem;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+}
+
+.choice-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.choice-btn:hover::before {
+  left: 100%;
+}
+
+.choice-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #00ff88;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 255, 136, 0.3);
+}
+
+.choice-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+
+.choice-btn.correct {
+  background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+  border-color: #00ff88;
+  color: #000000;
+  font-weight: 700;
+  animation: correctPulse 0.6s ease;
+}
+
+.choice-btn.incorrect {
+  background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
+  border-color: #ff4757;
+  color: #ffffff;
+  animation: incorrectShake 0.6s ease;
+}
+
+@keyframes correctPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes incorrectShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* 結果コンテナ */
+.result-container {
+  min-height: 120px;
+}
+
+.result {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.explain-block {
+  text-align: left;
+}
+
+.explain-block .title {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.explain-block .line {
+  margin-bottom: 0.8rem;
+  line-height: 1.5;
+}
+
+.explain-block strong {
+  color: #00ff88;
+}
+
+.correct {
+  border-left: 4px solid #00ff88;
+  padding-left: 1rem;
+}
+
+.incorrect {
+  border-left: 4px solid #ff4757;
+  padding-left: 1rem;
+}
+
+/* アクションボタン */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.action-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+}
+
+.btn-icon {
+  font-size: 1.2rem;
+}
+
+.restart-btn {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+}
+
+.restart-btn:hover {
+  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.6);
+}
+
+/* 通知 */
+.achievement-notification,
+.levelup-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 1000;
+  animation: slideInRight 0.5s ease;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.achievement-content,
+.levelup-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.achievement-icon,
+.levelup-icon {
+  font-size: 2rem;
+}
+
+.achievement-text,
+.levelup-text {
+  color: #333;
+}
+
+.achievement-title,
+.levelup-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 0.3rem;
+}
+
+.achievement-desc,
+.levelup-level {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* レスポンシブデザイン */
+@media screen and (max-width: 768px) {
+  .container {
+    padding: 0.5rem;
+  }
+  
+  .game-header {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .level-info {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .stats {
+    width: 100%;
+    justify-content: space-around;
+  }
+  
+  .choices {
+    grid-template-columns: 1fr;
+  }
+  
+  .question-card {
+    padding: 1.5rem;
+  }
+  
+  .question {
+    font-size: 1.1rem;
+  }
+  
+  .choice-btn {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .level-badge {
+    padding: 0.6rem 1rem;
+  }
+  
+  .level-number {
+    font-size: 1.2rem;
+  }
+  
+  .exp-bar {
+    width: 120px;
+  }
+  
+  .stat-item {
+    padding: 0.6rem 0.8rem;
+  }
+  
+  .stat-value {
+    font-size: 1rem;
+  }
+  
+  .question-card {
+    padding: 1rem;
+  }
+  
+  .question {
+    font-size: 1rem;
+  }
+  
+  .choice-btn {
+    padding: 0.8rem;
+    font-size: 0.9rem;
+  }
+}

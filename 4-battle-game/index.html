@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>戦闘ゲーム</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="game-container">
+    <div id="start-screen">
+      <h1>戦闘ゲーム</h1>
+      <p>クリックでゲームスタート</p>
+      <button id="start-button">START</button>
+    </div>
+
+    <div id="game-content" style="display: none;">
+      <h1>戦闘ゲーム</h1>
+
+      <div class="character-info player-info">
+        <h2>勇者</h2>
+        <div class="character-sprite">
+          <img src="images/hero.png" alt="勇者" class="pixel-art" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';" />
+          <span class="emoji-fallback" style="display:none;">🛡️</span>
+        </div>
+        <div class="status">
+          <div class="hp-bar">
+            <span>HP: </span>
+            <div class="bar">
+              <div class="bar-fill player-hp-fill"></div>
+            </div>
+            <span class="hp-text"><span id="player-hp">100</span>/100</span>
+          </div>
+          <div class="mp-bar">
+            <span>MP: </span>
+            <div class="bar">
+              <div class="bar-fill player-mp-fill"></div>
+            </div>
+            <span class="mp-text"><span id="player-mp">50</span>/50</span>
+          </div>
+          <div class="exp-bar">
+            <span>EXP: </span>
+            <div class="bar">
+              <div class="bar-fill player-exp-fill"></div>
+            </div>
+            <span class="exp-text"><span id="player-exp">0</span>/<span id="player-next-exp">100</span></span>
+          </div>
+          <p>Lv: <span id="player-level">1</span></p>
+        </div>
+      </div>
+
+      <div class="character-info enemy-info">
+        <h2 id="enemy-name"></h2>
+        <div class="character-sprite">
+          <img id="enemy-image" src="" alt="敵" class="pixel-art" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';" />
+          <span id="enemy-sprite" class="emoji-fallback" style="display:none;">👾</span>
+        </div>
+        <div class="status">
+          <div class="hp-bar">
+            <span>HP: </span>
+            <div class="bar">
+              <div class="bar-fill enemy-hp-fill"></div>
+            </div>
+            <span class="hp-text"><span id="enemy-hp">50</span>/<span id="enemy-max-hp">50</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="battle-log">
+        <div id="log-messages"></div>
+      </div>
+
+      <div class="battle-commands" id="battle-commands">
+        <button class="command-btn" onclick="playerAttack()">こうげき</button>
+        <button class="command-btn" onclick="playerMagic()">まほう</button>
+        <button class="command-btn" onclick="playerHeal()">かいふく</button>
+        <button class="command-btn" onclick="runAway()">にげる</button>
+      </div>
+
+      <div class="game-over" id="game-over" style="display: none;">
+        <h2 id="game-over-text"></h2>
+        <button onclick="restartGame()">最初から</button>
+      </div>
+    </div>
+  </div>
+
+  <audio id="bgm" loop>
+    <source src="audio/BGM157-131031-yaseinodaikettou-wav-nointro.wav" type="audio/wav" />
+  </audio>
+  <audio id="levelup-sound">
+    <source src="audio/levelup.mp3" type="audio/mpeg" />
+  </audio>
+  <audio id="enemy-attack-sound">
+    <source src="audio/tekikou.mp3" type="audio/mpeg" />
+  </audio>
+  <audio id="player-attack-sound">
+    <source src="audio/mikatakou.mp3" type="audio/mpeg" />
+  </audio>
+  <audio id="gameover-sound">
+    <source src="audio/gameover.mp3" type="audio/mpeg" />
+  </audio>
+
+  <div class="audio-controls">
+    <button id="mute-btn" onclick="toggleMute()">🔊</button>
+    <input type="range" id="volume-slider" min="0" max="100" value="50" onchange="changeVolume()" />
+  </div>
+
+  <div id="magic-effect" class="magic-effect" style="display: none;"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

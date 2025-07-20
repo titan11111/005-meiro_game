@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>僧侶の相談ゲーム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🙏 僧侶の相談ゲーム 🙏</h1>
+            <p>相談者のお悩みに最適なアドバイスを選んでください</p>
+        </header>
+
+        <div class="game-area">
+            <div class="status-bar">
+                <div class="score">感謝ポイント: <span id="score">0</span></div>
+                <div class="remaining">残り相談者: <span id="remaining">24</span></div>
+            </div>
+            
+            <div id="stats-container" class="stats-container">
+                <div class="stat-item">
+                    <span class="stat-label">レベル:</span>
+                    <span class="stat-value">1</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">経験値:</span>
+                    <span class="stat-value">0/100</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">コンボ:</span>
+                    <span class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">最大コンボ:</span>
+                    <span class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">正解率:</span>
+                    <span class="stat-value">0%</span>
+                </div>
+            </div>
+            
+            <div id="emotion-bar" class="emotion-bar">
+                <span class="emotion-label">🙏 感謝</span>
+                <div class="emotion-progress">
+                    <div class="emotion-fill" id="emotion-fill"></div>
+                </div>
+                <span class="emotion-label">😠 怒り</span>
+            </div>
+
+            <div id="consultation-card" class="consultation-card">
+                <div class="visitor-info">
+                    <div class="visitor-icon">👤</div>
+                    <div class="visitor-name" id="visitor-name">相談者</div>
+                </div>
+                <div class="consultation-text" id="consultation-text">
+                    相談内容がここに表示されます
+                </div>
+            </div>
+
+            <div id="advice-buttons" class="advice-buttons">
+                <button class="advice-btn" id="advice1" onclick="selectAdvice(0)">
+                    アドバイス1
+                </button>
+                <button class="advice-btn" id="advice2" onclick="selectAdvice(1)">
+                    アドバイス2
+                </button>
+                <button class="advice-btn" id="advice3" onclick="selectAdvice(2)">
+                    アドバイス3
+                </button>
+            </div>
+
+            <div id="result" class="result hidden">
+                <div class="result-text" id="result-text"></div>
+                <div class="result-message" id="result-message"></div>
+                <button class="next-btn" onclick="nextConsultation()">次の相談者へ</button>
+            </div>
+
+            <div id="game-over" class="game-over hidden">
+                <h2>お疲れ様でした！</h2>
+                <div class="final-score">
+                    最終感謝ポイント: <span id="final-score">0</span>
+                </div>
+                <div class="rating" id="rating"></div>
+                <button class="restart-btn" onclick="restartGame()">もう一度挑戦</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

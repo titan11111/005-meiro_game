@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUIZ-ZONE - ディストピアクイズバトル</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 起動画面 -->
+    <div id="startScreen" class="screen active">
+        <div class="logo">
+            <h1>QUIZ-ZONE</h1>
+            <p class="subtitle">知識管理機構《Z.E.R.O》</p>
+        </div>
+        <div class="warning">
+            <p>⚠️ 無知は罪である ⚠️</p>
+            <p>知能試練を開始せよ</p>
+        </div>
+        <button id="startBtn" class="main-btn">試練開始</button>
+    </div>
+
+    <!-- ゾーン選択画面 -->
+    <div id="zoneScreen" class="screen">
+        <div class="header">
+            <h2>ZONEタワー</h2>
+            <p>クリア済み: <span id="clearCount">0</span>/8</p>
+        </div>
+        <div class="zone-grid">
+            <div class="zone-box" data-zone="1">
+                <div class="zone-number">1</div>
+                <div class="zone-name">数学</div>
+                <div class="zone-status">🔒</div>
+            </div>
+            <div class="zone-box" data-zone="2">
+                <div class="zone-number">2</div>
+                <div class="zone-name">国語</div>
+                <div class="zone-status">🔒</div>
+            </div>
+            <div class="zone-box" data-zone="3">
+                <div class="zone-number">3</div>
+                <div class="zone-name">理科</div>
+                <div class="zone-status">🔒</div>
+            </div>
+            <div class="zone-box" data-zone="4">
+                <div class="zone-number">4</div>
+                <div class="zone-name">社会</div>
+                <div class="zone-status">🔒</div>
+            </div>
+            <div class="zone-box omega" data-zone="omega">
+                <div class="zone-number">Ω</div>
+                <div class="zone-name">中央AI</div>
+                <div class="zone-status">🔒</div>
+            </div>
+            <div class="zone-box" data-zone="5">
+                <div class="zone-number">5</div>
+                <div class="zone-name">英語</div>
+                <div class="zone-status">🔒</div>
+            </div>
+            <div class="zone-box" data-zone="6">
+                <div class="zone-number">6</div>
+                <div class="zone-name">生活</div>
+                <div class="zone-status">🔒</div>
+            </div>
+            <div class="zone-box" data-zone="7">
+                <div class="zone-number">7</div>
+                <div class="zone-name">音楽</div>
+                <div class="zone-status">🔒</div>
+            </div>
+            <div class="zone-box" data-zone="8">
+                <div class="zone-number">8</div>
+                <div class="zone-name">体育</div>
+                <div class="zone-status">🔒</div>
+            </div>
+        </div>
+        <button id="trainingBtn" class="sub-btn">記憶補完室</button>
+    </div>
+
+    <!-- クイズ画面 -->
+    <div id="quizScreen" class="screen">
+        <div class="quiz-header">
+            <div class="zone-info">
+                <span id="currentZone">Zone 1</span>
+                <span id="bossName">数学管理官</span>
+            </div>
+            <div class="quiz-status">
+                <span id="questionNum">1/5</span>
+                <span id="score">正解: 0/5</span>
+            </div>
+            <div class="timer">
+                <span id="timeLeft">30</span>秒
+            </div>
+        </div>
+        
+        <div class="quiz-content">
+            <div class="question-box">
+                <p id="question">問題がここに表示されます</p>
+            </div>
+            <div class="answers">
+                <button class="answer-btn" data-answer="0">選択肢1</button>
+                <button class="answer-btn" data-answer="1">選択肢2</button>
+                <button class="answer-btn" data-answer="2">選択肢3</button>
+                <button class="answer-btn" data-answer="3">選択肢4</button>
+            </div>
+        </div>
+        
+        <button id="quitBtn" class="sub-btn">試練中断</button>
+    </div>
+
+    <!-- 結果画面 -->
+    <div id="resultScreen" class="screen">
+        <div class="result-content">
+            <h2 id="resultTitle">結果</h2>
+            <div class="result-info">
+                <p id="resultScore">正解数: 0/5</p>
+                <p id="resultMessage">メッセージ</p>
+            </div>
+            <div class="result-actions">
+                <button id="retryBtn" class="main-btn">再挑戦</button>
+                <button id="backToZoneBtn" class="sub-btn">ZONEタワーへ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- トレーニング画面 -->
+    <div id="trainingScreen" class="screen">
+        <div class="training-header">
+            <h2>記憶補完室</h2>
+            <p>間違えた問題を復習しよう</p>
+        </div>
+        <div class="training-content">
+            <div id="trainingList" class="training-list">
+                <p class="no-data">まだ復習する問題がありません</p>
+            </div>
+        </div>
+        <button id="backFromTrainingBtn" class="sub-btn">戻る</button>
+    </div>
+
+    <!-- エンディング画面 -->
+    <div id="endingScreen" class="screen">
+        <div class="ending-content">
+            <div class="ending-header">
+                <h1 class="ending-title">LIBERATION</h1>
+                <p class="ending-subtitle">知識の解放</p>
+            </div>
+            
+            <div class="ending-story">
+                <div class="story-section" id="story1">
+                    <h3>システム崩壊</h3>
+                    <p>中央制御AI《Ω》の破壊により、知識管理機構《Z.E.R.O》のシステムが完全に停止した。</p>
+                    <p>長年にわたって人々を支配していた「無知は罪である」という思想が、今、終焉を迎える。</p>
+                </div>
+                
+                <div class="story-section" id="story2">
+                    <h3>真実の開示</h3>
+                    <p>システムの奥深くに隠されていた真実が明かされる。</p>
+                    <p>知識管理機構は、人々の思考を制御し、自由な学びを阻害するための装置だった。</p>
+                    <p>あなたの勝利は、単なる個人の成功ではなく、人類全体の解放を意味していた。</p>
+                </div>
+                
+                <div class="story-section" id="story3">
+                    <h3>新たな始まり</h3>
+                    <p>他の被験者たちも次々と目覚め、知識の自由を取り戻していく。</p>
+                    <p>ZONEタワーは崩壊し、代わりに真の学びの場が建設されることになる。</p>
+                    <p>あなたは「知識の解放者」として、新たな時代の扉を開いた。</p>
+                </div>
+            </div>
+            
+            <div class="ending-stats">
+                <h3>最終成績</h3>
+                <p>クリアしたゾーン: <span id="finalClearCount">0</span>/8</p>
+                <p>総試行回数: <span id="totalAttempts">0</span>回</p>
+                <p>解放者レベル: <span id="liberatorLevel">初級</span></p>
+            </div>
+            
+            <div class="ending-actions">
+                <button id="restartBtn" class="main-btn">新たな試練へ</button>
+                <button id="creditsBtn" class="sub-btn">クレジット</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- クレジット画面 -->
+    <div id="creditsScreen" class="screen">
+        <div class="credits-content">
+            <h2>QUIZ-ZONE</h2>
+            <div class="credits-section">
+                <h3>開発・制作</h3>
+                <p>Knowledge Liberation Project</p>
+                <p>ディストピアクイズバトルシステム</p>
+            </div>
+            <div class="credits-section">
+                <h3>ストーリー</h3>
+                <p>知識管理機構《Z.E.R.O》</p>
+                <p>中央制御AI《Ω》</p>
+                <p>8つの知識ゾーン</p>
+            </div>
+            <div class="credits-section">
+                <h3>メッセージ</h3>
+                <p>「知識は自由であるべきだ」</p>
+                <p>「学びは喜びであるべきだ」</p>
+                <p>「無知は罪ではない、学ぶ勇気こそが尊い」</p>
+            </div>
+            <button id="backToEndingBtn" class="sub-btn">エンディングに戻る</button>
+        </div>
+    </div>
+
+    <!-- 効果音用（表示されない） -->
+    <audio id="correctSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUF" type="audio/wav">
+    </audio>
+    <audio id="wrongSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUF" type="audio/wav">
+    </audio>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyberpunk English Academy - 中3英語学習ゲーム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- メニュー画面 -->
+        <div id="menuScreen" class="screen">
+            <div class="logo">
+                <h1 class="glitch-text">CYBERPUNK<br>ENGLISH<br>ACADEMY</h1>
+                <p class="subtitle">中学3年生向け 英語学習ゲーム</p>
+            </div>
+            <div class="menu-buttons">
+                <button id="startButton" class="cyber-button">
+                    <span>START MISSION</span>
+                </button>
+                <div class="game-info">
+                    <h3>GAME FEATURES</h3>
+                    <ul>
+                        <li>🎯 ハッキングコマンドで回答選択</li>
+                        <li>⚡ タイムアタックでスリル体験</li>
+                        <li>🎮 レベルアップシステム</li>
+                        <li>📱 スマホ対応</li>
+                        <li>🎵 サウンドエフェクト</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ゲーム画面 -->
+        <div id="gameScreen" class="screen" style="display: none;">
+            <!-- ヘッダー情報 -->
+            <div class="game-header">
+                <div class="player-info">
+                    <div class="info-item">
+                        <span>LV.</span>
+                        <span id="playerLevel">1</span>
+                    </div>
+                    <div class="info-item">
+                        <span>EXP:</span>
+                        <span id="playerExp">0/100</span>
+                    </div>
+                    <div class="info-item">
+                        <span>SCORE:</span>
+                        <span id="playerScore">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span>LIVES:</span>
+                        <span id="playerLives">3</span>
+                    </div>
+                </div>
+                <div id="timer" class="timer">TIME: 30</div>
+            </div>
+
+            <!-- ミッション情報 -->
+            <div class="mission-info">
+                <h2 id="missionTitle" class="glitch-text">LOADING...</h2>
+                <p id="missionDescription">システムを初期化中...</p>
+            </div>
+
+            <!-- 質問セクション -->
+            <div class="question-section">
+                <div class="question-container">
+                    <h3 class="question-label">DECRYPT THIS:</h3>
+                    <p id="questionText" class="question-text">問題を読み込み中...</p>
+                </div>
+
+                <!-- 回答選択肢 -->
+                <div class="answers-container">
+                    <button class="answer-btn" data-index="0">
+                        <span class="command">EXEC_A:</span>
+                        <span class="option">Option A</span>
+                    </button>
+                    <button class="answer-btn" data-index="1">
+                        <span class="command">EXEC_B:</span>
+                        <span class="option">Option B</span>
+                    </button>
+                    <button class="answer-btn" data-index="2">
+                        <span class="command">EXEC_C:</span>
+                        <span class="option">Option C</span>
+                    </button>
+                    <button class="answer-btn" data-index="3">
+                        <span class="command">EXEC_D:</span>
+                        <span class="option">Option D</span>
+                    </button>
+                </div>
+
+                <!-- 結果表示 -->
+                <div class="result-container">
+                    <div id="result" class="result"></div>
+                    <div id="explanation" class="explanation"></div>
+                    <button id="nextButton" class="cyber-button next-button" style="display: none;">
+                        <span>NEXT CHALLENGE</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- キーボードヘルプ -->
+            <div class="keyboard-help">
+                <p>🎮 キーボード操作：A/1, B/2, C/3, D/4 で回答選択</p>
+                <p>💡 隠しコマンド：Ctrl+H でヘルプ表示</p>
+            </div>
+        </div>
+
+        <!-- ゲームオーバー画面 -->
+        <div id="gameOverScreen" class="screen end-screen" style="display: none;">
+            <div class="end-content">
+                <h2 class="glitch-text error">SYSTEM COMPROMISED</h2>
+                <div class="end-stats">
+                    <p>ハッキング失敗...</p>
+                    <p>でも大丈夫！もう一度挑戦しよう！</p>
+                </div>
+                <button id="restartButton" class="cyber-button">
+                    <span>RESTART MISSION</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 勝利画面 -->
+        <div id="victoryScreen" class="screen end-screen" style="display: none;">
+            <div class="end-content">
+                <h2 class="glitch-text success">MISSION COMPLETE!</h2>
+                <div class="end-stats">
+                    <p>🎉 おめでとう！全てのミッションをクリアしました！</p>
+                    <p>あなたは真のサイバー英語マスターです！</p>
+                </div>
+                <button id="restartButton" class="cyber-button">
+                    <span>PLAY AGAIN</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- パーティクルエフェクト用 -->
+        <div class="particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+    </div>
+
+    <!-- JavaScriptファイル読み込み -->
+    <script src="script.js"></script>
+</body>
+</html>

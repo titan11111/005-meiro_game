@@ -1,0 +1,1682 @@
+[
+  {
+    "jp": "ぼっちはライブ前、とても緊張していた。",
+    "sentence": "Bocchi was very (   ) before the live show.",
+    "answer": "nervous",
+    "choices": [
+      "nervous",
+      "relaxed",
+      "bored",
+      "confident"
+    ],
+    "meaning": "緊張した。心がドキドキして落ち着かない。",
+    "synonym": "anxious（不安な）",
+    "antonym": "calm（落ち着いている）"
+  },
+  {
+    "jp": "なでしこはテントを素早く設営した。",
+    "sentence": "Nadeshiko (   ) set up the tent.",
+    "answer": "quickly",
+    "choices": [
+      "quickly",
+      "slowly",
+      "carefully",
+      "lazily"
+    ],
+    "meaning": "素早く。スピードが速いこと。",
+    "synonym": "rapidly（急速に）",
+    "antonym": "slowly（ゆっくり）"
+  },
+  {
+    "jp": "フリーレンは一人で旅を続けていた。",
+    "sentence": "Frieren continued her journey (   ).",
+    "answer": "by herself",
+    "choices": [
+      "by herself",
+      "in fact",
+      "at once",
+      "in front of"
+    ],
+    "meaning": "一人で。誰の助けもなしに。",
+    "synonym": "alone（ひとりで）",
+    "antonym": "together（いっしょに）"
+  },
+  {
+    "jp": "虎杖は仲間を助けたかったので、戦いを選んだ。",
+    "sentence": "Yuji chose to fight (   ) he wanted to help his friends.",
+    "answer": "because",
+    "choices": [
+      "because",
+      "if",
+      "although",
+      "until"
+    ],
+    "meaning": "〜なので。理由を表す。",
+    "synonym": "since（〜なので）",
+    "antonym": "despite（〜にもかかわらず）"
+  },
+  {
+    "jp": "ロイドは正体を隠す必要があった。",
+    "sentence": "Loid had to (   ) his true identity.",
+    "answer": "hide",
+    "choices": [
+      "hide",
+      "show",
+      "open",
+      "share"
+    ],
+    "meaning": "隠す。見えないようにすること。",
+    "synonym": "conceal（隠す）",
+    "antonym": "reveal（明かす）"
+  },
+  {
+    "jp": "ぼっちはライブが終わったあと、突然泣いてしまった。",
+    "sentence": "After the live, Bocchi (   ) cried.",
+    "answer": "suddenly",
+    "choices": [
+      "suddenly",
+      "always",
+      "rarely",
+      "gently"
+    ],
+    "meaning": "突然に。急に。",
+    "synonym": "abruptly（不意に）",
+    "antonym": "gradually（徐々に）"
+  },
+  {
+    "jp": "リンは火を注意深く起こした。",
+    "sentence": "Rin (   ) started the fire.",
+    "answer": "carefully",
+    "choices": [
+      "carefully",
+      "roughly",
+      "noisily",
+      "boldly"
+    ],
+    "meaning": "注意深く。慎重に。",
+    "synonym": "cautiously（慎重に）",
+    "antonym": "carelessly（不注意に）"
+  },
+  {
+    "jp": "フェルンは静かにフリーレンについていった。",
+    "sentence": "Fern followed Frieren (   ).",
+    "answer": "silently",
+    "choices": [
+      "silently",
+      "quickly",
+      "loudly",
+      "jealously"
+    ],
+    "meaning": "静かに。音を立てずに。",
+    "synonym": "quietly（静かに）",
+    "antonym": "noisily（うるさく）"
+  },
+  {
+    "jp": "五条は渋谷での任務に突然現れた。",
+    "sentence": "Gojo (   ) appeared at the mission in Shibuya.",
+    "answer": "suddenly",
+    "choices": [
+      "suddenly",
+      "eventually",
+      "slowly",
+      "eagerly"
+    ],
+    "meaning": "突然に。いきなり。",
+    "synonym": "abruptly（急に）",
+    "antonym": "gradually（徐々に）"
+  },
+  {
+    "jp": "ヨルは何も言わずに静かに部屋を出た。",
+    "sentence": "Yor (   ) left the room without saying anything.",
+    "answer": "quietly",
+    "choices": [
+      "quietly",
+      "angrily",
+      "happily",
+      "rudely"
+    ],
+    "meaning": "静かに。しずかに行動するさま。",
+    "synonym": "silently（静かに）",
+    "antonym": "noisily（騒がしく）"
+  },
+  {
+    "jp": "ぼっちはライブの準備に深く集中していた。",
+    "sentence": "Bocchi was (   ) focused on preparing for the live.",
+    "answer": "deeply",
+    "choices": [
+      "deeply",
+      "barely",
+      "noisily",
+      "weakly"
+    ],
+    "meaning": "深く。集中しているさま。",
+    "synonym": "intensely（強く）",
+    "antonym": "lightly（軽く）"
+  },
+  {
+    "jp": "なでしこはキャンプ場で穏やかに眠った。",
+    "sentence": "Nadeshiko slept (   ) at the campsite.",
+    "answer": "peacefully",
+    "choices": [
+      "peacefully",
+      "angrily",
+      "sadly",
+      "quickly"
+    ],
+    "meaning": "平和に。穏やかに。",
+    "synonym": "calmly（落ち着いて）",
+    "antonym": "restlessly（落ち着かず）"
+  },
+  {
+    "jp": "フリーレンは魔法を落ち着いて唱えた。",
+    "sentence": "Frieren cast the spell (   ).",
+    "answer": "calmly",
+    "choices": [
+      "calmly",
+      "loudly",
+      "quickly",
+      "slowly"
+    ],
+    "meaning": "落ち着いて。平静に。",
+    "synonym": "peacefully（穏やかに）",
+    "antonym": "nervously（緊張して）"
+  },
+  {
+    "jp": "虎杖は敵に勇敢に立ち向かった。",
+    "sentence": "Yuji faced the enemy (   ).",
+    "answer": "bravely",
+    "choices": [
+      "bravely",
+      "quietly",
+      "eagerly",
+      "carelessly"
+    ],
+    "meaning": "勇敢に。恐れずに。",
+    "synonym": "courageously（勇敢に）",
+    "antonym": "fearfully（おびえて）"
+  },
+  {
+    "jp": "ロイドは任務を完璧に遂行した。",
+    "sentence": "Loid (   ) completed his mission.",
+    "answer": "perfectly",
+    "choices": [
+      "perfectly",
+      "roughly",
+      "randomly",
+      "partially"
+    ],
+    "meaning": "完璧に。完全に。",
+    "synonym": "flawlessly（欠点なく）",
+    "antonym": "imperfectly（不完全に）"
+  },
+  {
+    "jp": "ぼっちは楽屋でこっそり隠れていた。",
+    "sentence": "Bocchi was (   ) in the backstage.",
+    "answer": "hiding",
+    "choices": [
+      "hiding",
+      "jumping",
+      "dancing",
+      "talking"
+    ],
+    "meaning": "隠れている。見えないようにしている。",
+    "synonym": "concealing（隠す）",
+    "antonym": "revealing（明かす）"
+  },
+  {
+    "jp": "なでしこは焚き火を始めた。",
+    "sentence": "Nadeshiko (   ) the campfire.",
+    "answer": "started",
+    "choices": [
+      "started",
+      "closed",
+      "forgot",
+      "missed"
+    ],
+    "meaning": "始めた。始動させた。",
+    "synonym": "began（始めた）",
+    "antonym": "stopped（止めた）"
+  },
+  {
+    "jp": "フェルンは古い本を静かに読んでいた。",
+    "sentence": "Fern was (   ) reading the old book.",
+    "answer": "quietly",
+    "choices": [
+      "quietly",
+      "quickly",
+      "badly",
+      "angrily"
+    ],
+    "meaning": "静かに。音を立てずに。",
+    "synonym": "silently（静かに）",
+    "antonym": "noisily（うるさく）"
+  },
+  {
+    "jp": "五条は結界を簡単に破った。",
+    "sentence": "Gojo (   ) broke the barrier.",
+    "answer": "easily",
+    "choices": [
+      "easily",
+      "barely",
+      "nervously",
+      "slowly"
+    ],
+    "meaning": "簡単に。難なく。",
+    "synonym": "smoothly（スムーズに）",
+    "antonym": "hardly（ほとんど〜ない）"
+  },
+  {
+    "jp": "ヨルはアーニャのために飲み物を用意した。",
+    "sentence": "Yor (   ) the drinks at the party.",
+    "answer": "served",
+    "choices": [
+      "served",
+      "hid",
+      "forgot",
+      "dropped"
+    ],
+    "meaning": "提供した。振る舞った。",
+    "synonym": "offered（差し出した）",
+    "antonym": "withheld（差し控えた）"
+  },
+  {
+    "jp": "ぼっちは勇気を出してみんなに話しかけた。",
+    "sentence": "Bocchi (   ) up the courage to speak to everyone.",
+    "answer": "built",
+    "choices": [
+      "built",
+      "broke",
+      "left",
+      "ignored"
+    ],
+    "meaning": "築いた。心の中に作った。",
+    "synonym": "developed（育てた）",
+    "antonym": "destroyed（壊した）"
+  },
+  {
+    "jp": "リンは朝日を見ながらコーヒーを飲んだ。",
+    "sentence": "Rin drank her (   ) while watching the sunrise.",
+    "answer": "coffee",
+    "choices": [
+      "coffee",
+      "juice",
+      "tea",
+      "water"
+    ],
+    "meaning": "コーヒー。黒い苦い飲み物。",
+    "synonym": "espresso（エスプレッソ）",
+    "antonym": "milk（ミルク）"
+  },
+  {
+    "jp": "フリーレンは仲間を信頼することにした。",
+    "sentence": "Frieren decided to (   ) her friends.",
+    "answer": "trust",
+    "choices": [
+      "trust",
+      "doubt",
+      "ignore",
+      "forget"
+    ],
+    "meaning": "信頼する。信用する。",
+    "synonym": "believe（信じる）",
+    "antonym": "mistrust（信用しない）"
+  },
+  {
+    "jp": "虎杖は毎日トレーニングをして強くなった。",
+    "sentence": "Yuji got stronger through daily (   ).",
+    "answer": "training",
+    "choices": [
+      "training",
+      "talking",
+      "traveling",
+      "drawing"
+    ],
+    "meaning": "訓練。トレーニング。",
+    "synonym": "practice（練習）",
+    "antonym": "laziness（怠け）"
+  },
+  {
+    "jp": "ロイドは家族を守ろうとした。",
+    "sentence": "Loid tried to (   ) the family.",
+    "answer": "protect",
+    "choices": [
+      "protect",
+      "attack",
+      "ignore",
+      "avoid"
+    ],
+    "meaning": "守る。危険から遠ざける。",
+    "synonym": "guard（守る）",
+    "antonym": "harm（傷つける）"
+  },
+  {
+    "jp": "ぼっちは演奏中にギターの弦を切ってしまった。",
+    "sentence": "Bocchi (   ) a guitar string during the performance.",
+    "answer": "broke",
+    "choices": [
+      "broke",
+      "tuned",
+      "held",
+      "sold"
+    ],
+    "meaning": "壊した。切れた。",
+    "synonym": "snapped（切れた）",
+    "antonym": "fixed（直した）"
+  },
+  {
+    "jp": "なでしこは新しいレシピに挑戦した。",
+    "sentence": "Nadeshiko (   ) a new recipe.",
+    "answer": "tried",
+    "choices": [
+      "tried",
+      "ignored",
+      "refused",
+      "hid"
+    ],
+    "meaning": "試した。挑戦した。",
+    "synonym": "attempted（試みた）",
+    "antonym": "avoided（避けた）"
+  },
+  {
+    "jp": "フリーレンは敵に捕まらなかった。",
+    "sentence": "Frieren was not (   ) by the enemy.",
+    "answer": "caught",
+    "choices": [
+      "caught",
+      "loved",
+      "helped",
+      "respected"
+    ],
+    "meaning": "捕まった。",
+    "synonym": "captured（捕まえられた）",
+    "antonym": "escaped（逃げた）"
+  },
+  {
+    "jp": "五条はいつも生徒を支えている。",
+    "sentence": "Gojo always (   ) his students.",
+    "answer": "supports",
+    "choices": [
+      "supports",
+      "ignores",
+      "criticizes",
+      "fears"
+    ],
+    "meaning": "支えている。応援している。",
+    "synonym": "encourages（励ます）",
+    "antonym": "discourages（やる気をそぐ）"
+  },
+  {
+    "jp": "ヨルはアーニャのためにプレゼントを買った。",
+    "sentence": "Yor (   ) a present for Anya.",
+    "answer": "bought",
+    "choices": [
+      "bought",
+      "lost",
+      "made",
+      "broke"
+    ],
+    "meaning": "買った。お金で得た。",
+    "synonym": "purchased（購入した）",
+    "antonym": "sold（売った）"
+  },
+  {
+    "jp": "ぼっちは自分の気持ちを正直に伝えた。",
+    "sentence": "Bocchi (   ) expressed her feelings.",
+    "answer": "honestly",
+    "choices": [
+      "honestly",
+      "rudely",
+      "loudly",
+      "rarely"
+    ],
+    "meaning": "正直に。うそやごまかしがなく。",
+    "synonym": "truthfully（誠実に）",
+    "antonym": "dishonestly（不正直に）"
+  },
+  {
+    "jp": "なでしこはランチのあとで昼寝をした。",
+    "sentence": "Nadeshiko took a nap (   ) lunch.",
+    "answer": "after",
+    "choices": [
+      "after",
+      "before",
+      "during",
+      "without"
+    ],
+    "meaning": "〜のあとで。時間的な順番を表す。",
+    "synonym": "following（〜の後）",
+    "antonym": "before（〜の前に）"
+  },
+  {
+    "jp": "フリーレンは仲間との時間を大切に思っていた。",
+    "sentence": "Frieren (   ) the time with her companions.",
+    "answer": "valued",
+    "choices": [
+      "valued",
+      "wasted",
+      "forgot",
+      "ignored"
+    ],
+    "meaning": "大切にした。価値を見出した。",
+    "synonym": "appreciated（感謝した）",
+    "antonym": "neglected（軽視した）"
+  },
+  {
+    "jp": "虎杖は学校に遅刻しないように走った。",
+    "sentence": "Yuji ran to school to avoid being (   ).",
+    "answer": "late",
+    "choices": [
+      "late",
+      "early",
+      "tired",
+      "noisy"
+    ],
+    "meaning": "遅れた。間に合わない。",
+    "synonym": "tardy（遅れた）",
+    "antonym": "punctual（時間通り）"
+  },
+  {
+    "jp": "ロイドは会議で冷静に話した。",
+    "sentence": "Loid spoke (   ) at the meeting.",
+    "answer": "calmly",
+    "choices": [
+      "calmly",
+      "angrily",
+      "nervously",
+      "randomly"
+    ],
+    "meaning": "落ち着いて。感情を抑えて。",
+    "synonym": "peacefully（穏やかに）",
+    "antonym": "violently（荒々しく）"
+  },
+  {
+    "jp": "ぼっちは家にひとりで残された。",
+    "sentence": "Bocchi was left (   ) at home.",
+    "answer": "alone",
+    "choices": [
+      "alone",
+      "together",
+      "outside",
+      "early"
+    ],
+    "meaning": "一人で。他に誰もいない状態。",
+    "synonym": "by herself（自分ひとりで）",
+    "antonym": "with others（他の人と一緒に）"
+  },
+  {
+    "jp": "なでしこは朝早く起きて散歩に出かけた。",
+    "sentence": "Nadeshiko woke up (   ) and went for a walk.",
+    "answer": "early",
+    "choices": [
+      "early",
+      "late",
+      "never",
+      "rarely"
+    ],
+    "meaning": "早く。通常より前に。",
+    "synonym": "promptly（即座に）",
+    "antonym": "late（遅く）"
+  },
+  {
+    "jp": "フェルンは小さな声でお礼を言った。",
+    "sentence": "Fern said thank you (   ).",
+    "answer": "softly",
+    "choices": [
+      "softly",
+      "roughly",
+      "loudly",
+      "bravely"
+    ],
+    "meaning": "小さな声で。やさしく。",
+    "synonym": "gently（やさしく）",
+    "antonym": "harshly（荒々しく）"
+  },
+  {
+    "jp": "五条は質問にすぐに答えた。",
+    "sentence": "Gojo (   ) answered the question.",
+    "answer": "quickly",
+    "choices": [
+      "quickly",
+      "slowly",
+      "noisily",
+      "hardly"
+    ],
+    "meaning": "素早く。時間をかけずに。",
+    "synonym": "promptly（即座に）",
+    "antonym": "slowly（ゆっくり）"
+  },
+  {
+    "jp": "ヨルは家の掃除をていねいに行った。",
+    "sentence": "Yor (   ) cleaned the house.",
+    "answer": "carefully",
+    "choices": [
+      "carefully",
+      "wildly",
+      "angrily",
+      "blindly"
+    ],
+    "meaning": "注意深く。気をつけて。",
+    "synonym": "neatly（きちんと）",
+    "antonym": "carelessly（不注意に）"
+  },
+  {
+    "jp": "ぼっちは自分の部屋でギターを練習していた。",
+    "sentence": "Bocchi was practicing her guitar (   ) in her room.",
+    "answer": "alone",
+    "choices": [
+      "alone",
+      "together",
+      "outside",
+      "slowly"
+    ],
+    "meaning": "一人で。他の人なしで。",
+    "synonym": "by herself（自分で）",
+    "antonym": "with others（誰かと一緒に）"
+  },
+  {
+    "jp": "なでしこは笑顔で友達を迎えた。",
+    "sentence": "Nadeshiko (   ) welcomed her friends.",
+    "answer": "happily",
+    "choices": [
+      "happily",
+      "angrily",
+      "sadly",
+      "quietly"
+    ],
+    "meaning": "嬉しそうに。喜びながら。",
+    "synonym": "joyfully（喜んで）",
+    "antonym": "unhappily（不幸そうに）"
+  },
+  {
+    "jp": "フリーレンは静かな森を歩いた。",
+    "sentence": "Frieren walked through the (   ) forest.",
+    "answer": "quiet",
+    "choices": [
+      "quiet",
+      "noisy",
+      "bright",
+      "empty"
+    ],
+    "meaning": "静かな。騒がしくない。",
+    "synonym": "silent（静かな）",
+    "antonym": "loud（うるさい）"
+  },
+  {
+    "jp": "虎杖はすべての答えを正しく書いた。",
+    "sentence": "Yuji wrote all the answers (   ).",
+    "answer": "correctly",
+    "choices": [
+      "correctly",
+      "wrongly",
+      "quickly",
+      "roughly"
+    ],
+    "meaning": "正確に。間違いなく。",
+    "synonym": "accurately（正確に）",
+    "antonym": "incorrectly（間違って）"
+  },
+  {
+    "jp": "ロイドは家族と幸せな時間を過ごした。",
+    "sentence": "Loid spent a (   ) time with his family.",
+    "answer": "happy",
+    "choices": [
+      "happy",
+      "boring",
+      "short",
+      "lonely"
+    ],
+    "meaning": "幸せな。うれしい気持ち。",
+    "synonym": "joyful（楽しい）",
+    "antonym": "sad（悲しい）"
+  },
+  {
+    "jp": "ぼっちはライブ会場をこっそり見に行った。",
+    "sentence": "Bocchi (   ) checked the concert hall.",
+    "answer": "secretly",
+    "choices": [
+      "secretly",
+      "loudly",
+      "happily",
+      "suddenly"
+    ],
+    "meaning": "こっそり。人に知られないように。",
+    "synonym": "quietly（ひっそりと）",
+    "antonym": "openly（公然と）"
+  },
+  {
+    "jp": "なでしこはご飯をすばやく食べ終えた。",
+    "sentence": "Nadeshiko finished her meal (   ).",
+    "answer": "quickly",
+    "choices": [
+      "quickly",
+      "slowly",
+      "roughly",
+      "randomly"
+    ],
+    "meaning": "素早く。スピードがある。",
+    "synonym": "rapidly（急いで）",
+    "antonym": "slowly（ゆっくり）"
+  },
+  {
+    "jp": "フリーレンは長い旅を静かに続けた。",
+    "sentence": "Frieren (   ) continued her long journey.",
+    "answer": "silently",
+    "choices": [
+      "silently",
+      "noisily",
+      "suddenly",
+      "joyfully"
+    ],
+    "meaning": "静かに。音を立てずに。",
+    "synonym": "quietly（しずかに）",
+    "antonym": "loudly（大きな声で）"
+  },
+  {
+    "jp": "五条はすべてを冷静に見ていた。",
+    "sentence": "Gojo observed everything (   ).",
+    "answer": "calmly",
+    "choices": [
+      "calmly",
+      "wildly",
+      "angrily",
+      "awkwardly"
+    ],
+    "meaning": "落ち着いて。穏やかに。",
+    "synonym": "peacefully（穏やかに）",
+    "antonym": "nervously（緊張して）"
+  },
+  {
+    "jp": "ヨルは大切な書類を慎重に持っていた。",
+    "sentence": "Yor (   ) carried the important documents.",
+    "answer": "carefully",
+    "choices": [
+      "carefully",
+      "lazily",
+      "roughly",
+      "quickly"
+    ],
+    "meaning": "慎重に。注意深く。",
+    "synonym": "cautiously（慎重に）",
+    "antonym": "carelessly（不注意に）"
+  },
+  {
+    "jp": "ぼっちはステージの裏でそわそわしていた。",
+    "sentence": "Bocchi was feeling (   ) backstage.",
+    "answer": "nervous",
+    "choices": [
+      "nervous",
+      "happy",
+      "lazy",
+      "bored"
+    ],
+    "meaning": "緊張した。落ち着かない状態。",
+    "synonym": "anxious（不安な）",
+    "antonym": "calm（落ち着いた）"
+  },
+  {
+    "jp": "なでしこは夕日を静かに眺めていた。",
+    "sentence": "Nadeshiko was (   ) watching the sunset.",
+    "answer": "quietly",
+    "choices": [
+      "quietly",
+      "quickly",
+      "loudly",
+      "sadly"
+    ],
+    "meaning": "静かに。音を立てずに。",
+    "synonym": "silently（しずかに）",
+    "antonym": "noisily（騒がしく）"
+  },
+  {
+    "jp": "フリーレンは優しく子供を抱きしめた。",
+    "sentence": "Frieren (   ) hugged the child.",
+    "answer": "gently",
+    "choices": [
+      "gently",
+      "roughly",
+      "quickly",
+      "rudely"
+    ],
+    "meaning": "やさしく。丁寧に。",
+    "synonym": "softly（やわらかく）",
+    "antonym": "harshly（厳しく）"
+  },
+  {
+    "jp": "虎杖は新しい技をすぐに覚えた。",
+    "sentence": "Yuji (   ) learned the new skill.",
+    "answer": "quickly",
+    "choices": [
+      "quickly",
+      "slowly",
+      "lazily",
+      "rarely"
+    ],
+    "meaning": "素早く。時間をかけずに。",
+    "synonym": "promptly（即座に）",
+    "antonym": "gradually（徐々に）"
+  },
+  {
+    "jp": "ロイドは敵の動きをすばやく見抜いた。",
+    "sentence": "Loid (   ) figured out the enemy's move.",
+    "answer": "instantly",
+    "choices": [
+      "instantly",
+      "randomly",
+      "noisily",
+      "slowly"
+    ],
+    "meaning": "即座に。その瞬間に。",
+    "synonym": "immediately（すぐに）",
+    "antonym": "eventually（最終的に）"
+  },
+  {
+    "jp": "ぼっちは新しいバンドにうまくなじんだ。",
+    "sentence": "Bocchi (   ) adapted to the new band.",
+    "answer": "easily",
+    "choices": [
+      "easily",
+      "rarely",
+      "poorly",
+      "roughly"
+    ],
+    "meaning": "簡単に。苦労せずに。",
+    "synonym": "smoothly（スムーズに）",
+    "antonym": "difficultly（困難に）"
+  },
+  {
+    "jp": "なでしこは焚き火を慎重に扱った。",
+    "sentence": "Nadeshiko (   ) handled the campfire.",
+    "answer": "carefully",
+    "choices": [
+      "carefully",
+      "happily",
+      "lazily",
+      "rudely"
+    ],
+    "meaning": "注意深く。気をつけて。",
+    "synonym": "cautiously（慎重に）",
+    "antonym": "carelessly（不注意に）"
+  },
+  {
+    "jp": "フリーレンは古代の呪文を自信たっぷりに唱えた。",
+    "sentence": "Frieren (   ) chanted the ancient spell.",
+    "answer": "confidently",
+    "choices": [
+      "confidently",
+      "nervously",
+      "quietly",
+      "sadly"
+    ],
+    "meaning": "自信を持って。",
+    "synonym": "assuredly（確信を持って）",
+    "antonym": "uncertainly（不安げに）"
+  },
+  {
+    "jp": "五条は戦いの中で冷静さを保っていた。",
+    "sentence": "Gojo remained (   ) during the battle.",
+    "answer": "calm",
+    "choices": [
+      "calm",
+      "angry",
+      "afraid",
+      "sad"
+    ],
+    "meaning": "落ち着いた。",
+    "synonym": "collected（冷静な）",
+    "antonym": "panicked（取り乱した）"
+  },
+  {
+    "jp": "ヨルはアーニャにやさしく微笑んだ。",
+    "sentence": "Yor smiled (   ) at Anya.",
+    "answer": "kindly",
+    "choices": [
+      "kindly",
+      "rudely",
+      "shyly",
+      "coldly"
+    ],
+    "meaning": "やさしく。親しみを持って。",
+    "synonym": "warmly（あたたかく）",
+    "antonym": "coldly（冷たく）"
+  },
+  {
+    "jp": "ぼっちは友達にそっと声をかけた。",
+    "sentence": "Bocchi (   ) spoke to her friend.",
+    "answer": "softly",
+    "choices": [
+      "softly",
+      "rudely",
+      "loudly",
+      "sharply"
+    ],
+    "meaning": "やさしく、小さな声で。",
+    "synonym": "gently（やさしく）",
+    "antonym": "loudly（大きな声で）"
+  },
+  {
+    "jp": "なでしこは夜空をじっと見つめた。",
+    "sentence": "Nadeshiko (   ) stared at the night sky.",
+    "answer": "quietly",
+    "choices": [
+      "quietly",
+      "noisily",
+      "bravely",
+      "randomly"
+    ],
+    "meaning": "静かに。黙って。",
+    "synonym": "silently（静かに）",
+    "antonym": "noisily（騒がしく）"
+  },
+  {
+    "jp": "フリーレンは地図を慎重に調べた。",
+    "sentence": "Frieren (   ) studied the map.",
+    "answer": "carefully",
+    "choices": [
+      "carefully",
+      "rarely",
+      "happily",
+      "suddenly"
+    ],
+    "meaning": "慎重に。注意して。",
+    "synonym": "cautiously（慎重に）",
+    "antonym": "carelessly（不注意に）"
+  },
+  {
+    "jp": "虎杖はまっすぐに敵に向かって走った。",
+    "sentence": "Yuji ran (   ) toward the enemy.",
+    "answer": "directly",
+    "choices": [
+      "directly",
+      "slowly",
+      "lazily",
+      "indirectly"
+    ],
+    "meaning": "まっすぐに。ためらいなく。",
+    "synonym": "straight（まっすぐに）",
+    "antonym": "indirectly（遠回しに）"
+  },
+  {
+    "jp": "ロイドは小さな音にもすぐに気づいた。",
+    "sentence": "Loid (   ) noticed the small sound.",
+    "answer": "immediately",
+    "choices": [
+      "immediately",
+      "gradually",
+      "quietly",
+      "suddenly"
+    ],
+    "meaning": "即座に。すぐに。",
+    "synonym": "instantly（瞬時に）",
+    "antonym": "slowly（ゆっくり）"
+  },
+  {
+    "jp": "ぼっちは勇気を持ってステージに立った。",
+    "sentence": "Bocchi stood on the stage (   ).",
+    "answer": "bravely",
+    "choices": [
+      "bravely",
+      "sadly",
+      "noisily",
+      "weakly"
+    ],
+    "meaning": "勇敢に。おそれずに。",
+    "synonym": "courageously（勇敢に）",
+    "antonym": "fearfully（怖がって）"
+  },
+  {
+    "jp": "なでしこは新しい友達にていねいに話しかけた。",
+    "sentence": "Nadeshiko spoke (   ) to the new friend.",
+    "answer": "politely",
+    "choices": [
+      "politely",
+      "rudely",
+      "loudly",
+      "suddenly"
+    ],
+    "meaning": "ていねいに。礼儀正しく。",
+    "synonym": "respectfully（敬意を持って）",
+    "antonym": "impolitely（失礼に）"
+  },
+  {
+    "jp": "フリーレンはゆっくりと山を下りた。",
+    "sentence": "Frieren went down the mountain (   ).",
+    "answer": "slowly",
+    "choices": [
+      "slowly",
+      "quickly",
+      "loudly",
+      "badly"
+    ],
+    "meaning": "ゆっくりと。スピードを落として。",
+    "synonym": "gently（穏やかに）",
+    "antonym": "quickly（速く）"
+  },
+  {
+    "jp": "五条は軽く肩をすくめてみせた。",
+    "sentence": "Gojo (   ) shrugged his shoulders.",
+    "answer": "lightly",
+    "choices": [
+      "lightly",
+      "heavily",
+      "rudely",
+      "awkwardly"
+    ],
+    "meaning": "軽く。力を入れずに。",
+    "synonym": "gently（やさしく）",
+    "antonym": "forcefully（強く）"
+  },
+  {
+    "jp": "ヨルは不安そうに辺りを見回した。",
+    "sentence": "Yor looked around (   ).",
+    "answer": "nervously",
+    "choices": [
+      "nervously",
+      "bravely",
+      "quietly",
+      "eagerly"
+    ],
+    "meaning": "不安そうに。そわそわと。",
+    "synonym": "anxiously（心配して）",
+    "antonym": "calmly（落ち着いて）"
+  },
+  {
+    "jp": "ぼっちは鏡の前で何度も練習した。",
+    "sentence": "Bocchi practiced many times (   ) the mirror.",
+    "answer": "in front of",
+    "choices": [
+      "in front of",
+      "because of",
+      "next to",
+      "behind"
+    ],
+    "meaning": "〜の前で。",
+    "synonym": "before（〜の前に）",
+    "antonym": "behind（〜の後ろで）"
+  },
+  {
+    "jp": "なでしこは火がつくまでじっと待った。",
+    "sentence": "Nadeshiko waited (   ) the fire lit.",
+    "answer": "until",
+    "choices": [
+      "until",
+      "because",
+      "although",
+      "if"
+    ],
+    "meaning": "〜までずっと。",
+    "synonym": "till（〜まで）",
+    "antonym": "before（〜の前に）"
+  },
+  {
+    "jp": "フリーレンは旅に出る前に仲間と話した。",
+    "sentence": "Frieren talked to her friends (   ) she left.",
+    "answer": "before",
+    "choices": [
+      "before",
+      "after",
+      "while",
+      "until"
+    ],
+    "meaning": "〜する前に。",
+    "synonym": "prior to（〜の前に）",
+    "antonym": "after（〜のあと）"
+  },
+  {
+    "jp": "虎杖は友達が危険だと知ってすぐに動いた。",
+    "sentence": "Yuji acted (   ) he knew his friend was in danger.",
+    "answer": "as soon as",
+    "choices": [
+      "as soon as",
+      "unless",
+      "because",
+      "although"
+    ],
+    "meaning": "〜するとすぐに。",
+    "synonym": "immediately（すぐに）",
+    "antonym": "after a while（しばらくして）"
+  },
+  {
+    "jp": "ロイドは任務が成功することを願っていた。",
+    "sentence": "Loid hoped (   ) the mission would succeed.",
+    "answer": "that",
+    "choices": [
+      "that",
+      "so",
+      "or",
+      "and"
+    ],
+    "meaning": "〜ということ。",
+    "synonym": "in order that（〜するために）",
+    "antonym": "though（〜だけれども）"
+  },
+  {
+    "jp": "ぼっちは人前で演奏するのがこわかったが、挑戦した。",
+    "sentence": "Bocchi played the guitar (   ) she was scared.",
+    "answer": "although",
+    "choices": [
+      "although",
+      "because",
+      "if",
+      "until"
+    ],
+    "meaning": "〜だけれども。",
+    "synonym": "though（〜だが）",
+    "antonym": "because（〜だから）"
+  },
+  {
+    "jp": "なでしこは風が強かったけれど、外で料理をした。",
+    "sentence": "Nadeshiko cooked outside (   ) the wind was strong.",
+    "answer": "even though",
+    "choices": [
+      "even though",
+      "unless",
+      "because",
+      "since"
+    ],
+    "meaning": "〜だけれども。",
+    "synonym": "although（〜だが）",
+    "antonym": "because（〜なので）"
+  },
+  {
+    "jp": "フリーレンは敵が強くても戦いを避けなかった。",
+    "sentence": "Frieren didn't avoid the fight (   ) the enemy was strong.",
+    "answer": "even though",
+    "choices": [
+      "even though",
+      "if",
+      "because",
+      "so"
+    ],
+    "meaning": "〜だけれども。",
+    "synonym": "although（〜だが）",
+    "antonym": "because（〜なので）"
+  },
+  {
+    "jp": "五条はチームが困っていたので助けに来た。",
+    "sentence": "Gojo came to help (   ) his team was in trouble.",
+    "answer": "because",
+    "choices": [
+      "because",
+      "unless",
+      "before",
+      "so"
+    ],
+    "meaning": "〜だから。",
+    "synonym": "since（〜なので）",
+    "antonym": "although（〜だけれども）"
+  },
+  {
+    "jp": "ヨルはアーニャが泣いたのでお菓子をあげた。",
+    "sentence": "Yor gave Anya snacks (   ) she cried.",
+    "answer": "because",
+    "choices": [
+      "because",
+      "until",
+      "if",
+      "though"
+    ],
+    "meaning": "〜だから。",
+    "synonym": "since（〜なので）",
+    "antonym": "although（〜だけれども）"
+  },
+  {
+    "jp": "ぼっちは仲間と練習することに決めた。",
+    "sentence": "Bocchi decided to practice (   ) her bandmates.",
+    "answer": "with",
+    "choices": [
+      "with",
+      "without",
+      "before",
+      "after"
+    ],
+    "meaning": "〜と一緒に。",
+    "synonym": "together with（〜と共に）",
+    "antonym": "alone（ひとりで）"
+  },
+  {
+    "jp": "なでしこはランタンを落としたが、すぐに拾った。",
+    "sentence": "Nadeshiko dropped the lantern (   ) picked it up quickly.",
+    "answer": "and",
+    "choices": [
+      "and",
+      "but",
+      "so",
+      "because"
+    ],
+    "meaning": "そして。つなぎの表現。",
+    "synonym": "then（そして）",
+    "antonym": "but（しかし）"
+  },
+  {
+    "jp": "フリーレンは静かに座って星を見ていた。",
+    "sentence": "Frieren sat (   ) and watched the stars.",
+    "answer": "quietly",
+    "choices": [
+      "quietly",
+      "loudly",
+      "quickly",
+      "roughly"
+    ],
+    "meaning": "静かに。穏やかに。",
+    "synonym": "silently（静かに）",
+    "antonym": "noisily（騒がしく）"
+  },
+  {
+    "jp": "虎杖はもし時間があれば練習を続けたいと言った。",
+    "sentence": "Yuji said he would practice more (   ) he had time.",
+    "answer": "if",
+    "choices": [
+      "if",
+      "because",
+      "until",
+      "so"
+    ],
+    "meaning": "もし〜なら。",
+    "synonym": "in case（〜の場合）",
+    "antonym": "unless（〜でない限り）"
+  },
+  {
+    "jp": "ロイドは秘密の作戦のために早く家を出た。",
+    "sentence": "Loid left home early (   ) the secret mission.",
+    "answer": "for",
+    "choices": [
+      "for",
+      "by",
+      "with",
+      "of"
+    ],
+    "meaning": "〜のために。",
+    "synonym": "in order to（〜するために）",
+    "antonym": "against（〜に反して）"
+  },
+  {
+    "jp": "ぼっちは大きな音にびっくりして転んだ。",
+    "sentence": "Bocchi fell down (   ) the loud noise.",
+    "answer": "because of",
+    "choices": [
+      "because of",
+      "although",
+      "until",
+      "so"
+    ],
+    "meaning": "〜が原因で。",
+    "synonym": "due to（〜のせいで）",
+    "antonym": "regardless of（〜に関係なく）"
+  },
+  {
+    "jp": "なでしこはテントを片付けて、それから朝食を作った。",
+    "sentence": "Nadeshiko cleaned the tent (   ) made breakfast.",
+    "answer": "and",
+    "choices": [
+      "and",
+      "so",
+      "because",
+      "if"
+    ],
+    "meaning": "そして。",
+    "synonym": "then（それから）",
+    "antonym": "but（しかし）"
+  },
+  {
+    "jp": "フリーレンは誰にも気づかれずにそこを離れた。",
+    "sentence": "Frieren left the place (   ) anyone noticed.",
+    "answer": "before",
+    "choices": [
+      "before",
+      "until",
+      "because",
+      "if"
+    ],
+    "meaning": "〜する前に。",
+    "synonym": "prior to（〜の前に）",
+    "antonym": "after（〜の後）"
+  },
+  {
+    "jp": "五条はゆっくりと歩いて現場に到着した。",
+    "sentence": "Gojo (   ) arrived at the scene slowly.",
+    "answer": "finally",
+    "choices": [
+      "finally",
+      "quickly",
+      "roughly",
+      "badly"
+    ],
+    "meaning": "ついに。最終的に。",
+    "synonym": "eventually（最終的に）",
+    "antonym": "suddenly（突然）"
+  },
+  {
+    "jp": "ヨルは急に立ち上がって外に出た。",
+    "sentence": "Yor (   ) stood up and went outside.",
+    "answer": "suddenly",
+    "choices": [
+      "suddenly",
+      "lazily",
+      "softly",
+      "bravely"
+    ],
+    "meaning": "突然に。",
+    "synonym": "abruptly（突然に）",
+    "antonym": "gradually（徐々に）"
+  },
+  {
+    "jp": "ぼっちは突然、演奏を始めた。",
+    "sentence": "Bocchi (   ) began to play the guitar.",
+    "answer": "suddenly",
+    "choices": [
+      "suddenly",
+      "slowly",
+      "quietly",
+      "gently"
+    ],
+    "meaning": "突然に。急に始めること。",
+    "synonym": "abruptly（急に）",
+    "antonym": "gradually（徐々に）"
+  },
+  {
+    "jp": "なでしこは笑顔で友達におにぎりを渡した。",
+    "sentence": "Nadeshiko (   ) gave her friends rice balls.",
+    "answer": "smiling",
+    "choices": [
+      "smiling",
+      "crying",
+      "shouting",
+      "waiting"
+    ],
+    "meaning": "笑いながら。笑顔で。",
+    "synonym": "grinning（にっこり笑って）",
+    "antonym": "frowning（しかめっ面で）"
+  },
+  {
+    "jp": "フリーレンは静かに読書していた。",
+    "sentence": "Frieren was (   ) reading a book.",
+    "answer": "quietly",
+    "choices": [
+      "quietly",
+      "loudly",
+      "angrily",
+      "happily"
+    ],
+    "meaning": "静かに。穏やかに。",
+    "synonym": "silently（静かに）",
+    "antonym": "noisily（騒がしく）"
+  },
+  {
+    "jp": "虎杖は試合で最後まで諦めなかった。",
+    "sentence": "Yuji didn’t give up (   ) the end of the match.",
+    "answer": "until",
+    "choices": [
+      "until",
+      "before",
+      "after",
+      "if"
+    ],
+    "meaning": "〜まで。",
+    "synonym": "up to（〜まで）",
+    "antonym": "from the beginning（最初から）"
+  },
+  {
+    "jp": "ロイドは静かに部屋に入った。",
+    "sentence": "Loid entered the room (   ).",
+    "answer": "quietly",
+    "choices": [
+      "quietly",
+      "noisily",
+      "happily",
+      "angrily"
+    ],
+    "meaning": "静かに。音を立てずに。",
+    "synonym": "silently（静かに）",
+    "antonym": "noisily（騒がしく）"
+  },
+  {
+    "jp": "ぼっちは少しずつ他人と話せるようになった。",
+    "sentence": "Bocchi began to talk to others (   ).",
+    "answer": "gradually",
+    "choices": [
+      "gradually",
+      "suddenly",
+      "instantly",
+      "never"
+    ],
+    "meaning": "徐々に。だんだんと。",
+    "synonym": "slowly（ゆっくり）",
+    "antonym": "suddenly（突然）"
+  },
+  {
+    "jp": "なでしこは楽しそうに料理をしていた。",
+    "sentence": "Nadeshiko was cooking (   ).",
+    "answer": "happily",
+    "choices": [
+      "happily",
+      "angrily",
+      "loudly",
+      "silently"
+    ],
+    "meaning": "嬉しそうに。楽しそうに。",
+    "synonym": "joyfully（喜んで）",
+    "antonym": "sadly（悲しそうに）"
+  },
+  {
+    "jp": "フリーレンは疲れた様子で帰ってきた。",
+    "sentence": "Frieren came back (   ).",
+    "answer": "tiredly",
+    "choices": [
+      "tiredly",
+      "excitedly",
+      "angrily",
+      "quickly"
+    ],
+    "meaning": "疲れて。エネルギーがなくて。",
+    "synonym": "weary（疲れて）",
+    "antonym": "energetically（元気よく）"
+  },
+  {
+    "jp": "五条は嬉しそうに生徒たちを見守った。",
+    "sentence": "Gojo watched his students (   ).",
+    "answer": "happily",
+    "choices": [
+      "happily",
+      "nervously",
+      "quickly",
+      "noisily"
+    ],
+    "meaning": "嬉しそうに。満足して。",
+    "synonym": "joyfully（喜んで）",
+    "antonym": "sadly（悲しそうに）"
+  },
+  {
+    "jp": "ヨルは不器用ながらも料理を頑張った。",
+    "sentence": "Yor tried to cook (   ).",
+    "answer": "awkwardly",
+    "choices": [
+      "awkwardly",
+      "perfectly",
+      "loudly",
+      "gently"
+    ],
+    "meaning": "ぎこちなく。不器用に。",
+    "synonym": "clumsily（不器用に）",
+    "antonym": "smoothly（スムーズに）"
+  },
+  {
+    "jp": "この岩には美しい結晶が含まれていた。",
+    "sentence": "This rock contained beautiful (   ).",
+    "answer": "crystals",
+    "choices": [
+      "crystals",
+      "papers",
+      "leaves",
+      "shells"
+    ],
+    "meaning": "結晶。規則正しい形をした固体。",
+    "synonym": "gems（宝石）",
+    "antonym": "liquids（液体）"
+  },
+  {
+    "jp": "彼は鉱物を集めるのが趣味だ。",
+    "sentence": "He likes to collect (   ).",
+    "answer": "minerals",
+    "choices": [
+      "minerals",
+      "plants",
+      "coins",
+      "stars"
+    ],
+    "meaning": "鉱物。地中から採れる自然の物質。",
+    "synonym": "rocks（岩石）",
+    "antonym": "organics（有機物）"
+  },
+  {
+    "jp": "この鉱石は鉄を多く含んでいる。",
+    "sentence": "This (   ) contains a lot of iron.",
+    "answer": "ore",
+    "choices": [
+      "ore",
+      "gem",
+      "glass",
+      "dust"
+    ],
+    "meaning": "鉱石。金属を含む岩石。",
+    "synonym": "mineral（鉱物）",
+    "antonym": "pure metal（精製金属）"
+  },
+  {
+    "jp": "その宝石は光を反射して輝いていた。",
+    "sentence": "The (   ) was shining brightly.",
+    "answer": "gem",
+    "choices": [
+      "gem",
+      "rock",
+      "coin",
+      "mirror"
+    ],
+    "meaning": "宝石。価値のある美しい石。",
+    "synonym": "jewel（ジュエル）",
+    "antonym": "stone（ただの石）"
+  },
+  {
+    "jp": "鉱山労働者たちは地下で鉱石を採掘した。",
+    "sentence": "The miners dug (   ) from underground.",
+    "answer": "ore",
+    "choices": [
+      "ore",
+      "water",
+      "sand",
+      "fire"
+    ],
+    "meaning": "鉱石。金属を含んだ原石。",
+    "synonym": "mineral（鉱物）",
+    "antonym": "refined metal（精製金属）"
+  },
+  {
+    "jp": "この結晶は六角形の形をしている。",
+    "sentence": "This crystal has a (   ) shape.",
+    "answer": "hexagonal",
+    "choices": [
+      "hexagonal",
+      "square",
+      "round",
+      "flat"
+    ],
+    "meaning": "六角形の。",
+    "synonym": "six-sided（六面の）",
+    "antonym": "irregular（不規則な）"
+  },
+  {
+    "jp": "砂金は川の底で見つかることがある。",
+    "sentence": "Gold dust can be found at the (   ) of a river.",
+    "answer": "bottom",
+    "choices": [
+      "bottom",
+      "top",
+      "side",
+      "surface"
+    ],
+    "meaning": "底。最も低い部分。",
+    "synonym": "base（基部）",
+    "antonym": "top（上部）"
+  },
+  {
+    "jp": "鉱物は地球の内部から作られる。",
+    "sentence": "Minerals are formed inside the (   ).",
+    "answer": "Earth",
+    "choices": [
+      "Earth",
+      "moon",
+      "sky",
+      "cloud"
+    ],
+    "meaning": "地球。私たちが住む惑星。",
+    "synonym": "planet（惑星）",
+    "antonym": "space（宇宙）"
+  },
+  {
+    "jp": "その石は金属のように輝いていた。",
+    "sentence": "The stone (   ) like metal.",
+    "answer": "sparkled",
+    "choices": [
+      "sparkled",
+      "melted",
+      "broke",
+      "sank"
+    ],
+    "meaning": "輝いた。光を放つ。",
+    "synonym": "shined（光った）",
+    "antonym": "dimmed（くすんだ）"
+  },
+  {
+    "jp": "彼女は鉱石の重さをていねいに測った。",
+    "sentence": "She carefully (   ) the weight of the ore.",
+    "answer": "measured",
+    "choices": [
+      "measured",
+      "dropped",
+      "pushed",
+      "rubbed"
+    ],
+    "meaning": "測った。長さや重さを調べる。",
+    "synonym": "checked（確認した）",
+    "antonym": "ignored（無視した）"
+  },
+  {
+    "jp": "私たちはナイアガラの滝を見に行った。",
+    "sentence": "We went to see Niagara (   ).",
+    "answer": "Falls",
+    "choices": [
+      "Falls",
+      "River",
+      "Valley",
+      "Tower"
+    ],
+    "meaning": "滝。大量の水が高い所から落ちる場所。",
+    "synonym": "waterfall（滝）",
+    "antonym": "hill（丘）"
+  },
+  {
+    "jp": "彼はエッフェル塔の前で写真を撮った。",
+    "sentence": "He took a photo in front of the Eiffel (   ).",
+    "answer": "Tower",
+    "choices": [
+      "Tower",
+      "River",
+      "Park",
+      "Gate"
+    ],
+    "meaning": "塔。高くそびえる建造物。",
+    "synonym": "structure（建造物）",
+    "antonym": "ground（地面）"
+  },
+  {
+    "jp": "彼女は旅の間に多くの国を訪れた。",
+    "sentence": "She (   ) many countries during her trip.",
+    "answer": "visited",
+    "choices": [
+      "visited",
+      "watched",
+      "passed",
+      "called"
+    ],
+    "meaning": "訪れた。ある場所に行くこと。",
+    "synonym": "traveled（旅行した）",
+    "antonym": "avoided（避けた）"
+  },
+  {
+    "jp": "彼らはスペインの古い教会を見学した。",
+    "sentence": "They toured an old (   ) in Spain.",
+    "answer": "church",
+    "choices": [
+      "church",
+      "station",
+      "library",
+      "museum"
+    ],
+    "meaning": "教会。宗教的な建物。",
+    "synonym": "cathedral（大聖堂）",
+    "antonym": "factory（工場）"
+  },
+  {
+    "jp": "私の夢はピラミッドを見ることだ。",
+    "sentence": "My dream is to see the (   ).",
+    "answer": "pyramids",
+    "choices": [
+      "pyramids",
+      "tunnels",
+      "temples",
+      "bridges"
+    ],
+    "meaning": "ピラミッド。エジプトの有名な建造物。",
+    "synonym": "monument（記念建造物）",
+    "antonym": "hut（小屋）"
+  },
+  {
+    "jp": "旅行にはパスポートが必要だ。",
+    "sentence": "You need a (   ) to travel abroad.",
+    "answer": "passport",
+    "choices": [
+      "passport",
+      "ticket",
+      "coin",
+      "card"
+    ],
+    "meaning": "パスポート。外国に行くときの証明書。",
+    "synonym": "travel document（渡航書類）",
+    "antonym": "ID card（身分証）"
+  },
+  {
+    "jp": "彼らはハワイで美しいビーチを楽しんだ。",
+    "sentence": "They enjoyed the beautiful (   ) in Hawaii.",
+    "answer": "beach",
+    "choices": [
+      "beach",
+      "mountain",
+      "desert",
+      "market"
+    ],
+    "meaning": "ビーチ。海辺の砂浜。",
+    "synonym": "seashore（海岸）",
+    "antonym": "jungle（ジャングル）"
+  },
+  {
+    "jp": "私たちはアルプス山脈でハイキングをした。",
+    "sentence": "We went hiking in the Alps (   ).",
+    "answer": "mountains",
+    "choices": [
+      "mountains",
+      "rivers",
+      "islands",
+      "fields"
+    ],
+    "meaning": "山々。高い地形。",
+    "synonym": "peaks（山頂）",
+    "antonym": "plains（平野）"
+  },
+  {
+    "jp": "旅先で現地の食べ物を味わった。",
+    "sentence": "We tasted local (   ) during the trip.",
+    "answer": "food",
+    "choices": [
+      "food",
+      "music",
+      "weather",
+      "people"
+    ],
+    "meaning": "食べ物。地域の料理。",
+    "synonym": "cuisine（料理）",
+    "antonym": "drink（飲み物）"
+  },
+  {
+    "jp": "彼はオーストラリアの自然を楽しんだ。",
+    "sentence": "He enjoyed the nature in (   ).",
+    "answer": "Australia",
+    "choices": [
+      "Australia",
+      "Germany",
+      "India",
+      "Canada"
+    ],
+    "meaning": "オーストラリア。国名のひとつ。",
+    "synonym": "continent（大陸）",
+    "antonym": "city（都市）"
+  }
+]

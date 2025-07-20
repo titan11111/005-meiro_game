@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ベアーズ・ラスト・ワード - Bear's Last Word</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- メインメニュー -->
+        <div id="main-menu" class="screen">
+            <div class="menu-content">
+                <h1 class="game-title">ベアーズ・ラスト・ワード</h1>
+                <h2 class="game-subtitle">Bear's Last Word</h2>
+                <div class="bear-intro">
+                    <div class="bear-sprite" id="menu-bear"></div>
+                    <p class="intro-text">可愛いクマのパディを救おう！<br>知識の力で爆弾から守れ！</p>
+                </div>
+                <div class="menu-buttons">
+                    <button class="menu-btn" onclick="startGame()">ゲーム開始</button>
+                    <button class="menu-btn" onclick="showInstructions()">遊び方</button>
+                    <button class="menu-btn" onclick="showHighScores()">ランキング</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 説明画面 -->
+        <div id="instructions" class="screen hidden">
+            <div class="instructions-content">
+                <h2>遊び方</h2>
+                <div class="instruction-item">
+                    <h3>🎯 目的</h3>
+                    <p>爆弾につながれたテディベアのパディを救おう！</p>
+                </div>
+                <div class="instruction-item">
+                    <h3>⏰ ルール</h3>
+                    <p>・制限時間内にクイズに答えよう<br>
+                       ・正解すると時間が延長される<br>
+                       ・不正解でライフが減る<br>
+                       ・ライフが0になるかタイマーが0になるとゲームオーバー</p>
+                </div>
+                <div class="instruction-item">
+                    <h3>💡 ヒント</h3>
+                    <p>・時間停止：タイマーを一時停止<br>
+                       ・50/50：選択肢を2つに絞る<br>
+                       ・スキップ：問題をスキップ</p>
+                </div>
+                <button class="back-btn" onclick="showMainMenu()">戻る</button>
+            </div>
+        </div>
+
+        <!-- ランキング画面 -->
+        <div id="high-scores" class="screen hidden">
+            <div class="scores-content">
+                <h2>ランキング</h2>
+                <div id="scores-list" class="scores-list">
+                    <!-- スコアがここに表示される -->
+                </div>
+                <button class="back-btn" onclick="showMainMenu()">戻る</button>
+            </div>
+        </div>
+
+        <!-- ゲーム画面 -->
+        <div id="game-screen" class="screen hidden">
+            <!-- ゲームヘッダー -->
+            <div class="game-header">
+                <div class="life-container">
+                    <span class="label">ライフ:</span>
+                    <div id="life-hearts" class="life-hearts">
+                        <span class="heart">❤️</span>
+                        <span class="heart">❤️</span>
+                        <span class="heart">❤️</span>
+                    </div>
+                </div>
+                <div class="score-container">
+                    <span class="label">スコア:</span>
+                    <span id="score">0</span>
+                </div>
+                <div class="stage-container">
+                    <span class="label">ステージ:</span>
+                    <span id="stage">1</span>
+                </div>
+            </div>
+
+            <!-- タイマーと爆弾 -->
+            <div class="timer-section">
+                <div class="bomb-container">
+                    <div class="bomb">💣</div>
+                    <div class="fuse"></div>
+                </div>
+                <div class="timer-container">
+                    <div id="timer-bar" class="timer-bar">
+                        <div id="timer-fill" class="timer-fill"></div>
+                    </div>
+                    <div id="timer-text" class="timer-text">30</div>
+                </div>
+            </div>
+
+            <!-- メインゲームエリア -->
+            <div class="game-main">
+                <!-- クマのキャラクター -->
+                <div class="bear-section">
+                    <div class="bear-sprite" id="game-bear"></div>
+                    <div id="bear-speech" class="bear-speech hidden">
+                        <p id="bear-message">助けて！</p>
+                    </div>
+                </div>
+
+                <!-- クイズセクション -->
+                <div class="quiz-section">
+                    <div id="question-container" class="question-container">
+                        <h3 id="question">問題がここに表示されます</h3>
+                    </div>
+                    <div id="answers-container" class="answers-container">
+                        <!-- 選択肢がここに表示される -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- ヒントボタン -->
+            <div class="hints-section">
+                <button id="hint-freeze" class="hint-btn" onclick="useHint('freeze')" title="時間停止">
+                    ⏸️ <span id="freeze-count">3</span>
+                </button>
+                <button id="hint-fifty" class="hint-btn" onclick="useHint('fifty')" title="50/50">
+                    🎯 <span id="fifty-count">3</span>
+                </button>
+                <button id="hint-skip" class="hint-btn" onclick="useHint('skip')" title="スキップ">
+                    ⏭️ <span id="skip-count">2</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ゲームオーバー画面 -->
+        <div id="game-over" class="screen hidden">
+            <div class="game-over-content">
+                <h2 id="game-over-title">ゲームオーバー</h2>
+                <div class="bear-sprite sad" id="game-over-bear"></div>
+                <div id="game-over-message" class="game-over-message">
+                    <p>パディを救えませんでした...</p>
+                </div>
+                <div class="final-score">
+                    <h3>最終スコア: <span id="final-score">0</span></h3>
+                    <p>ステージ: <span id="final-stage">1</span></p>
+                </div>
+                <div class="game-over-buttons">
+                    <button class="menu-btn" onclick="restartGame()">もう一度</button>
+                    <button class="menu-btn" onclick="showMainMenu()">メニューに戻る</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 勝利画面 -->
+        <div id="victory" class="screen hidden">
+            <div class="victory-content">
+                <h2>おめでとう！</h2>
+                <div class="bear-sprite happy" id="victory-bear"></div>
+                <div class="victory-message">
+                    <p>パディを無事に救出しました！</p>
+                    <p>あなたの知識がパディの命を救いました！</p>
+                </div>
+                <div class="final-score">
+                    <h3>最終スコア: <span id="victory-score">0</span></h3>
+                    <p>クリアステージ: <span id="victory-stage">10</span></p>
+                </div>
+                <div class="victory-buttons">
+                    <button class="menu-btn" onclick="restartGame()">もう一度</button>
+                    <button class="menu-btn" onclick="showMainMenu()">メニューに戻る</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

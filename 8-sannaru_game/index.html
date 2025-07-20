@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>化学研究所見習いクエスト</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="game-header">
+      <h1>🧪 化学研究所見習いクエスト 🧪</h1>
+      <p>見習い化学者として、pHの秘密を解き明かそう！</p>
+    </div>
+
+    <div id="startScreen" class="screen">
+      <div class="story-intro">
+        <div class="character">
+          <p class="character-face">👨‍🔬</p>
+        </div>
+        <div class="story-text">
+          <h2>🏛️ 化学研究所へようこそ！</h2>
+          <p>あなたは今日から化学研究所の見習い研究員です！</p>
+          <p>先輩研究員の<span class="highlight">田中博士</span>と一緒に、<br>様々な物質のpH値を測定する実験を行います。</p>
+          <p>正解を重ねるごとに、あなたの研究レベルが上がり、<br>より高度な実験に挑戦できるようになります！</p>
+        </div>
+        <div class="level-info">
+          <p>🎯 <strong>目標:</strong> 見習い研究員から主任研究員へ！</p>
+          <p>📊 <strong>システム:</strong> 連続正解でレベルアップ！</p>
+        </div>
+      </div>
+      <button id="startButton" class="start-button">🔬 実験開始！</button>
+    </div>
+
+    <div id="gameScreen" class="screen hidden">
+      <div class="lab-header">
+        <div class="level-display">
+          <p class="level-title">レベル <span id="currentLevel">1</span></p>
+          <p class="level-name" id="levelName">見習い研究員</p>
+        </div>
+        <div class="progress-info">
+          <p class="question-number">実験課題 <span id="questionNum">1</span></p>
+          <p class="score">正解数: <span id="score">0</span></p>
+          <p class="streak">連続正解: <span id="streak">0</span> 🔥</p>
+        </div>
+      </div>
+
+      <div class="lab-environment">
+        <div class="character">
+          <p id="characterFace" class="character-face">👨‍🔬</p>
+        </div>
+        
+        <div class="experiment-area">
+          <div class="test-tube">
+            <div class="liquid" id="liquidColor"></div>
+            <p class="test-tube-label" id="questionText"></p>
+          </div>
+          
+          <div class="ph-meter">
+            <div class="meter-display">
+              <span class="ph-value" id="phValue">pH ?</span>
+            </div>
+            <div class="meter-needle" id="meterNeedle"></div>
+          </div>
+        </div>
+
+        <div class="question-area">
+          <h2>🧪 この物質のpH値を予測してください</h2>
+          <p class="experiment-context" id="experimentContext"></p>
+        </div>
+      </div>
+      
+      <div class="button-area">
+        <button class="choice-button acid-button" data-answer="酸性">🧪 酸性 (pH < 7)</button>
+        <button class="choice-button neutral-button" data-answer="中性">⚖️ 中性 (pH = 7)</button>
+        <button class="choice-button alkali-button" data-answer="アルカリ性">🔬 アルカリ性 (pH > 7)</button>
+      </div>
+
+      <div id="feedback" class="feedback hidden">
+        <div class="feedback-content">
+          <p id="feedbackText"></p>
+          <div class="level-up-notification" id="levelUpNotification" style="display: none;">
+            <h3>🎉 レベルアップ！ 🎉</h3>
+            <p id="levelUpMessage"></p>
+          </div>
+        </div>
+        <button id="nextButton" class="next-button">次の実験へ</button>
+      </div>
+    </div>
+
+    <div id="resultScreen" class="screen hidden">
+      <div class="final-report">
+        <h2 id="resultTitle">📋 実験レポート</h2>
+        <div class="character">
+          <p id="resultCharacter" class="character-face"></p>
+        </div>
+        <div class="result-details">
+          <div class="final-stats">
+            <p>最終レベル: <span id="finalLevel">1</span></p>
+            <p>正解数: <span id="finalScore">0</span> / 10 問</p>
+            <p>最大連続正解: <span id="finalStreak">0</span> 🔥</p>
+          </div>
+          <p id="resultMessage"></p>
+          <div class="achievement-badge" id="achievementBadge"></div>
+        </div>
+      </div>
+      <button id="restartButton" class="start-button">🔬 新しい実験を始める</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

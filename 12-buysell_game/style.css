@@ -1,0 +1,856 @@
+/* 全体のスタイル */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    min-height: 100vh;
+    color: #fff;
+    overflow-x: hidden;
+    /* スマホでのスクロール改善 */
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
+}
+
+.game-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ヘッダー */
+.game-header {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.game-header h1 {
+    font-size: 2em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.status-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    font-size: 1em;
+}
+
+.status-bar span {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+    padding: 8px 12px;
+    white-space: nowrap;
+}
+
+/* メインコンテンツ */
+.game-main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 5px;
+}
+
+/* フェーズコンテナ */
+.phase-container {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(5px);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 15px;
+    display: none;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.phase-container.active {
+    display: flex;
+}
+
+.phase-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #a8dadc;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    font-size: 1.5em;
+}
+
+/* ゲームメッセージ */
+.game-message {
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-weight: bold;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    display: none;
+    animation: fadeInOut 3s forwards;
+    z-index: 1000;
+    font-size: 1.1em;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* Seller/Customer Info */
+.seller-info, .customer-info {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    gap: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.seller-portrait, .customer-portrait {
+    width: 80px;
+    height: 80px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 3em;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.customer-portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.seller-details, .customer-details {
+    flex-grow: 1;
+}
+
+.seller-details h3, .customer-details h3 {
+    margin-bottom: 8px;
+    color: #8be9fd;
+    font-size: 1.2em;
+}
+
+.seller-details p, .customer-details p {
+    font-size: 1em;
+    color: #f8f8f2;
+    line-height: 1.4;
+}
+
+/* Item Offer */
+.item-offer {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.item-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.item-icon {
+    font-size: 4em;
+    margin-bottom: 15px;
+}
+
+.item-offer h4 {
+    margin-bottom: 8px;
+    color: #ffb86c;
+    font-size: 1.3em;
+}
+
+.item-offer p {
+    font-size: 1em;
+    color: #f8f8f2;
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.offer-price {
+    font-size: 1.4em;
+    font-weight: bold;
+    color: #50fa7b;
+}
+
+/* Buttons - タッチしやすいサイズに調整 */
+.negotiation-buttons, .display-buttons, .action-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.choice-btn, .display-btn, .action-btn, .next-btn {
+    background: #44475a;
+    color: #f8f8f2;
+    border: none;
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.1s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    /* タッチ対応の改善 */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 50px;
+}
+
+.choice-btn:hover, .display-btn:hover, .action-btn:hover, .next-btn:hover {
+    background: #6272a4;
+    transform: translateY(-2px);
+}
+
+.choice-btn:active, .display-btn:active, .action-btn:active, .next-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Specific button styles */
+.choice-btn.kind { background: #50fa7b; color: #333; }
+.choice-btn.kind:hover { background: #69ff8e; }
+.choice-btn.neutral { background: #8be9fd; color: #333; }
+.choice-btn.neutral:hover { background: #a8ffff; }
+.choice-btn.strict { background: #ff79c6; color: #333; }
+.choice-btn.strict:hover { background: #ff92d1; }
+.choice-btn.skip { background: #bd93f9; }
+.choice-btn.skip:hover { background: #cc99ff; }
+
+.display-btn.active {
+    background: #ffb86c;
+    color: #333;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.next-btn {
+    background: #ff79c6;
+    display: block;
+    width: 100%;
+    margin: 0 auto;
+    max-width: 300px;
+}
+
+/* Display Phase */
+.display-area {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex-grow: 1;
+    margin-bottom: 20px;
+}
+
+.inventory-section, .shop-section {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+}
+
+.inventory-section h3, .shop-section h3 {
+    text-align: center;
+    margin-bottom: 15px;
+    color: #f1fa8c;
+    font-size: 1.2em;
+}
+
+.inventory-grid, .shop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 5px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.inventory-item, .shop-item {
+    background: #44475a;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 100px;
+    /* タッチ対応 */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.inventory-item:hover, .shop-item:hover {
+    background: #6272a4;
+    transform: translateY(-2px);
+}
+
+.inventory-item h4, .shop-item h4 {
+    font-size: 0.9em;
+    margin: 5px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.inventory-item .item-icon, .shop-item .item-icon {
+    font-size: 2em;
+    margin-bottom: 5px;
+}
+
+.inventory-item .price, .shop-item .price, .inventory-item .current-sell-price {
+    font-size: 0.8em;
+    color: #f8f8f2;
+}
+
+/* Price Setting Section */
+.price-setting-section {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    display: none;
+}
+
+.price-setting-section h3 {
+    text-align: center;
+    color: #f1fa8c;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+}
+
+.price-setting-items {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 5px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.price-item {
+    background: #44475a;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.price-item-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.price-item-icon {
+    font-size: 1.5em;
+}
+
+.price-item-name {
+    font-weight: bold;
+    color: #8be9fd;
+    font-size: 1.1em;
+}
+
+.price-item-info {
+    font-size: 0.9em;
+    color: #f8f8f2;
+    line-height: 1.4;
+}
+
+.price-input-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.price-input-area input[type="number"] {
+    width: 100px;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #6272a4;
+    background: #282a36;
+    color: #f8f8f2;
+    font-size: 1em;
+}
+
+.price-preset-btn {
+    background: #6272a4;
+    color: #f8f8f2;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.price-preset-btn:hover {
+    background: #8be9fd;
+    color: #333;
+}
+
+/* Sell Phase Specific Styles */
+.shop-preview-sell-phase {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.shop-preview-sell-phase h3 {
+    text-align: center;
+    margin-bottom: 15px;
+    color: #f1fa8c;
+    font-size: 1.2em;
+}
+
+/* Result Phase */
+.daily-results {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.result-item {
+    background: #44475a;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.1em;
+}
+
+.result-item span:first-child {
+    color: #f8f8f2;
+}
+.result-item span:last-child {
+    font-weight: bold;
+    color: #50fa7b;
+}
+
+.result-item.profit span:last-child {
+    color: #ff79c6;
+}
+
+.news-section {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.news-section h3 {
+    color: #f1fa8c;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+}
+
+.news-section p {
+    font-style: italic;
+    color: #f8f8f2;
+    line-height: 1.4;
+    font-size: 1em;
+}
+
+/* Footer */
+.game-footer {
+    text-align: center;
+    padding: 15px;
+    font-size: 0.9em;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: auto;
+}
+
+/* モーダルウィンドウ */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #282a36;
+    margin: 10% auto;
+    padding: 30px;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-content h2 {
+    color: #f1fa8c;
+    margin-bottom: 15px;
+    font-size: 1.8em;
+}
+
+.modal-content p {
+    color: #f8f8f2;
+    margin-bottom: 20px;
+    font-size: 1.1em;
+    line-height: 1.4;
+}
+
+.modal-content button {
+    background-color: #50fa7b;
+    color: #333;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.modal-content button:hover {
+    background-color: #69ff8e;
+}
+
+/* タブレット対応 (481px - 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+    .game-header h1 {
+        font-size: 2.2em;
+    }
+    
+    .status-bar {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+    
+    .negotiation-buttons, .display-buttons {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .display-area {
+        flex-direction: row;
+        gap: 20px;
+    }
+    
+    .inventory-section, .shop-section {
+        flex: 1;
+        max-height: 300px;
+    }
+    
+    .inventory-grid, .shop-grid {
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    }
+    
+    .price-setting-items {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .daily-results {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* スマートフォン対応 (480px以下) */
+@media (max-width: 480px) {
+    .game-container {
+        padding: 5px;
+    }
+    
+    .game-header {
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+    
+    .game-header h1 {
+        font-size: 1.8em;
+        margin-bottom: 8px;
+    }
+    
+    .status-bar {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        font-size: 0.9em;
+    }
+    
+    .status-bar span {
+        padding: 6px 8px;
+        font-size: 0.8em;
+    }
+    
+    .phase-container {
+        padding: 15px;
+        margin-bottom: 10px;
+    }
+    
+    .phase-container h2 {
+        font-size: 1.3em;
+        margin-bottom: 15px;
+    }
+    
+    .seller-info, .customer-info {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+        gap: 10px;
+    }
+    
+    .seller-portrait, .customer-portrait {
+        width: 60px;
+        height: 60px;
+        font-size: 2.5em;
+    }
+    
+    .seller-details h3, .customer-details h3 {
+        font-size: 1.1em;
+        margin-bottom: 5px;
+    }
+    
+    .seller-details p, .customer-details p {
+        font-size: 0.9em;
+    }
+    
+    .item-card {
+        flex-direction: row;
+        align-items: center;
+        gap: 15px;
+        text-align: left;
+    }
+    
+    .item-icon {
+        font-size: 3em;
+        margin-bottom: 0;
+        flex-shrink: 0;
+    }
+    
+    .item-offer h4 {
+        font-size: 1.1em;
+        margin-bottom: 5px;
+    }
+    
+    .item-offer p {
+        font-size: 0.9em;
+        margin-bottom: 8px;
+    }
+    
+    .offer-price {
+        font-size: 1.2em;
+    }
+    
+    .choice-btn, .display-btn, .action-btn, .next-btn {
+        padding: 14px 16px;
+        font-size: 1em;
+        min-height: 48px;
+    }
+    
+    .inventory-grid, .shop-grid {
+        grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+        gap: 8px;
+    }
+    
+    .inventory-item, .shop-item {
+        padding: 10px;
+        min-height: 90px;
+    }
+    
+    .inventory-item .item-icon, .shop-item .item-icon {
+        font-size: 1.8em;
+    }
+    
+    .inventory-item h4, .shop-item h4 {
+        font-size: 0.8em;
+    }
+    
+    .inventory-item .price, .shop-item .price {
+        font-size: 0.7em;
+    }
+    
+    .price-item {
+        padding: 12px;
+    }
+    
+    .price-item-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .price-input-area {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .price-input-area input[type="number"] {
+        width: 100%;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 5% auto;
+        padding: 20px;
+    }
+    
+    .modal-content h2 {
+        font-size: 1.5em;
+    }
+    
+    .modal-content p {
+        font-size: 1em;
+    }
+}
+
+/* 横向きスマホ対応 (480px以下かつ横向き) */
+@media (max-width: 768px) and (orientation: landscape) and (max-height: 480px) {
+    .game-header {
+        padding: 5px;
+        margin-bottom: 5px;
+    }
+    
+    .game-header h1 {
+        font-size: 1.4em;
+        margin-bottom: 5px;
+    }
+    
+    .status-bar {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 5px;
+        font-size: 0.8em;
+    }
+    
+    .status-bar span {
+        padding: 3px 6px;
+        font-size: 0.7em;
+    }
+    
+    .phase-container {
+        padding: 10px;
+    }
+    
+    .phase-container h2 {
+        font-size: 1.2em;
+        margin-bottom: 10px;
+    }
+    
+    .display-area {
+        flex-direction: row;
+        gap: 10px;
+    }
+    
+    .inventory-section, .shop-section {
+        flex: 1;
+        max-height: 200px;
+        padding: 10px;
+    }
+    
+    .inventory-section h3, .shop-section h3 {
+        font-size: 1em;
+        margin-bottom: 8px;
+    }
+    
+    .inventory-grid, .shop-grid {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 5px;
+    }
+    
+    .inventory-item, .shop-item {
+        padding: 8px;
+        min-height: 80px;
+    }
+    
+    .inventory-item .item-icon, .shop-item .item-icon {
+        font-size: 1.5em;
+    }
+    
+    .choice-btn, .display-btn, .action-btn {
+        padding: 10px 12px;
+        font-size: 0.9em;
+        min-height: 40px;
+    }
+    
+    .negotiation-buttons, .display-buttons {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+    
+    .item-card {
+        flex-direction: row;
+        gap: 10px;
+    }
+    
+    .item-icon {
+        font-size: 2.5em;
+    }
+}

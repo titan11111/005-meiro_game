@@ -1,0 +1,527 @@
+/* リセットCSS */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: #333;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+header {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 20px;
+  border-radius: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+  font-size: 2em;
+  color: #4a5568;
+  margin-bottom: 10px;
+}
+
+header p {
+  color: #666;
+  font-size: 1.1em;
+}
+
+.game-area {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 15px;
+  background: #f7fafc;
+  border-radius: 10px;
+  border: 2px solid #e2e8f0;
+}
+
+.score, .remaining {
+  font-weight: bold;
+  font-size: 1.1em;
+  color: #4a5568;
+}
+
+.score span {
+  color: #38a169;
+}
+
+.remaining span {
+  color: #3182ce;
+}
+
+/* 統計情報コンテナ */
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 2px solid #e2e8f0;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 8px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.stat-label {
+  font-size: 0.8em;
+  color: #666;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+
+.stat-value {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #4a5568;
+}
+
+/* 感情バー */
+.emotion-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 10px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 2px solid #e2e8f0;
+}
+
+.emotion-label {
+  font-size: 0.9em;
+  font-weight: bold;
+  color: #4a5568;
+  white-space: nowrap;
+}
+
+.emotion-progress {
+  flex: 1;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.emotion-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38a169 0%, #3182ce 50%, #e53e3e 100%);
+  border-radius: 4px;
+  transition: width 0.5s ease, left 0.5s ease, background 0.5s;
+  width: 50%;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 最終統計情報 */
+.final-stats {
+  margin-top: 20px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 1.1em;
+}
+
+.stat-row:last-child {
+  margin-bottom: 0;
+}
+
+.rating-title {
+  font-size: 1.8em;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.rating-description {
+  font-size: 1.1em;
+  margin-bottom: 15px;
+  opacity: 0.9;
+}
+
+.consultation-card {
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 15px;
+  padding: 25px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.visitor-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.visitor-icon {
+  font-size: 2.5em;
+  margin-right: 15px;
+  background: #f7fafc;
+  padding: 10px;
+  border-radius: 50%;
+  border: 2px solid #e2e8f0;
+}
+
+.visitor-name {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #4a5568;
+}
+
+.consultation-text {
+  font-size: 1.2em;
+  line-height: 1.8;
+  color: #2d3748;
+  background: #f8fafc;
+  padding: 20px;
+  border-radius: 10px;
+  border-left: 4px solid #667eea;
+}
+
+.advice-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.advice-btn {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 18px 25px;
+  border-radius: 12px;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+  font-weight: bold;
+}
+
+.advice-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(102, 126, 234, 0.4);
+}
+
+.advice-btn:active {
+  transform: translateY(0);
+}
+
+.result {
+  text-align: center;
+  padding: 25px;
+  border-radius: 15px;
+  margin-bottom: 20px;
+}
+
+.result.success {
+  background: linear-gradient(135deg, #48bb78, #38a169);
+  color: white;
+}
+
+.result.failure {
+  background: linear-gradient(135deg, #f56565, #e53e3e);
+  color: white;
+}
+
+.result-text {
+  font-size: 1.4em;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.result-message {
+  font-size: 1.1em;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.next-btn, .restart-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: bold;
+}
+
+.next-btn:hover, .restart-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.game-over {
+  text-align: center;
+  padding: 40px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-radius: 15px;
+}
+
+.game-over h2 {
+  font-size: 2.2em;
+  margin-bottom: 20px;
+}
+
+.final-score {
+  font-size: 1.6em;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.rating {
+  font-size: 1.3em;
+  margin-bottom: 30px;
+  color: #ffd700;
+}
+
+.restart-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 15px 40px;
+  font-size: 1.2em;
+}
+
+.hidden {
+  display: none;
+}
+
+/* アニメーション */
+@keyframes levelUpAnimation {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes comboAnimation {
+  0% {
+    transform: translateX(-50%) scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes failureShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+/* コンボ時のボタンエフェクト */
+.advice-btn.combo-active {
+  animation: comboGlow 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes comboGlow {
+  from {
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+  }
+  to {
+    box-shadow: 0 4px 20px rgba(255, 107, 107, 0.6);
+  }
+}
+
+/* スマホ対応 */
+@media (max-width: 768px) {
+  .container {
+      padding: 10px;
+  }
+  
+  header h1 {
+      font-size: 1.5em;
+  }
+  
+  header p {
+      font-size: 1em;
+  }
+  
+  .game-area {
+      padding: 20px;
+  }
+  
+  .status-bar {
+      flex-direction: column;
+      gap: 10px;
+      text-align: center;
+  }
+  
+  .stats-container {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      padding: 10px;
+  }
+  
+  .stat-item {
+      padding: 6px;
+  }
+  
+  .stat-label {
+      font-size: 0.7em;
+  }
+  
+  .stat-value {
+      font-size: 1em;
+  }
+  
+  .emotion-bar {
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px;
+  }
+  
+  .emotion-label {
+      font-size: 0.8em;
+  }
+  
+  .emotion-progress {
+      height: 6px;
+  }
+  
+  .consultation-card {
+      padding: 20px;
+  }
+  
+  .visitor-info {
+      flex-direction: column;
+      text-align: center;
+  }
+  
+  .visitor-icon {
+      margin-right: 0;
+      margin-bottom: 10px;
+  }
+  
+  .consultation-text {
+      font-size: 1.1em;
+      padding: 15px;
+  }
+  
+  .advice-btn {
+      padding: 15px 20px;
+      font-size: 1em;
+  }
+  
+  .result-text {
+      font-size: 1.2em;
+  }
+  
+  .result-message {
+      font-size: 1em;
+  }
+  
+  .game-over h2 {
+      font-size: 1.8em;
+  }
+  
+  .final-score {
+      font-size: 1.4em;
+  }
+  
+  .rating {
+      font-size: 1.1em;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+      padding: 5px;
+  }
+  
+  header {
+      padding: 15px;
+  }
+  
+  .game-area {
+      padding: 15px;
+  }
+  
+  .consultation-card {
+      padding: 15px;
+  }
+  
+  .advice-btn {
+      padding: 12px 15px;
+      font-size: 0.9em;
+  }
+}

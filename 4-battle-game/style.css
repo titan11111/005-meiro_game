@@ -1,0 +1,623 @@
+/* style.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Press Start 2P', cursive, 'Arial', sans-serif; /* ピクセルフォントを優先 */
+  background: #2a2a3a; /* 全体を暗めの背景に */
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #f0f0f0;
+  position: relative;
+  overflow: hidden; /* 背景の擬似要素がはみ出さないように */
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxyY3Qgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMmYyZjNmIi8+CiAgICA8Y2lyY2xlIGN4PSIxMCIgY3k9IjEwIiByPSIwLjUiIGZpbGw9IiMzOTM5NDkiLz4KPC9zdmc+') repeat, /* ドットパターン */
+    linear-gradient(135deg, #1e1e2e, #1a1a2a, #161626); /* 暗いグラデーション */
+  background-size: 10px 10px, cover; /* ドットのサイズ調整 */
+  z-index: -1;
+  opacity: 0.8; /* 背景の透明度 */
+}
+
+.game-container {
+  max-width: 960px; /* UI画像に合わせて最大幅を広げる */
+  width: 95%;
+  background: #0d0d1a; /* UI画像のような非常に暗い背景 */
+  border-radius: 8px; /* 角を少し丸く */
+  padding: 20px 30px; /* パディング調整 */
+  box-shadow:
+    0 0 0 2px #4a3c3c, /* 外側の細い枠 */
+    0 0 0 4px #2a2a2a, /* その外側の濃い枠 */
+    0 0 0 6px #1a1a1a, /* 最外枠 */
+    0 10px 30px rgba(0, 0, 0, 0.7); /* 影 */
+  max-height: 98vh; /* 画面の高さによりフィットさせるため、95vhから98vhに調整 */
+  overflow-y: auto; /* 必要に応じてスクロールバーを表示 */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* 要素を上下に均等配置 */
+  align-items: center;
+  border: 1px solid #4a3c3c; /* 最も内側の枠 */
+  image-rendering: pixelated; /* ピクセルアートがぼやけないように */
+  gap: 15px; /* 各主要セクション間のスペースを制御 */
+}
+
+/* スクロールバーのスタイル（UIに合わせるため） */
+.game-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+.game-container::-webkit-scrollbar-track {
+  background: #1a1a2a;
+  border-radius: 5px;
+}
+
+.game-container::-webkit-scrollbar-thumb {
+  background: #5a5a6a;
+  border-radius: 5px;
+}
+
+.game-container::-webkit-scrollbar-thumb:hover {
+  background: #7a7a8a;
+}
+
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px; /* 少し縮小 */
+  font-size: 2.2em; /* UI画像に合わせて大きく */
+  color: #c0c0d0; /* UI画像のような少し青みがかった白 */
+  font-weight: normal; /* 太さをなくす */
+  text-shadow:
+    1px 1px 0 #000,
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    2px 2px 5px rgba(0, 0, 0, 0.7); /* ピクセルフォントのような影 */
+  letter-spacing: 2px; /* 文字間隔 */
+}
+
+#start-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  text-align: center;
+  padding: 30px 20px; /* パディング調整 */
+}
+
+#start-screen h1 {
+  font-size: 3.5em; /* さらに大きく */
+  margin-bottom: 25px; /* 少し縮小 */
+  background: none; /* グラデーション背景を削除 */
+  -webkit-text-fill-color: inherit; /* 透明なテキスト色を解除 */
+  color: #e0e0f0; /* 白に近い色に */
+  text-shadow:
+    2px 2px 0 #000,
+    -2px -2px 0 #000,
+    2px -2px 0 #000,
+    -2px 2px 0 #000,
+    4px 4px 10px rgba(0, 0, 0, 0.8); /* 強めの影 */
+  letter-spacing: 4px;
+}
+
+#start-screen p {
+  font-size: 1.3em; /* 少し縮小 */
+  margin-bottom: 30px; /* 少し縮小 */
+  color: #a0a0a0;
+  text-shadow: 1px 1px 0 #000;
+}
+
+#start-button {
+  padding: 18px 45px; /* 少し縮小 */
+  font-size: 1.6em; /* 少し縮小 */
+  font-weight: bold;
+  background: linear-gradient(180deg, #606070, #404050); /* 暗めのメタリック調 */
+  color: #e0e0e0;
+  border: 2px solid #9090a0; /* 明るい枠線 */
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 5px 15px rgba(0, 0, 0, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 1px 1px 0 #000;
+}
+
+#start-button:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, #707080, #505060);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 7px 20px rgba(0, 0, 0, 0.6);
+}
+
+#game-content {
+  width: 100%;
+  display: flex; /* Flexbox を使用 */
+  flex-direction: column; /* 縦方向に並べる */
+  justify-content: space-between; /* 要素を均等に配置 */
+  flex-grow: 1; /* 親要素の高さを埋める */
+}
+
+.character-info {
+  display: flex;
+  align-items: center;
+  margin: 15px 0; /* マージンを削減 */
+  padding: 12px 18px; /* パディングを削減 */
+  background: #1a1a2a; /* UI画像のような濃い背景 */
+  border-radius: 6px;
+  border: 1px solid #4a3c3c; /* 細い枠線 */
+  box-shadow:
+    inset 0 0 0 1px #5a4c4c, /* 内側の細い線 */
+    0 5px 15px rgba(0, 0, 0, 0.4);
+}
+
+.player-info {
+  justify-content: flex-start;
+  border-color: #4a3c3c; /* 共通の枠線色 */
+}
+
+.enemy-info {
+  justify-content: flex-end;
+  flex-direction: row-reverse;
+  border-color: #4a3c3c; /* 共通の枠線色 */
+}
+
+h2 {
+  font-size: 1.6em; /* 少し縮小 */
+  color: #d0d0e0;
+  text-shadow: 1px 1px 0 #000;
+  margin: 0 10px; /* スペース調整 */
+}
+
+.character-sprite {
+  font-size: 4em; /* スプライトを少し縮小 */
+  margin: 0 15px; /* スペース調整 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px; /* 一貫したサイズに調整 */
+  height: 80px; /* 一貫したサイズに調整 */
+  background: #0a0a1a; /* スプライトの背景 */
+  border: 1px solid #3a3a4a;
+  border-radius: 4px;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0; /* 縮まないようにする */
+}
+
+.character-sprite img.pixel-art {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* アスペクト比を維持して収める */
+    image-rendering: pixelated; /* 画像がぼやけないように */
+}
+
+.character-sprite .emoji-fallback {
+    font-size: 0.8em; /* 絵文字もピクセルアートに合わせる */
+    image-rendering: pixelated;
+}
+
+.status {
+  flex-grow: 1;
+  font-size: 1em; /* 少し縮小 */
+  color: #c0c0d0;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.hp-bar, .mp-bar, .exp-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px; /* マージンを削減 */
+}
+
+.hp-bar span, .mp-bar span, .exp-bar span {
+  width: 45px; /* ラベルの幅を固定 */
+  flex-shrink: 0;
+}
+
+.bar {
+  flex-grow: 1;
+  height: 12px; /* バーの高さ */
+  background: #3a3a4a; /* バーの背景色 */
+  border: 1px solid #5a5a6a;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-right: 8px; /* マージンを削減 */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.bar-fill {
+  height: 100%;
+  transition: width 0.3s ease-out;
+  border-radius: 2px;
+}
+
+.player-hp-fill {
+  background: linear-gradient(to right, #4CAF50, #8BC34A); /* 緑系のグラデーション */
+}
+
+.player-mp-fill {
+  background: linear-gradient(to right, #2196F3, #64B5F6); /* 青系のグラデーション */
+}
+
+.player-exp-fill {
+  background: linear-gradient(to right, #FFEB3B, #FFC107); /* 黄色系のグラデーション */
+}
+
+.enemy-hp-fill {
+  background: linear-gradient(to right, #F44336, #FF7043); /* 赤系のグラデーション */
+}
+
+.hp-text, .mp-text, .exp-text {
+  min-width: 70px; /* テキストの幅を確保 */
+  text-align: right;
+  color: #e0e0e0;
+}
+
+.status p {
+  margin-top: 8px; /* マージンを削減 */
+  font-size: 1.1em; /* 少し縮小 */
+  color: #d0d0e0;
+}
+
+.battle-log {
+  width: 100%;
+  background: #1a1a2a;
+  border: 1px solid #4a3c3c;
+  border-radius: 6px;
+  padding: 12px; /* パディングを削減 */
+  margin-top: 15px; /* マージンを削減 */
+  min-height: 80px; /* ログ表示エリアの最小高さを調整 */
+  max-height: 120px; /* 最大高さを設定して、ログが多すぎてもはみ出さないように */
+  overflow-y: auto; /* ログが多くなった場合はスクロール */
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+#log-messages p {
+  color: #e0e0e0;
+  margin-bottom: 4px; /* マージンを削減 */
+  font-size: 1em; /* 少し縮小 */
+  line-height: 1.3;
+  text-shadow: 1px 1px 0 #000;
+}
+
+#log-messages p:last-child {
+  margin-bottom: 0;
+  color: #fff; /* 最新のログを強調 */
+  font-weight: bold;
+}
+
+#log-messages p.damage {
+    color: #ff6060; /* ダメージ色 */
+}
+
+#log-messages p.heal {
+    color: #60ff60; /* 回復色 */
+}
+
+
+.battle-commands {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2列 */
+  gap: 12px; /* ボタン間の隙間を削減 */
+  width: 100%;
+  margin-top: 15px; /* マージンを削減 */
+}
+
+.command-btn {
+  padding: 15px 20px; /* パディングを削減 */
+  font-size: 1.3em; /* フォントサイズを調整 */
+  font-weight: bold;
+  background: linear-gradient(180deg, #404050, #202030); /* 暗めのメタリック調 */
+  color: #e0e0e0;
+  border: 2px solid #707080;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 4px 10px rgba(0, 0, 0, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.command-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, #505060, #303040);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 6px 15px rgba(0, 0, 0, 0.5);
+}
+
+.command-btn:disabled {
+  background: #2a2a3a;
+  border-color: #4a4a5a;
+  color: #808080;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.game-over {
+  text-align: center;
+  margin-top: 25px; /* マージンを削減 */
+}
+
+.game-over h2 {
+  font-size: 2.2em; /* フォントサイズを調整 */
+  color: #ffd700; /* 勝利はゴールド */
+  margin-bottom: 25px; /* マージンを削減 */
+  text-shadow:
+    2px 2px 0 #000,
+    -2px -2px 0 #000,
+    2px -2px 0 #000,
+    -2px 2px 0 #000,
+    3px 3px 8px rgba(0, 0, 0, 0.7);
+}
+
+.game-over h2:contains("あなたは倒れた") { /* 敗北は赤 */
+  color: #ff4500;
+}
+
+.game-over button {
+  padding: 12px 25px; /* パディングを削減 */
+  font-size: 1.2em; /* フォントサイズを調整 */
+  background: linear-gradient(135deg, #FFD700, #FFA500); /* ゴールド系のボタン */
+  color: #303030;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+  font-weight: bold;
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.game-over button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 20px rgba(255, 215, 0, 0.6);
+}
+
+.audio-controls {
+  position: fixed;
+  bottom: 15px; /* 位置を少し上げる */
+  right: 15px; /* 位置を少し内側にする */
+  display: flex;
+  align-items: center;
+  gap: 8px; /* 隙間を削減 */
+  background: rgba(0, 0, 0, 0.7);
+  padding: 8px 12px; /* パディングを削減 */
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}
+
+.audio-controls button {
+  background: none;
+  border: none;
+  font-size: 1.6em; /* フォントサイズを調整 */
+  cursor: pointer;
+  color: #f0f0f0;
+  transition: transform 0.2s ease;
+}
+
+.audio-controls button:hover {
+  transform: scale(1.1);
+}
+
+.audio-controls input[type="range"] {
+  -webkit-appearance: none;
+  width: 80px; /* 幅を削減 */
+  height: 6px; /* 高さを削減 */
+  background: #555;
+  border-radius: 5px;
+  outline: none;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.audio-controls input[type="range"]:hover {
+  opacity: 1;
+}
+
+.audio-controls input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px; /* サイズを削減 */
+  height: 16px; /* サイズを削減 */
+  background: #ffd700;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Magic Effects */
+.magic-effect {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px; /* サイズを削減 */
+    height: 180px; /* サイズを削減 */
+    border-radius: 50%;
+    opacity: 0;
+    animation: fadeOut 0.5s forwards;
+    z-index: 5;
+    pointer-events: none;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.7); /* 全体に輝き */
+}
+
+.magic-effect.fire-effect {
+    background: radial-gradient(circle at center, rgba(255, 100, 0, 0.8), rgba(255, 0, 0, 0.5), transparent);
+    box-shadow: 0 0 30px rgba(255, 100, 0, 0.9);
+}
+
+.magic-effect.ice-effect {
+    background: radial-gradient(circle at center, rgba(100, 200, 255, 0.8), rgba(0, 100, 255, 0.5), transparent);
+    box-shadow: 0 0 30px rgba(100, 200, 255, 0.9);
+}
+
+.magic-effect.thunder-effect {
+    background: radial-gradient(circle at center, rgba(255, 255, 0, 0.8), rgba(255, 150, 0, 0.5), transparent);
+    box-shadow: 0 0 30px rgba(255, 255, 0, 0.9);
+}
+
+.magic-effect.holy-effect {
+    background: radial-gradient(circle at center, rgba(255, 255, 200, 0.8), rgba(255, 255, 0, 0.5), transparent);
+    box-shadow: 0 0 30px rgba(255, 255, 200, 0.9);
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    to { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+}
+
+/* UI画像のようなドットフォントの読み込み */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .game-container {
+    padding: 10px 15px; /* パディングをさらに削減 */
+    gap: 10px; /* 隙間を削減 */
+  }
+
+  h1 {
+    font-size: 1.8em; /* フォントサイズを調整 */
+    margin-bottom: 15px;
+  }
+
+  #start-screen h1 {
+    font-size: 2.8em;
+  }
+
+  #start-screen p {
+    font-size: 1em;
+    margin-bottom: 25px;
+  }
+
+  #start-button {
+    padding: 12px 30px;
+    font-size: 1.2em;
+  }
+
+  .character-info {
+    flex-direction: column;
+    text-align: center;
+    margin: 10px 0; /* マージンをさらに削減 */
+    padding: 10px 15px;
+  }
+
+  .player-info, .enemy-info {
+    flex-direction: column; /* 常に縦並び */
+    align-items: center;
+    justify-content: center;
+  }
+
+  h2 {
+    font-size: 1.4em;
+    margin-bottom: 8px;
+  }
+
+  .character-sprite {
+    margin: 10px 0;
+    width: 70px;
+    height: 70px;
+  }
+
+  .status {
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .hp-bar, .mp-bar, .exp-bar {
+    margin-bottom: 4px;
+  }
+
+  .hp-bar span, .mp-bar span, .exp-bar span {
+    width: 40px;
+  }
+
+  .bar {
+    height: 10px;
+    margin-right: 5px;
+  }
+
+  .hp-text, .mp-text, .exp-text {
+    min-width: 60px;
+    font-size: 0.9em;
+  }
+
+  .status p {
+    margin-top: 5px;
+    font-size: 1em;
+  }
+
+  .battle-log {
+    margin-top: 10px;
+    padding: 10px;
+    min-height: 70px;
+    max-height: 100px;
+  }
+
+  #log-messages p {
+    font-size: 0.9em;
+    margin-bottom: 3px;
+  }
+
+  .battle-commands {
+    grid-template-columns: 1fr; /* 1列にする */
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .command-btn {
+    padding: 12px 15px;
+    font-size: 1.1em;
+  }
+
+  .game-over h2 {
+    font-size: 2em;
+    margin-bottom: 20px;
+  }
+
+  .game-over button {
+    padding: 10px 20px;
+    font-size: 1.1em;
+  }
+
+  .audio-controls {
+    flex-direction: column;
+    bottom: 5px;
+    right: 5px;
+    padding: 5px 10px;
+  }
+
+  .audio-controls input[type="range"] {
+    width: 70px;
+  }
+
+  .audio-controls button {
+    font-size: 1.4em;
+  }
+  .magic-effect {
+    width: 150px;
+    height: 150px;
+  }
+}

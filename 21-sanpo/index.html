@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>おさんぽ日和</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🌸 おさんぽ日和 🌸</h1>
+            <div class="stats-container">
+                <div class="heart-points">
+                    <span>こころポイント: </span>
+                    <span id="heart-points">0</span>
+                    <span>💖</span>
+                </div>
+                <div class="treasure-count">
+                    <span>宝物: </span>
+                    <span id="treasure-count">0</span>
+                    <span>🎁</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="game-screen">
+            <div class="location-icon" id="location-icon">🏠</div>
+            <div class="location-name" id="location-name">おうち</div>
+            <div class="story-text" id="story-text">
+                今日はとても良い天気！<br>
+                街を一周して、いろんな出会いを楽しみましょう。<br>
+                散歩中に素敵な宝物も見つかるかも！<br>
+                さあ、散歩に出発です！
+            </div>
+            <div class="choices" id="choices">
+                <button class="choice-btn" onclick="startWalk()">散歩を始める</button>
+            </div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        
+        <!-- 宝物発見時の演出 -->
+        <div class="treasure-popup" id="treasure-popup">
+            <div class="treasure-popup-content">
+                <div class="treasure-icon" id="treasure-icon">🎁</div>
+                <div class="treasure-text" id="treasure-text">宝物を発見しました！</div>
+            </div>
+        </div>
+        
+        <div class="diary-screen" id="diary-screen" style="display: none;">
+            <h2>📖 今日の散歩日記</h2>
+            <div class="diary-content" id="diary-content"></div>
+            <button class="choice-btn" onclick="showTreasureCollection()">宝物コレクション</button>
+            <button class="choice-btn" onclick="restartGame()">また散歩する</button>
+        </div>
+        
+        <!-- 宝物コレクション画面 -->
+        <div class="treasure-collection" id="treasure-collection" style="display: none;">
+            <h2>🎁 宝物コレクション</h2>
+            <div class="collection-grid" id="collection-grid"></div>
+            <button class="choice-btn" onclick="backToDiary()">日記に戻る</button>
+        </div>
+    </div>
+
+    <!-- 外部JSファイルを読み込む -->
+    <script src="script.js"></script>
+</body>
+</html>

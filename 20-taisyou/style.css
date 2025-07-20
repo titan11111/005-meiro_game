@@ -1,0 +1,275 @@
+/* レトロシューティングゲーム スタイル */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Georgia', '游明朝', 'YuMincho', 'Hiragino Mincho ProN', serif;
+    background: linear-gradient(135deg, #000033 0%, #000066 50%, #000033 100%);
+    color: #f4f1e8;
+    overflow: hidden;
+    min-height: 100vh;
+}
+
+.game-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    height: 100vh;
+    position: relative;
+}
+
+/* 画面共通 */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle at center, rgba(0, 0, 102, 0.3) 0%, rgba(0, 0, 0, 0.8) 100%);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* タイトル画面 */
+.title-content {
+    text-align: center;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 2rem;
+    border-radius: 15px;
+    border: 2px solid #00ff00;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+}
+
+.title-content h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #00ff00;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.title-content p {
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+    color: #f4f1e8;
+}
+
+.character {
+    font-size: 4rem;
+    margin: 1rem 0;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.instructions {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+/* ボタン */
+.btn {
+    background: linear-gradient(45deg, #00ff00, #00cc00);
+    color: #000;
+    border: none;
+    padding: 12px 24px;
+    font-size: 1.1rem;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 255, 0, 0.3);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 255, 0, 0.5);
+}
+
+/* ゲーム画面 */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.8);
+    border-bottom: 2px solid #00ff00;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #00ff00;
+}
+
+#gameCanvas {
+    display: block;
+    width: 100%;
+    height: calc(100vh - 120px);
+    background: #000033;
+}
+
+/* ゲームコントロール */
+.game-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.8);
+    border-top: 2px solid #00ff00;
+}
+
+.control-btn {
+    background: linear-gradient(45deg, #333, #666);
+    color: #fff;
+    border: 2px solid #00ff00;
+    padding: 15px 20px;
+    font-size: 1.2rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    min-width: 60px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.control-btn:hover {
+    background: linear-gradient(45deg, #00ff00, #00cc00);
+    color: #000;
+    transform: scale(1.1);
+}
+
+.control-btn:active {
+    transform: scale(0.95);
+}
+
+.fire-btn {
+    background: linear-gradient(45deg, #ff0000, #cc0000);
+    border-color: #ff6666;
+    font-size: 1.5rem;
+}
+
+.fire-btn:hover {
+    background: linear-gradient(45deg, #ff6666, #ff0000);
+}
+
+/* ゲームオーバー画面 */
+.game-over-content {
+    text-align: center;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 2rem;
+    border-radius: 15px;
+    border: 2px solid #ff0000;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+}
+
+.game-over-content h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #ff0000;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.game-over-content p {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: #f4f1e8;
+}
+
+.result-message {
+    margin: 1rem 0;
+    font-size: 1.2rem;
+    color: #00ff00;
+    font-weight: bold;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+    .title-content h1 {
+        font-size: 2rem;
+    }
+    
+    .title-content p {
+        font-size: 1rem;
+    }
+    
+    .character {
+        font-size: 3rem;
+    }
+    
+    .game-header {
+        font-size: 0.9rem;
+        padding: 0.5rem;
+    }
+    
+    .control-btn {
+        padding: 12px 16px;
+        font-size: 1rem;
+        min-width: 50px;
+        min-height: 50px;
+    }
+}
+
+@media (max-width: 480px) {
+    .title-content {
+        padding: 1rem;
+        margin: 1rem;
+    }
+    
+    .title-content h1 {
+        font-size: 1.5rem;
+    }
+    
+    .game-header {
+        flex-direction: column;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .control-btn {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+        min-width: 45px;
+        min-height: 45px;
+    }
+    
+    .game-controls {
+        gap: 0.5rem;
+    }
+}
+
+/* スコアポップアップ */
+.score-popup {
+    position: absolute;
+    color: #00ff00;
+    font-weight: bold;
+    font-size: 1.2rem;
+    pointer-events: none;
+    animation: scorePopup 1s ease-out forwards;
+}
+
+@keyframes scorePopup {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+}

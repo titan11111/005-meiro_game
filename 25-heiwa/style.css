@@ -1,0 +1,361 @@
+/* 基本スタイル */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Arial', sans-serif;
+  background: linear-gradient(135deg, #87CEEB 0%, #98FB98 100%);
+  min-height: 100vh;
+  padding: 10px;
+}
+
+.game-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+/* ヘッダー */
+.game-header {
+  background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+.game-header h1 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.game-header p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+/* メインコンテンツ */
+.game-main {
+  padding: 20px;
+}
+
+/* 村の地図 */
+.village-map h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+.map-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.map-area {
+  background: linear-gradient(135deg, #FFE0B2 0%, #FFCC02 100%);
+  border: none;
+  border-radius: 15px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.map-area:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.map-area:active {
+  transform: translateY(0);
+}
+
+.area-icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.area-name {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 村の発展度バー */
+.village-progress {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.village-progress label {
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 1px 1px 2px #888;
+}
+
+.village-progress progress {
+  width: 180px;
+  height: 18px;
+  border-radius: 8px;
+  overflow: hidden;
+  accent-color: #4ECDC4;
+  background: #eee;
+}
+
+.village-progress span {
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 1px 1px 2px #888;
+  min-width: 40px;
+  display: inline-block;
+}
+
+/* イベント画面 */
+.event-screen {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.event-content {
+  background: #f8f9fa;
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.npc-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.npc-avatar {
+  font-size: 3rem;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e3f2fd;
+  border-radius: 50%;
+}
+
+.npc-name {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.event-text {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #333;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.spell-selection h3 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+.spell-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.spell-button {
+  background: linear-gradient(135deg, #E1BEE7 0%, #C8A2C8 100%);
+  border: none;
+  border-radius: 10px;
+  padding: 12px 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #333;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.spell-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.spell-button:active {
+  transform: translateY(0);
+}
+
+/* 結果画面 */
+.result-screen {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.result-content {
+  background: #f8f9fa;
+  border-radius: 15px;
+  padding: 30px;
+  text-align: center;
+}
+
+.result-text {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  color: #333;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.result-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ボタン共通スタイル */
+.back-button, .continue-button {
+  background: linear-gradient(135deg, #81C784 0%, #4CAF50 100%);
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  color: white;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+.back-button:hover, .continue-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.back-button:active, .continue-button:active {
+  transform: translateY(0);
+}
+
+/* フッター */
+.game-footer {
+  background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+  color: white;
+  padding: 15px;
+  text-align: center;
+  font-size: 1rem;
+}
+
+/* ユーティリティクラス */
+.hidden {
+  display: none;
+}
+
+/* アニメーション */
+@keyframes fadeIn {
+  from {
+      opacity: 0;
+      transform: translateY(20px);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
+
+/* スマホ対応 */
+@media (max-width: 768px) {
+  .game-header h1 {
+      font-size: 1.5rem;
+  }
+  
+  .game-header p {
+      font-size: 1rem;
+  }
+  
+  .map-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+  }
+  
+  .map-area {
+      padding: 15px;
+  }
+  
+  .area-icon {
+      font-size: 2rem;
+  }
+  
+  .area-name {
+      font-size: 1rem;
+  }
+  
+  .spell-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+  }
+  
+  .spell-button {
+      padding: 10px 6px;
+      font-size: 0.8rem;
+  }
+  
+  .result-buttons {
+      flex-direction: column;
+      align-items: center;
+  }
+  
+  .back-button, .continue-button {
+      width: 100%;
+      max-width: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-container {
+      margin: 0;
+      border-radius: 0;
+  }
+  
+  .game-main {
+      padding: 15px;
+  }
+  
+  .map-grid {
+      grid-template-columns: 1fr;
+  }
+  
+  .npc-info {
+      flex-direction: column;
+      text-align: center;
+  }
+  
+  .spell-grid {
+      grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "discoveredColors": [
+    "red",
+    "blue",
+    "yellow",
+    "purple"
+  ],
+  "userColors": {
+    "mixed_red_blue": {
+      "name": "紫",
+      "hex": "#800080",
+      "type": "mixed",
+      "description": "高貴な色。王様や魔法使いが好む色です。",
+      "recipe": "赤 + 青",
+      "discoveredAt": "2025/05/27"
+    }
+  },
+  "playerLevel": 2,
+  "quizScore": 1,
+  "quizTotal": 2
+}

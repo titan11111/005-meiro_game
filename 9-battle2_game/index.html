@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>クイズバトルRPG</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="game-container">
+    <div id="status-bar">
+      <div id="hp-container"><span>HP:</span><div id="hp-hearts"></div></div>
+      <div id="exp-container">
+        <span>経験値:</span>
+        <div id="exp-bar"><div id="exp-fill"></div></div>
+        <span id="exp-text">0/100</span>
+      </div>
+      <div id="level-display">Lv.1</div>
+    </div>
+
+    <div id="game-area"><div id="player"></div></div>
+
+    <div id="controller">
+      <div id="controller-row1">
+        <button id="btn-up">↑</button>
+      </div>
+      <div id="controller-row2">
+        <button id="btn-left">←</button>
+        <button id="btn-down">↓</button>
+        <button id="btn-right">→</button>
+      </div>
+    </div>
+
+    <!-- 特殊能力ボタン -->
+    <div class="ability-buttons">
+      <button class="ability-button" id="dash-btn" title="ダッシュ (スペースキー)">⚡</button>
+      <button class="ability-button" id="freeze-btn" title="フリーズ (Fキー)">❄️</button>
+      <button class="ability-button" id="bomb-btn" title="ボム (Bキー)">💣</button>
+    </div>
+
+    <!-- ゲーム説明 -->
+    <div id="game-info" style="position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 10px; font-size: 10px; z-index: 150; max-width: 200px;">
+      <div style="color: #ffcc00; font-weight: bold; margin-bottom: 5px;">🎮 操作方法</div>
+      <div style="font-size: 8px; line-height: 1.3;">
+        <div>• 矢印キー/ボタン: 移動</div>
+        <div>• 敵に触れる: クイズ開始</div>
+        <div>• アイテム取得: パワーアップ</div>
+        <div>• スペース: ダッシュ</div>
+        <div>• F: 敵フリーズ</div>
+        <div>• B: ボム</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="quiz-container" class="hidden">
+    <div id="quiz-box">
+      <p id="quiz-genre"></p>
+      <p id="quiz-question">ここにクイズ</p>
+      <div id="quiz-options"></div>
+    </div>
+  </div>
+
+  <div id="gameover-container" class="hidden">
+    <div id="gameover-box">
+      <p id="gameover-text">ゲームオーバー</p>
+      <button id="restart-button">リトライ</button>
+    </div>
+  </div>
+  
+  <audio id="bgm-field" src="./audio/field.mp3" loop preload="auto"></audio>
+  <audio id="se-correct" src="./audio/seikai2.mp3" preload="auto"></audio>
+  <audio id="se-wrong" src="./audio/fuseikai2.mp3" preload="auto"></audio>
+  <audio id="se-levelup" src="./audio/levelup.mp3" preload="auto"></audio>
+
+  <script src="./script.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,726 @@
+/* QUIZ-ZONE ディストピアクイズバトル スタイル */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Courier New', monospace;
+  background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+  color: #00ff00;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* 共通スクリーン設定 */
+.screen {
+  display: none;
+  min-height: 100vh;
+  padding: 20px;
+  position: relative;
+}
+
+.screen.active {
+  display: block;
+}
+
+/* ボタン共通スタイル */
+button {
+  font-family: 'Courier New', monospace;
+  border: 2px solid #00ff00;
+  background: rgba(0, 255, 0, 0.1);
+  color: #00ff00;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+button:hover {
+  background: rgba(0, 255, 0, 0.2);
+  box-shadow: 0 0 10px #00ff00;
+  transform: translateY(-2px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+.main-btn {
+  font-size: 18px;
+  padding: 16px 32px;
+  border: 3px solid #00ff00;
+}
+
+.sub-btn {
+  font-size: 14px;
+  padding: 10px 20px;
+  border: 2px solid #ffff00;
+  color: #ffff00;
+  background: rgba(255, 255, 0, 0.1);
+}
+
+.sub-btn:hover {
+  background: rgba(255, 255, 0, 0.2);
+  box-shadow: 0 0 10px #ffff00;
+}
+
+/* 起動画面 */
+#startScreen {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: linear-gradient(135deg, #000 0%, #1a1a1a 50%, #000 100%);
+  animation: screenFlicker 0.1s infinite alternate;
+}
+
+#startScreen.active {
+  display: flex;
+}
+
+@keyframes screenFlicker {
+  0% { opacity: 0.98; }
+  100% { opacity: 1; }
+}
+
+.logo h1 {
+  font-size: 4rem;
+  color: #ff0000;
+  text-shadow: 0 0 20px #ff0000;
+  margin-bottom: 10px;
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from { text-shadow: 0 0 20px #ff0000; }
+  to { text-shadow: 0 0 30px #ff0000, 0 0 40px #ff0000; }
+}
+
+.subtitle {
+  color: #888;
+  font-size: 1.2rem;
+  margin-bottom: 50px;
+}
+
+.warning {
+  background: rgba(255, 0, 0, 0.1);
+  border: 2px solid #ff0000;
+  padding: 20px;
+  margin: 30px 0;
+  border-radius: 8px;
+}
+
+.warning p {
+  color: #ff0000;
+  font-size: 1.1rem;
+  margin: 5px 0;
+}
+
+/* ゾーン選択画面 */
+#zoneScreen {
+  padding: 20px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.header h2 {
+  font-size: 2.5rem;
+  color: #00ff00;
+  text-shadow: 0 0 10px #00ff00;
+  margin-bottom: 10px;
+}
+
+.zone-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  max-width: 600px;
+  margin: 0 auto 30px;
+}
+
+.zone-box {
+  background: rgba(0, 255, 0, 0.05);
+  border: 2px solid #00ff00;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  position: relative;
+}
+
+.zone-box:hover {
+  background: rgba(0, 255, 0, 0.1);
+  box-shadow: 0 0 15px #00ff00;
+  transform: scale(1.05);
+}
+
+.zone-box.cleared {
+  border-color: #0080ff;
+  background: linear-gradient(135deg, rgba(0, 128, 255, 0.3), rgba(0, 100, 200, 0.1));
+  transform: rotate(-5deg);
+  cursor: not-allowed;
+  opacity: 0.9;
+  position: relative;
+  box-shadow: inset 0 0 10px rgba(0, 128, 255, 0.3);
+}
+
+.zone-box.cleared::before {
+  content: "CLEAR";
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #0080ff;
+  color: #fff;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 4px;
+  transform: rotate(15deg);
+  z-index: 10;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.zone-box.cleared .zone-status {
+  color: #0080ff;
+}
+
+.zone-box.cleared .zone-number {
+  color: #0080ff;
+  text-shadow: 0 0 5px rgba(0, 128, 255, 0.5);
+}
+
+.zone-box.cleared .zone-name {
+  color: #0080ff;
+}
+
+.zone-box.cleared:hover {
+  transform: rotate(-5deg) scale(1.02);
+  box-shadow: 0 0 15px rgba(0, 128, 255, 0.5);
+}
+
+@keyframes clearAnimation {
+  0% {
+    transform: rotate(0deg) scale(1);
+    box-shadow: 0 0 20px #0080ff;
+  }
+  50% {
+    transform: rotate(-10deg) scale(1.1);
+    box-shadow: 0 0 30px #0080ff, 0 0 40px #0080ff;
+  }
+  100% {
+    transform: rotate(-5deg) scale(1);
+    box-shadow: 0 0 15px rgba(0, 128, 255, 0.5);
+  }
+}
+
+.zone-box.locked {
+  border-color: #555;
+  color: #555;
+  cursor: not-allowed;
+}
+
+.zone-box.locked:hover {
+  transform: none;
+  box-shadow: none;
+  background: rgba(0, 255, 0, 0.05);
+}
+
+.zone-box.omega {
+  background: linear-gradient(135deg, rgba(255, 0, 0, 0.1), rgba(255, 255, 0, 0.1));
+  border-color: #ff0000;
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.zone-box.omega:hover {
+  box-shadow: 0 0 20px #ff0000;
+}
+
+.zone-number {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.zone-name {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+.zone-status {
+  font-size: 1.5rem;
+  color: #888;
+}
+
+/* クイズ画面 */
+#quizScreen {
+  padding: 20px;
+}
+
+.quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 255, 0, 0.1);
+  border: 2px solid #00ff00;
+  padding: 15px;
+  margin-bottom: 30px;
+  border-radius: 8px;
+}
+
+.zone-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.zone-info span {
+  font-weight: bold;
+}
+
+.quiz-status {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.timer {
+  font-size: 1.5rem;
+  color: #ffff00;
+  font-weight: bold;
+}
+
+.timer.warning {
+  color: #ff0000;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.quiz-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.question-box {
+  background: rgba(0, 255, 0, 0.05);
+  border: 2px solid #00ff00;
+  padding: 30px;
+  margin-bottom: 30px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.question-box p {
+  font-size: 1.4rem;
+  line-height: 1.6;
+}
+
+.answers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.answer-btn {
+  padding: 20px;
+  font-size: 1.1rem;
+  text-align: left;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.answer-btn.correct {
+  background: rgba(0, 255, 0, 0.3);
+  border-color: #00ff00;
+}
+
+.answer-btn.wrong {
+  background: rgba(255, 0, 0, 0.3);
+  border-color: #ff0000;
+  color: #ff0000;
+}
+
+.answer-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 結果画面 */
+#resultScreen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.result-content {
+  background: rgba(0, 255, 0, 0.05);
+  border: 2px solid #00ff00;
+  padding: 40px;
+  border-radius: 8px;
+  max-width: 500px;
+}
+
+.result-content h2 {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  text-shadow: 0 0 10px #00ff00;
+}
+
+.result-content.success h2 {
+  color: #00ff00;
+}
+
+.result-content.failure h2 {
+  color: #ff0000;
+  text-shadow: 0 0 10px #ff0000;
+}
+
+.result-info {
+  margin: 30px 0;
+}
+
+.result-info p {
+  font-size: 1.3rem;
+  margin: 10px 0;
+}
+
+.result-actions {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+/* トレーニング画面 */
+#trainingScreen {
+  padding: 20px;
+}
+
+.training-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.training-header h2 {
+  font-size: 2.5rem;
+  color: #ffff00;
+  text-shadow: 0 0 10px #ffff00;
+  margin-bottom: 10px;
+}
+
+.training-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.training-list {
+  background: rgba(255, 255, 0, 0.05);
+  border: 2px solid #ffff00;
+  padding: 20px;
+  border-radius: 8px;
+  min-height: 200px;
+}
+
+.training-item {
+  background: rgba(0, 255, 0, 0.05);
+  border: 1px solid #00ff00;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.training-item:hover {
+  background: rgba(0, 255, 0, 0.1);
+  transform: translateX(5px);
+}
+
+.no-data {
+  text-align: center;
+  color: #888;
+  font-size: 1.2rem;
+  padding: 50px;
+}
+
+/* エンディング画面 */
+#endingScreen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #000 0%, #1a1a1a 50%, #000 100%);
+  padding: 20px;
+}
+
+.ending-content {
+  background: rgba(0, 128, 255, 0.05);
+  border: 3px solid #0080ff;
+  padding: 40px;
+  border-radius: 12px;
+  max-width: 800px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(0, 128, 255, 0.3);
+}
+
+.ending-header {
+  margin-bottom: 40px;
+}
+
+.ending-title {
+  font-size: 3.5rem;
+  color: #0080ff;
+  text-shadow: 0 0 20px #0080ff;
+  margin-bottom: 10px;
+  animation: endingGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes endingGlow {
+  from { text-shadow: 0 0 20px #0080ff; }
+  to { text-shadow: 0 0 30px #0080ff, 0 0 40px #0080ff; }
+}
+
+.ending-subtitle {
+  color: #0080ff;
+  font-size: 1.3rem;
+  opacity: 0.8;
+}
+
+.ending-story {
+  margin: 40px 0;
+  text-align: left;
+}
+
+.story-section {
+  background: rgba(0, 128, 255, 0.1);
+  border: 1px solid rgba(0, 128, 255, 0.3);
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 8px;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: storyReveal 1s ease-out forwards;
+}
+
+.story-section:nth-child(1) { animation-delay: 0.5s; }
+.story-section:nth-child(2) { animation-delay: 1.5s; }
+.story-section:nth-child(3) { animation-delay: 2.5s; }
+
+@keyframes storyReveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.story-section h3 {
+  color: #0080ff;
+  font-size: 1.4rem;
+  margin-bottom: 15px;
+  text-shadow: 0 0 5px rgba(0, 128, 255, 0.5);
+}
+
+.story-section p {
+  color: #fff;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin: 10px 0;
+}
+
+.ending-stats {
+  background: rgba(0, 128, 255, 0.1);
+  border: 2px solid #0080ff;
+  padding: 25px;
+  margin: 30px 0;
+  border-radius: 8px;
+  animation: statsReveal 1s ease-out 3.5s both;
+}
+
+@keyframes statsReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.ending-stats h3 {
+  color: #0080ff;
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+}
+
+.ending-stats p {
+  color: #fff;
+  font-size: 1.2rem;
+  margin: 8px 0;
+}
+
+.ending-stats span {
+  color: #0080ff;
+  font-weight: bold;
+}
+
+.ending-actions {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 30px;
+  animation: actionsReveal 1s ease-out 4s both;
+}
+
+@keyframes actionsReveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* クレジット画面 */
+#creditsScreen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #000 0%, #1a1a1a 50%, #000 100%);
+  padding: 20px;
+}
+
+.credits-content {
+  background: rgba(0, 128, 255, 0.05);
+  border: 2px solid #0080ff;
+  padding: 40px;
+  border-radius: 12px;
+  max-width: 600px;
+  text-align: center;
+}
+
+.credits-content h2 {
+  font-size: 2.5rem;
+  color: #0080ff;
+  text-shadow: 0 0 15px #0080ff;
+  margin-bottom: 30px;
+}
+
+.credits-section {
+  margin: 25px 0;
+  padding: 20px;
+  background: rgba(0, 128, 255, 0.1);
+  border-radius: 8px;
+}
+
+.credits-section h3 {
+  color: #0080ff;
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+}
+
+.credits-section p {
+  color: #fff;
+  font-size: 1.1rem;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+  .logo h1 {
+      font-size: 3rem;
+  }
+  
+  .zone-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+  }
+  
+  .zone-box.omega {
+      grid-column: 1 / -1;
+      grid-row: auto;
+  }
+  
+  .quiz-header {
+      flex-direction: column;
+      gap: 10px;
+      text-align: center;
+  }
+  
+  .answers {
+      grid-template-columns: 1fr;
+  }
+  
+  .result-actions {
+      flex-direction: column;
+      align-items: center;
+  }
+  
+  .answer-btn {
+      font-size: 1rem;
+      padding: 15px;
+      min-height: 60px;
+  }
+  
+  .question-box p {
+      font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .screen {
+      padding: 15px;
+  }
+  
+  .logo h1 {
+      font-size: 2.5rem;
+  }
+  
+  .zone-grid {
+      gap: 8px;
+  }
+  
+  .zone-box {
+      padding: 15px;
+  }
+  
+  .zone-number {
+      font-size: 1.5rem;
+  }
+  
+  .zone-name {
+      font-size: 1rem;
+  }
+  
+  .question-box {
+      padding: 20px;
+  }
+  
+  .question-box p {
+      font-size: 1.1rem;
+  }
+  
+  .answer-btn {
+      padding: 12px;
+      font-size: 0.9rem;
+  }
+}

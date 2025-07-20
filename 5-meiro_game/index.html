@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>迷路クイズRPG</title>
+  <link rel="stylesheet" href="style.css" />
+  <audio id="bgm" src="./sound/bgm2.mp3" loop></audio>
+  <audio id="seikai" src="./sound/seikai.mp3"></audio>
+  <audio id="fuseikai" src="./sound/fuseikai.mp3"></audio>
+  <audio id="takara" src="./sound/takara.mp3"></audio>
+  <audio id="kamituku" src="./sound/kamituku.mp3"></audio>
+</head>
+<body>
+  <button id="start-button" class="modal-content">🎮 スタート</button>
+  <div class="game-container">
+    <div class="header">
+      <h1>🏴‍☠️ 迷路クイズRPG 🏴‍☠️</h1>
+      <div class="info">
+        <span>🌟 レベル: <span id="level">1</span></span>
+        <span>🎯 宝物を探そう！</span>
+        <span>🗝️ 残り宝箱: <span id="treasure-count"></span></span>
+      </div>
+    </div>
+
+    <div class="maze-container">
+      <canvas id="mazeCanvas"></canvas>
+      <div id="message" class="message hidden"></div>
+      <div id="quiz-box" class="quiz hidden">
+        <div id="quiz-question"></div>
+        <div id="quiz-options"></div>
+      </div>
+      <div id="game-over-modal" class="modal hidden">
+        <div class="modal-content">
+          <h2>😵 ゲームオーバー！</h2>
+          <p id="game-over-reason"></p>
+          <button id="restart-button">🔄 もう一度プレイ</button>
+        </div>
+      </div>
+      <div id="game-clear-modal" class="modal hidden">
+        <div class="modal-content">
+          <h2>🎉 ゲームクリア！</h2>
+          <p>🏆 全てのレベルをクリアしました！</p>
+          <button id="clear-restart-button">🔄 最初からプレイ</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="instruction">
+        <p>🎮 操作方法：下のボタンか矢印キーで移動</p>
+      </div>
+      <div class="joystick">
+        <button id="up" class="control-btn">⬆️</button>
+        <div class="horizontal-controls">
+          <button id="left" class="control-btn">⬅️</button>
+          <button id="right" class="control-btn">➡️</button>
+        </div>
+        <button id="down" class="control-btn">⬇️</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="loading">🎮 ゲームを準備中...</div>
+
+  <script src="main.js" defer></script>
+</body>
+</html>

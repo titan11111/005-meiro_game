@@ -1,0 +1,542 @@
+/* 基本設定 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #333;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+}
+
+/* 実験室の背景効果 */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.container {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 15px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* ヘッダー */
+.game-header {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+    border: 2px solid #4a90e2;
+}
+
+.game-header h1 {
+    font-size: 1.8rem;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.game-header p {
+    font-size: 0.9rem;
+    color: #34495e;
+}
+
+/* ストーリー紹介 */
+.story-intro {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.story-text h2 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 1.4rem;
+}
+
+.story-text p {
+    margin-bottom: 10px;
+    line-height: 1.6;
+    color: #34495e;
+}
+
+.highlight {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.level-info {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    padding: 15px;
+    border-radius: 15px;
+    margin-top: 15px;
+}
+
+.level-info p {
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+/* 実験室ヘッダー */
+.lab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #34495e, #2c3e50);
+    color: white;
+    border-radius: 15px;
+    padding: 12px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.level-display {
+    text-align: left;
+}
+
+.level-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #f39c12;
+}
+
+.level-name {
+    font-size: 0.9rem;
+    color: #ecf0f1;
+}
+
+.progress-info {
+    text-align: right;
+}
+
+.progress-info p {
+    margin-bottom: 3px;
+    font-size: 0.9rem;
+}
+
+.streak {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+/* 実験環境 */
+.lab-environment {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 2px solid #bdc3c7;
+}
+
+.experiment-area {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 20px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
+    border-radius: 15px;
+}
+
+/* 試験管 */
+.test-tube {
+    width: 80px;
+    height: 120px;
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+    border-radius: 0 0 40px 40px;
+    position: relative;
+    border: 3px solid #34495e;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.liquid {
+    width: 100%;
+    height: 60%;
+    border-radius: 0 0 35px 35px;
+    position: absolute;
+    bottom: 0;
+    transition: all 0.5s ease;
+}
+
+.test-tube-label {
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #2c3e50;
+    white-space: nowrap;
+}
+
+/* pHメーター */
+.ph-meter {
+    width: 120px;
+    height: 80px;
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    border-radius: 10px;
+    position: relative;
+    border: 3px solid #95a5a6;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.meter-display {
+    background: #000;
+    color: #00ff00;
+    padding: 5px;
+    border-radius: 5px;
+    margin: 5px;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    text-align: center;
+}
+
+.meter-needle {
+    width: 2px;
+    height: 30px;
+    background: #e74c3c;
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%) rotate(0deg);
+    transform-origin: bottom center;
+    transition: transform 1s ease;
+    box-shadow: 0 0 5px rgba(231, 76, 60, 0.5);
+}
+
+/* 画面切り替え */
+.screen {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 20px 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.5s ease-in;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 2px solid #bdc3c7;
+}
+
+.screen.hidden {
+    display: none;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* キャラクター */
+.character {
+    margin: 15px 0;
+    flex-shrink: 0;
+}
+
+.character-face {
+    font-size: 3.5rem;
+    line-height: 1;
+    margin: 15px 0;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-8px); }
+    60% { transform: translateY(-4px); }
+}
+
+.character-face.correct {
+    animation: celebrate 0.8s ease-in-out;
+}
+
+@keyframes celebrate {
+    0% { transform: scale(1) rotate(0deg); }
+    25% { transform: scale(1.1) rotate(-3deg); }
+    50% { transform: scale(1.2) rotate(3deg); }
+    75% { transform: scale(1.1) rotate(-3deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+.character-face.incorrect {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+}
+
+/* 問題エリア */
+.question-area {
+    margin: 20px 0;
+    flex-shrink: 0;
+}
+
+.question-area h2 {
+    font-size: 1.6rem;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    background: linear-gradient(45deg, #e74c3c, #3498db);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.experiment-context {
+    font-size: 1rem;
+    color: #7f8c8d;
+    font-style: italic;
+    margin-top: 10px;
+}
+
+/* ボタンエリア */
+.button-area {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 20px 0;
+    flex-shrink: 0;
+}
+
+.choice-button {
+    padding: 15px;
+    border: none;
+    border-radius: 15px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    touch-action: manipulation;
+}
+
+.choice-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.choice-button:active {
+    transform: translateY(0);
+}
+
+.acid-button {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+}
+
+.neutral-button {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+}
+
+.alkali-button {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    color: white;
+}
+
+/* フィードバック */
+.feedback {
+    margin: 15px 0;
+    padding: 12px;
+    border-radius: 15px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    animation: slideIn 0.5s ease-out;
+    flex-grow: 1;
+    min-height: 80px;
+    max-height: 200px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.feedback.correct {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: white;
+}
+
+.feedback.incorrect {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+}
+
+/* レベルアップ通知 */
+.level-up-notification {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 15px;
+    animation: levelUp 0.8s ease-in-out;
+}
+
+@keyframes levelUp {
+    0% { transform: scale(0.8); opacity: 0; }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.level-up-notification h3 {
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+/* 解説のスタイル */
+.explanation {
+    display: block;
+    font-size: 0.9rem;
+    margin-top: 8px;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.4;
+}
+
+/* 次へボタン */
+.next-button {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+    margin-top: 15px;
+    display: block;
+    width: 100%;
+    max-width: 200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.next-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+}
+
+.next-button:active {
+    transform: translateY(0);
+}
+
+/* スタートボタン */
+.start-button {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    border: none;
+    padding: 18px 30px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+    flex-shrink: 0;
+    margin-top: auto;
+}
+
+.start-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(231, 76, 60, 0.4);
+}
+
+/* 結果画面 */
+.final-report {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.final-stats {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    padding: 15px;
+    border-radius: 15px;
+    margin: 15px 0;
+}
+
+.final-stats p {
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+#resultMessage {
+    font-size: 1.1rem;
+    color: #2c3e50;
+    margin: 15px 0;
+    line-height: 1.6;
+}
+
+.achievement-badge {
+    width: 80px;
+    height: 80px;
+    margin: 15px auto;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 480px) {
+    .lab-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .experiment-area {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .test-tube {
+        width: 60px;
+        height: 90px;
+    }
+    
+    .ph-meter {
+        width: 100px;
+        height: 60px;
+    }
+}

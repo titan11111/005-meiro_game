@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魔王を倒した勇者の魔法RPG</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <header class="game-header">
+            <h1>🏰 魔王を倒した勇者の魔法RPG</h1>
+            <p>魔王を倒したレベル99の勇者が、村人の小さな困りごとを魔法で解決！</p>
+            <div class="village-progress">
+                <label for="progressBar">村の発展度：</label>
+                <progress id="progressBar" value="0" max="100"></progress>
+                <span id="progressPercent">0%</span>
+            </div>
+        </header>
+
+        <main class="game-main">
+            <!-- 村の地図 -->
+            <div class="village-map" id="villageMap">
+                <h2>📍 村の地図</h2>
+                <div class="map-grid">
+                    <button class="map-area" data-area="square">
+                        <div class="area-icon">🏛️</div>
+                        <div class="area-name">村の広場</div>
+                    </button>
+                    <button class="map-area" data-area="well">
+                        <div class="area-icon">🚰</div>
+                        <div class="area-name">井戸</div>
+                    </button>
+                    <button class="map-area" data-area="bakery">
+                        <div class="area-icon">🍞</div>
+                        <div class="area-name">パン屋</div>
+                    </button>
+                    <button class="map-area" data-area="elder">
+                        <div class="area-icon">🏠</div>
+                        <div class="area-name">長老の家</div>
+                    </button>
+                    <button class="map-area" data-area="school">
+                        <div class="area-icon">⛪</div>
+                        <div class="area-name">学校</div>
+                    </button>
+                    <button class="map-area" data-area="field">
+                        <div class="area-icon">🌾</div>
+                        <div class="area-name">畑</div>
+                    </button>
+                    <button class="map-area" data-area="forest">
+                        <div class="area-icon">🌲</div>
+                        <div class="area-name">森の入り口</div>
+                    </button>
+                    <button class="map-area" data-area="blacksmith">
+                        <div class="area-icon">⚒️</div>
+                        <div class="area-name">鍛冶屋</div>
+                    </button>
+                    <button class="map-area" data-area="inn">
+                        <div class="area-icon">🏨</div>
+                        <div class="area-name">宿屋</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- イベント画面 -->
+            <div class="event-screen hidden" id="eventScreen">
+                <div class="event-content">
+                    <div class="npc-info">
+                        <div class="npc-avatar" id="npcAvatar">👤</div>
+                        <div class="npc-name" id="npcName">村人</div>
+                    </div>
+                    <div class="event-text" id="eventText">
+                        何か困りごとがありそうです...
+                    </div>
+                    <div class="spell-selection">
+                        <h3>🔮 使う魔法を選んでください</h3>
+                        <div class="spell-grid" id="spellGrid">
+                            <!-- 魔法ボタンはJavaScriptで生成 -->
+                        </div>
+                    </div>
+                    <button class="back-button" id="backButton">🔙 村の地図に戻る</button>
+                </div>
+            </div>
+
+            <!-- 結果画面 -->
+            <div class="result-screen hidden" id="resultScreen">
+                <div class="result-content">
+                    <div class="result-text" id="resultText">
+                        魔法の結果が表示されます
+                    </div>
+                    <div class="result-buttons">
+                        <button class="continue-button" id="continueButton">✨ 続ける</button>
+                        <button class="back-button" id="backToMapButton">🔙 村の地図に戻る</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="game-footer">
+            <p>💫 魔王を倒した勇者が魔法で村人を助けよう！</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

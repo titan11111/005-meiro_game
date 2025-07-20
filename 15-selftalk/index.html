@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>セルフトークアプリ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>セルフトークアプリ</h1>
+        </header>
+
+        <main class="main-content">
+            <div class="description">
+                <h2>その日の気分におすすめの<br>セルフトークを3つお届けします</h2>
+            </div>
+
+            <div class="input-area">
+                <textarea id="moodInput" placeholder="今の気分や悩みを詳しく教えてね（例：仕事で失敗してしまって落ち込んでいる）"></textarea>
+                <button id="submitBtn" onclick="generateSelfTalk()">セルフトークを生成</button>
+            </div>
+
+            <div id="initialMessage" class="initial-message">
+                <p>上の入力欄に今の気分を入力して、<br>3人の専門家からのアドバイスを受け取りましょう！</p>
+            </div>
+
+            <div class="characters-area" id="charactersArea">
+                <div class="character">
+                    <div class="speech-bubble" id="neuroSpeech">
+                        <p>気分を入力してね<br>脳科学の視点でアドバイスするよ</p>
+                    </div>
+                    <div class="character-img">
+                        <img src="images/kagakusya.png" alt="脳科学者">
+                        <div class="character-placeholder neuro-placeholder"></div>
+                    </div>
+                    <p class="character-name">脳科学者</p>
+                </div>
+
+                <div class="character">
+                    <div class="speech-bubble" id="counselorSpeech">
+                        <p>どんな気持ちも大切<br>一緒に考えてみましょう</p>
+                    </div>
+                    <div class="character-img">
+                        <img src="images/kaunsera.png" alt="カウンセラー">
+                        <div class="character-placeholder counselor-placeholder"></div>
+                    </div>
+                    <p class="character-name">カウンセラー</p>
+                </div>
+
+                <div class="character">
+                    <div class="speech-bubble" id="elderSpeech">
+                        <p>人生経験からお話しするね<br>何でも聞いてちょうだい</p>
+                    </div>
+                    <div class="character-img">
+                        <img src="images/rouba.png" alt="人生の先輩">
+                        <div class="character-placeholder elder-placeholder"></div>
+                    </div>
+                    <p class="character-name">人生の先輩</p>
+                </div>
+            </div>
+
+            <div class="history-counter" id="historyCounter">
+                <p>記録回数: <span id="historyCount">0</span>/10</p>
+            </div>
+        </main>
+    </div>
+
+    <div id="pdfModal" class="modal">
+        <div class="modal-content">
+            <h3>おめでとうございます！</h3>
+            <p>10回分のセルフトーク記録が貯まりました。<br>これまでの記録をPDFでダウンロードできます。</p>
+            <div class="modal-buttons">
+                <button class="pdf-btn" onclick="generatePDF()">PDFをダウンロード</button>
+                <button class="cancel-btn" onclick="closePdfModal()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

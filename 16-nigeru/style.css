@@ -1,0 +1,448 @@
+/* リセットCSS */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    /* Prevent text selection which can interfere with touch */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    /* Remove tap highlight on iOS */
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Courier New', monospace;
+    background: linear-gradient(135deg, #0a0f23 0%, #1a1a2e 50%, #16213e 100%);
+    color: #00ffff;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden; /* デフォルトはoverflow: hidden */
+}
+
+.game-container {
+    text-align: center;
+    padding: 20px;
+    max-width: 900px;
+    width: 100%;
+    display: flex; /* 追加: flexboxで子要素を配置 */
+    flex-direction: column; /* 追加: 縦方向に並べる */
+    align-items: center; /* 追加: 中央揃え */
+    justify-content: center; /* 追加: 中央揃え */
+}
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 20px;
+    width: 100%; /* 幅を100%に */
+}
+
+.game-header h1 {
+    font-size: 2rem;
+    text-shadow: 0 0 20px #00ffff;
+    color: #00ffff;
+}
+
+.score {
+    font-size: 1.2rem; /* サイズを調整 */
+    font-weight: bold;
+    color: #ff6b6b;
+    text-shadow: 0 0 10px #ff6b6b;
+    line-height: 1.4; /* 行の高さを調整 */
+}
+
+#gameCanvas {
+    background: linear-gradient(180deg, #0f0f23 0%, #1a1a2e 100%);
+    border: 3px solid #00ffff;
+    border-radius: 10px;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+    max-width: 100%;
+    height: auto; /* 高さ自動調整 */
+    aspect-ratio: 2 / 1; /* 幅:高さ = 2:1 を維持 */
+    display: block;
+    margin: 0 auto;
+}
+
+.game-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+    width: 100%; /* 幅を100%に */
+}
+
+.move-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.action-controls {
+    display: flex;
+    gap: 15px;
+}
+
+.control-btn {
+    background: linear-gradient(145deg, #ff6b6b, #ee5a24);
+    border: none;
+    border-radius: 15px;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 15px 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.move-btn {
+    background: linear-gradient(145deg, #00ffff, #0099cc);
+    color: #0a0f23;
+    padding: 15px 20px;
+    font-size: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+}
+
+.move-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 255, 255, 0.5);
+    background: linear-gradient(145deg, #33ffff, #00ccff);
+}
+
+.control-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.5);
+    background: linear-gradient(145deg, #ff5252, #ff3838);
+}
+
+.control-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 10px rgba(255, 107, 107, 0.3);
+}
+
+.game-info {
+    margin: 20px 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    width: 100%; /* 幅を100%に */
+}
+
+.game-info p {
+    margin: 8px 0;
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+}
+
+.game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    border: 3px solid #ff6b6b;
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 0 50px rgba(255, 107, 107, 0.5);
+    z-index: 1000;
+}
+
+.game-over h2 {
+    color: #ff6b6b;
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    text-shadow: 0 0 20px #ff6b6b;
+}
+
+.game-over p {
+    font-size: 1.5rem;
+    margin-bottom: 30px;
+    color: #00ffff;
+}
+
+/* ステージクリア画面用 */
+#stageClear {
+    border-color: #00ffff;
+    box-shadow: 0 0 50px rgba(0, 255, 255, 0.5);
+}
+
+#stageClear h2 {
+    color: #00ffff;
+    text-shadow: 0 0 20px #00ffff;
+}
+
+
+.restart-btn {
+    background: linear-gradient(145deg, #00ffff, #0099cc);
+    border: none;
+    border-radius: 15px;
+    color: #0a0f23;
+    font-size: 1.3rem;
+    font-weight: bold;
+    padding: 15px 40px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+}
+
+.restart-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 255, 255, 0.5);
+    background: linear-gradient(145deg, #33ffff, #00ccff);
+}
+
+.hidden {
+    display: none;
+}
+
+/* 画面回転を促すメッセージのスタイル */
+.rotate-message {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95);
+    color: #00ffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.8rem;
+    text-align: center;
+    z-index: 9999; /* 最前面に表示 */
+    backdrop-filter: blur(5px); /* 背景をぼかす */
+    text-shadow: 0 0 15px #00ffff;
+    line-height: 1.5;
+}
+
+.rotate-message p:first-child {
+    font-size: 2.5rem; /* メインメッセージを大きく */
+    margin-bottom: 10px;
+}
+
+.rotate-message.hidden {
+    display: none;
+}
+
+
+/* スマホ全般の縦向き時の調整 (max-width: 768px を含む) */
+@media (max-width: 768px) {
+    /* transform: scale(0.9) は削除しました */
+    
+    .game-header {
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 15px;
+        padding: 0 10px; /* パディングを調整 */
+    }
+    
+    .game-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .score {
+        font-size: 1.2rem;
+    }
+    
+    #gameCanvas {
+        width: 100%;
+        max-width: 400px;
+        height: auto; /* autoに変更 */
+        aspect-ratio: 2 / 1; /* アスペクト比を維持 */
+    }
+    
+    .game-controls {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .control-btn {
+        font-size: 1rem;
+        padding: 12px 20px;
+    }
+    
+    .move-btn {
+        padding: 12px 15px;
+        font-size: 1.2rem;
+    }
+    
+    .game-info {
+        font-size: 0.9rem;
+    }
+    
+    .game-over {
+        width: 90%;
+        max-width: 350px;
+        padding: 20px;
+    }
+    
+    .game-over h2 {
+        font-size: 2rem;
+    }
+    
+    .game-over p {
+        font-size: 1.2rem;
+    }
+}
+
+/* 横向きスマホ対応 (768px以下の横幅で、かつ横向きの場合) */
+@media screen and (orientation: landscape) and (max-width: 768px) {
+    body {
+        /* 横向きスマホでは、画面全体を埋めるように調整 */
+        padding: 0;
+        margin: 0;
+        min-height: 100vh;
+        width: 100vw;
+        display: flex;
+        flex-direction: column; /* 縦方向に要素を並べる */
+        justify-content: flex-start; /* 上から配置 */
+        align-items: center;
+        overflow-y: auto; /* 必要に応じて縦スクロールを許可 */
+        overflow-x: hidden; /* 横方向のスクロールは禁止 */
+    }
+
+    .game-container {
+        /* 横向きスマホでは、パディングを減らすか調整してスペースを確保 */
+        padding: 10px;
+        width: 100%; /* 横幅いっぱいに */
+        max-width: none; /* 最大幅の制限を解除 */
+        display: flex; /* Flexboxで子要素を配置 */
+        flex-direction: column; /* 縦方向に要素を並べる */
+        align-items: center; /* 中央揃え */
+        justify-content: flex-start; /* 上から配置 */
+    }
+
+    .game-header {
+        width: 95%; /* ヘッダーの幅を調整 */
+        flex-direction: row; /* 横並びに戻す */
+        justify-content: space-between; /* 両端揃え */
+        align-items: center;
+        margin-bottom: 5px; /* マージンを減らす */
+        padding: 5px 10px; /* パディングを減らす */
+    }
+
+    .game-header h1 {
+        font-size: 1.2rem; /* ヘッダーの文字サイズをさらに小さく */
+    }
+
+    .score {
+        font-size: 0.9rem; /* スコアの文字サイズをさらに小さく */
+        line-height: 1.2;
+    }
+
+    #gameCanvas {
+        width: 95vw; /* ビューポートの横幅の95%を使用 */
+        max-width: 600px; /* ある程度の最大幅を設定（より広いスマホ向け） */
+        height: auto; /* 高さ自動調整 */
+        aspect-ratio: 2 / 1; /* アスペクト比を2:1に固定 (Canvasのwidth:heightと同じ) */
+        margin: 5px auto; /* 上下のマージンを調整 */
+    }
+
+    .game-controls {
+        flex-direction: row; /* コントロールボタンを横並びにする */
+        gap: 10px; /* ボタン間のスペースを調整 */
+        margin: 5px 0 10px 0; /* マージンを調整 */
+        padding: 0 10px;
+        width: 95%; /* 幅を調整 */
+        justify-content: center; /* 中央に配置 */
+    }
+
+    .move-controls, .action-controls {
+        gap: 5px; /* 各グループ内のボタン間のスペースを調整 */
+    }
+
+    .control-btn {
+        font-size: 0.8rem; /* ボタンの文字サイズを小さく */
+        padding: 8px 15px; /* ボタンのパディングを小さく */
+        border-radius: 10px; /* 角丸を小さく */
+    }
+
+    .move-btn {
+        font-size: 1rem; /* 矢印ボタンは少し大きめ */
+        padding: 8px 10px;
+    }
+
+    .game-info {
+        font-size: 0.7rem; /* 情報テキストを小さく */
+        margin: 5px 0;
+        line-height: 1.4;
+        width: 95%;
+    }
+    
+    /* ゲームオーバー/ステージクリア画面の表示調整 */
+    .game-over {
+        transform: translate(-50%, -50%) scale(0.8); /* 少し縮小して収める */
+        padding: 20px;
+        width: 80%;
+    }
+    .game-over h2 {
+        font-size: 1.8rem;
+    }
+    .game-over p {
+        font-size: 1rem;
+    }
+    .restart-btn {
+        font-size: 1rem;
+        padding: 10px 20px;
+    }
+}
+
+/* 縦画面（portrait）の場合のみメッセージを表示し、ゲームを隠す */
+@media screen and (orientation: portrait) and (max-width: 768px) {
+    .rotate-message {
+        display: flex; /* 縦画面でスマホの場合に表示 */
+    }
+    .game-container {
+        display: none; /* 縦画面でスマホの場合、ゲームを隠す */
+    }
+    body {
+        overflow: hidden; /* 縦画面でスクロールバーが出ないように */
+    }
+}
+
+@media (max-width: 480px) {
+    .game-header h1 {
+        font-size: 1.2rem;
+    }
+    
+    .score {
+        font-size: 1rem;
+    }
+    
+    .control-btn {
+        font-size: 0.9rem;
+        padding: 10px 15px;
+    }
+    
+    .game-info {
+        font-size: 0.8rem;
+    }
+    
+    .game-over h2 {
+        font-size: 1.5rem;
+    }
+    
+    .game-over p {
+        font-size: 1rem;
+    }
+}
+
+/* アニメーション効果 */
+@keyframes glow {
+    0%, 100% { text-shadow: 0 0 20px #00ffff; }
+    50% { text-shadow: 0 0 30px #00ffff, 0 0 40px #00ffff; }
+}
+
+.game-header h1 {
+    animation: glow 2s ease-in-out infinite;
+}

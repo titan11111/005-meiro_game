@@ -1,0 +1,278 @@
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    /* 背景画像をユーザーが提供したサイバーパンク風の画像に変更 */
+    background: url('ChatGPT Image 2025年6月14日 21_40_00.jpg') no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+    color: #eee; /* 全体の文字色を明るくして、暗い背景に合わせる */
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7); /* 背景が暗くなったので、オーバーレイも暗めに、透過度を調整 */
+    backdrop-filter: blur(8px); /* ぼかしを少し強めて、背景が主張しすぎないように */
+    z-index: -1;
+}
+
+#title-screen, #quiz-container {
+    background-color: rgba(15, 15, 30, 0.95); /* サイバーパンク風に暗めの背景色に調整 */
+    border: 4px solid #00ffff; /* シアン系のネオンカラーをアクセントに */
+    border-radius: 20px;
+    padding: 25px;
+    width: 90%;
+    max-width: 650px;
+    margin: 40px auto;
+    box-shadow: 0 0 25px rgba(0,255,255,0.4); /* ネオンカラーの影 */
+    text-align: center;
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+h1 {
+    color: #00ffff; /* シアン系のネオンカラー */
+    text-shadow: 0 0 15px rgba(0,255,255,0.8), 0 0 5px rgba(0,255,255,0.5); /* ネオン効果を強調 */
+    margin-bottom: 15px;
+    font-size: 2.5em;
+}
+
+.subtitle {
+    font-size: 1.3em;
+    color: #aaffff; /* 少し明るいシアン */
+    margin-bottom: 30px;
+    line-height: 1.5;
+}
+
+#question-number {
+    font-size: 1.1em;
+    color: #88ffff;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+#question {
+    font-size: 1.6em;
+    margin-bottom: 25px;
+    min-height: 70px;
+    color: #ffffff; /* 白に近い色 */
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.choices-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.choice {
+    background-color: rgba(50, 50, 70, 0.8); /* 暗い背景に合うように調整 */
+    border: 2px solid #00ffff; /* ネオンカラーのボーダー */
+    width: 47%;
+    height: 90px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s, border-color 0.2s;
+    font-size: 1.6em;
+    font-weight: bold;
+    color: #aaffff; /* 文字色もネオンカラーに */
+    box-sizing: border-box;
+    box-shadow: 0 4px 10px rgba(0,255,255,0.2); /* ネオンカラーの影 */
+}
+
+.choice:hover {
+    background-color: rgba(70, 70, 90, 0.9); /* ホバー時の色 */
+    transform: scale(1.03);
+    box-shadow: 0 6px 15px rgba(0,255,255,0.4); /* ホバー時の影 */
+    border-color: #ff00ff; /* ホバーで色を変える */
+}
+
+.choice:active {
+    transform: scale(0.98);
+}
+
+.choice:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: rgba(30, 30, 45, 0.8);
+    border-color: #555;
+    box-shadow: none;
+    color: #888;
+}
+
+#feedback {
+    margin: 25px 0;
+    font-weight: bold;
+    min-height: 90px;
+    border-top: 2px dashed #00ccff; /* ネオンカラーの点線 */
+    padding-top: 15px;
+    color: #00ffff; /* ネオンカラー */
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    text-shadow: 0 0 5px rgba(0,255,255,0.5);
+}
+
+#result {
+    margin-top: 20px;
+    font-size: 1.5em;
+    color: #ff00ff; /* マゼンタ系のネオンカラー */
+    font-weight: bold;
+    line-height: 1.6;
+    text-shadow: 0 0 8px rgba(255,0,255,0.6);
+}
+
+#next-btn, #restart-btn, #start-btn, #line-share {
+    margin-top: 15px;
+    padding: 14px 30px;
+    font-size: 1.1em;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: inline-block;
+    transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    color: #ffffff; /* ボタンの文字色を白に */
+    border: 2px solid; /* ボーダーを追加 */
+}
+
+#start-btn {
+    background-color: #9933ff; /* 紫系のネオン */
+    border-color: #cc66ff;
+}
+
+#start-btn:hover {
+    background-color: #bb66ff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(153,51,255,0.4);
+}
+
+#next-btn {
+    background-color: #0099ff; /* 青系のネオン */
+    border-color: #66ccff;
+}
+
+#next-btn:hover {
+    background-color: #33bbff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,153,255,0.4);
+}
+
+#restart-btn {
+    background-color: #ff33cc; /* ピンク系のネオン */
+    border-color: #ff66ee;
+}
+
+#restart-btn:hover {
+    background-color: #ff66ee;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(255,51,204,0.4);
+}
+
+#line-share {
+    background-color: #00c300; /* LINEの標準カラーを維持 */
+    color: white;
+    text-decoration: none;
+    line-height: 1;
+    border-color: #00e000;
+}
+
+#line-share:hover {
+    background-color: #00a800;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+}
+
+/* 画面フラッシュ時のトランジション */
+body.flash-correct {
+    background-color: #00cc00 !important; /* 緑のネオンカラー */
+    transition: background-color 0.3s ease-out;
+}
+
+body.flash-wrong {
+    background-color: #ff3333 !important; /* 赤のネオンカラー */
+    transition: background-color 0.3s ease-out;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+    #title-screen, #quiz-container {
+        margin: 20px auto;
+        padding: 15px;
+        min-height: 500px;
+    }
+
+    h1 {
+        font-size: 2em;
+    }
+
+    .subtitle {
+        font-size: 1.1em;
+    }
+
+    #question {
+        font-size: 1.4em;
+        min-height: 60px;
+    }
+
+    .choice {
+        width: 100%;
+        height: 70px;
+        font-size: 1.4em;
+    }
+
+    #feedback {
+        font-size: 1.1em;
+        min-height: 70px;
+    }
+
+    #next-btn, #restart-btn, #start-btn, #line-share {
+        padding: 10px 20px;
+        font-size: 1em;
+    }
+
+    #result {
+        font-size: 1.3em;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.8em;
+    }
+
+    .subtitle {
+        font-size: 1em;
+    }
+
+    #question {
+        font-size: 1.2em;
+        min-height: 50px;
+    }
+
+    .choice {
+        font-size: 1.2em;
+    }
+
+    #feedback {
+        font-size: 1em;
+        min-height: 60px;
+    }
+}
