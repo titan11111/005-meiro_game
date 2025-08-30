@@ -10,14 +10,18 @@ const GameState = {
   isQuiz: false,
   gameOver: false,
   gameClear: false,
-  collected: [] // コレクションアイテムを管理
+  collected: [], // コレクションアイテムを管理
+  timeLeft: 30,
+  items: [],
+  timerId: null,
+  itemSpawnId: null
 };
 
 const Assets = {
   images: {},
   sounds: {},
   load(callback) {
-    const imgList = ["hero", "treasure", "mimic", "coin", "flag"];
+    const imgList = ["hero", "treasure", "mimic", "coin", "flag", "clock"];
     const soundList = ["bgm", "seikai", "fuseikai", "takara", "kamituku"];
     let total = imgList.length;
     let loaded = 0;
@@ -133,6 +137,21 @@ const Renderer = {
       }
     });
 
+    // 落下アイテムを描画
+    GameState.items.forEach(item => {
+      const px = item.x * cellSize + offsetX;
+      const py = item.y * cellSize + offsetY;
+      if (px > this.canvas.width || py > this.canvas.height ||
+          px + cellSize < 0 || py + cellSize < 0) return;
+      const img = Assets.images.clock;
+      if (img) {
+        ctx.drawImage(img, px, py, cellSize, cellSize);
+      } else {
+        ctx.fillStyle = '#00f';
+        ctx.fillRect(px, py, cellSize, cellSize);
+      }
+    });
+
     // ヒーローを描画（常に中央）
     const heroImg = Assets.images.hero;
     if (heroImg) {
@@ -162,9 +181,17 @@ const GameEngine = {
     GameState.isQuiz = false;
     GameState.revealed = [];
     GameState.usedMimics = [];
+    GameState.timeLeft = 30;
+    updateTimeDisplay();
+    GameState.items = [];
+    if (GameState.timerId) clearInterval(GameState.timerId);
+    if (GameState.itemSpawnId) clearInterval(GameState.itemSpawnId);
     this.generateMaze();
     this.placeTreasures();
     Renderer.draw();
+    this.startTimer();
+    this.startItemSpawn();
+    this.loop();
   },
   
   resizeCanvas() { // Renamed from rresizeCanvas to resizeCanvas
@@ -266,7 +293,59 @@ const GameEngine = {
       GameState.treasures.push({ x: gx, y: gy, isMimic: false, isGoal: true });
     }
   },
-  
+
+  startTimer() {
+    GameState.timerId = setInterval(() => {
+      if (GameState.gameOver || GameState.gameClear) return;
+      GameState.timeLeft--;
+      updateTimeDisplay();
+      if (GameState.timeLeft <= 0) {
+        clearInterval(GameState.timerId);
+        if (GameState.itemSpawnId) clearInterval(GameState.itemSpawnId);
+        GameState.gameOver = true;
+        document.getElementById("game-over-reason").textContent = "時間切れ...";
+        showModal(document.getElementById("game-over-modal"));
+      }
+    }, 1000);
+  },
+
+  startItemSpawn() {
+    GameState.itemSpawnId = setInterval(() => {
+      if (GameState.gameOver || GameState.gameClear) return;
+      this.spawnItem();
+    }, 2000);
+  },
+
+  spawnItem() {
+    const hasFast = GameState.items.some(i => i.type === 'fastClock');
+    const type = !hasFast && Math.random() < 0.2 ? 'fastClock' : 'clock';
+    const speed = type === 'fastClock' ? 0.4 : 0.2;
+    const x = Math.floor(Math.random() * (GameState.size - 2)) + 1;
+    GameState.items.push({ x, y: 0, speed, type });
+  },
+
+  loop() {
+    if (GameState.gameOver || GameState.gameClear) return;
+    this.updateItems();
+    Renderer.draw();
+    requestAnimationFrame(() => this.loop());
+  },
+
+  updateItems() {
+    GameState.items.forEach(it => it.y += it.speed);
+    GameState.items = GameState.items.filter(it => {
+      const caught = Math.abs(it.x - GameState.hero.x) < 0.5 && Math.abs(it.y - GameState.hero.y) < 0.5;
+      if (caught) {
+        if (it.type === 'fastClock' || it.type === 'clock') {
+          GameState.timeLeft += 1;
+          updateTimeDisplay();
+        }
+        return false;
+      }
+      return it.y < GameState.size;
+    });
+  },
+
   moveHero(dx, dy) {
     if (GameState.gameOver || GameState.gameClear || GameState.isQuiz) return;
     
@@ -431,6 +510,11 @@ function showModal(modal) {
 
 function hideModal(modal) {
   modal.classList.add("hidden");
+}
+
+function updateTimeDisplay() {
+  const el = document.getElementById("time");
+  if (el) el.textContent = GameState.timeLeft;
 }
 
 function playSound(soundId) {
