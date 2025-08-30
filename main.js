@@ -310,10 +310,19 @@ const GameEngine = {
   },
 
   startItemSpawn() {
-    GameState.itemSpawnId = setInterval(() => {
+    let spawnCount = 0;
+    const spawn = () => {
       if (GameState.gameOver || GameState.gameClear) return;
       this.spawnItem();
-    }, 2000);
+      spawnCount++;
+      if (spawnCount >= 3 && GameState.itemSpawnId) {
+        clearInterval(GameState.itemSpawnId);
+        GameState.itemSpawnId = null;
+      }
+    };
+
+    spawn();
+    GameState.itemSpawnId = setInterval(spawn, 20000);
   },
 
   spawnItem() {
