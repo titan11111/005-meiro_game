@@ -606,7 +606,7 @@ function setupEventListeners() {
   });
 }
 
-// クイズデータ（main.jsに統合）
+
 const quizData = [
   { question: "[算数] 1mは何cm？", options: ["10cm", "100cm", "1000cm"], answer: "100cm" },
   { question: "[理科] 雨の後にできるものは？", options: ["雲", "風", "虹"], answer: "虹" },
