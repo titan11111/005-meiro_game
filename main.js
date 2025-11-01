@@ -607,19 +607,6 @@ function setupEventListeners() {
 }
 
 
-const quizData = [
-  { question: "[算数] 1mは何cm？", options: ["10cm", "100cm", "1000cm"], answer: "100cm" },
-  { question: "[理科] 雨の後にできるものは？", options: ["雲", "風", "虹"], answer: "虹" },
-  { question: "[社会] 海に囲まれた国は？", options: ["日本", "中国", "ロシア"], answer: "日本" },
-  { question: "[算数] 三角形の角の和は？", options: ["90度", "180度", "360度"], answer: "180度" },
-  { question: "[理科] 春に咲く花は？", options: ["ひまわり", "たんぽぽ", "あさがお"], answer: "たんぽぽ" },
-  { question: "[理科] 月は自分で光る？", options: ["はい", "いいえ"], answer: "いいえ" },
-  { question: "[国語] 『山』を使った熟語は？", options: ["川山", "火山", "土山"], answer: "火山" },
-  { question: "[社会] 外国と物を売り買いすることを？", options: ["運送", "貿易", "取引"], answer: "貿易" },
-  { question: "[算数] 九九の7×8は？", options: ["56", "63", "48"], answer: "56" },
-  { question: "[理科] 植物が光を受けて作るものは？", options: ["酸素", "二酸化炭素", "水"], answer: "酸素" }
-];
-
 // 初期化
 document.addEventListener('DOMContentLoaded', () => {
   Renderer.init();
