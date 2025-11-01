@@ -533,28 +533,65 @@ function playSound(soundId) {
   }
 }
 
+// 長押し移動のための変数
+let holdingIntervals = {
+  up: null,
+  down: null,
+  left: null,
+  right: null
+};
+
+// 長押し移動を開始
+function startHolding(direction, dx, dy) {
+  if (holdingIntervals[direction]) return;
+  GameEngine.moveHero(dx, dy);
+  holdingIntervals[direction] = setInterval(() => {
+    GameEngine.moveHero(dx, dy);
+  }, 100);
+}
+
+// 長押し移動を終了
+function stopHolding(direction) {
+  if (holdingIntervals[direction]) {
+    clearInterval(holdingIntervals[direction]);
+    holdingIntervals[direction] = null;
+  }
+}
+
 // イベントリスナー設定
 function setupEventListeners() {
-  // ボタン操作
-  document.getElementById("up").onclick = () => GameEngine.moveHero(0, -1);
-  document.getElementById("down").onclick = () => GameEngine.moveHero(0, 1);
-  document.getElementById("left").onclick = () => GameEngine.moveHero(-1, 0);
-  document.getElementById("right").onclick = () => GameEngine.moveHero(1, 0);
-
-  // タッチ操作（スマホ対応）
   const upBtn = document.getElementById("up");
   const downBtn = document.getElementById("down");
   const leftBtn = document.getElementById("left");
   const rightBtn = document.getElementById("right");
 
-  upBtn.addEventListener('touchstart', (e) => { e.preventDefault(); GameEngine.moveHero(0, -1); });
-  upBtn.addEventListener('touchend', (e) => { e.preventDefault(); });
-  downBtn.addEventListener('touchstart', (e) => { e.preventDefault(); GameEngine.moveHero(0, 1); });
-  downBtn.addEventListener('touchend', (e) => { e.preventDefault(); });
-  leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); GameEngine.moveHero(-1, 0); });
-  leftBtn.addEventListener('touchend', (e) => { e.preventDefault(); });
-  rightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); GameEngine.moveHero(1, 0); });
-  rightBtn.addEventListener('touchend', (e) => { e.preventDefault(); });
+  // 上ボタン
+  upBtn.addEventListener('mousedown', () => startHolding('up', 0, -1));
+  upBtn.addEventListener('mouseup', () => stopHolding('up'));
+  upBtn.addEventListener('mouseleave', () => stopHolding('up'));
+  upBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startHolding('up', 0, -1); });
+  upBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopHolding('up'); });
+
+  // 下ボタン
+  downBtn.addEventListener('mousedown', () => startHolding('down', 0, 1));
+  downBtn.addEventListener('mouseup', () => stopHolding('down'));
+  downBtn.addEventListener('mouseleave', () => stopHolding('down'));
+  downBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startHolding('down', 0, 1); });
+  downBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopHolding('down'); });
+
+  // 左ボタン
+  leftBtn.addEventListener('mousedown', () => startHolding('left', -1, 0));
+  leftBtn.addEventListener('mouseup', () => stopHolding('left'));
+  leftBtn.addEventListener('mouseleave', () => stopHolding('left'));
+  leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startHolding('left', -1, 0); });
+  leftBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopHolding('left'); });
+
+  // 右ボタン
+  rightBtn.addEventListener('mousedown', () => startHolding('right', 1, 0));
+  rightBtn.addEventListener('mouseup', () => stopHolding('right'));
+  rightBtn.addEventListener('mouseleave', () => stopHolding('right'));
+  rightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startHolding('right', 1, 0); });
+  rightBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopHolding('right'); });
 
   // キーボード操作
   document.addEventListener("keydown", (e) => {
