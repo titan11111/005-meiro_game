@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>2025 best game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Press Start 2P', cursive;
+      margin: 0;
+      padding: 20px;
+      background: #1a1a2e;
+      background-image: 
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px),
+        repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px);
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 20px;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin: 0;
+      color: #ffd700;
+      text-shadow: 
+        4px 4px 0 #ff6b6b,
+        8px 8px 0 #4ecdc4,
+        12px 12px 0 #45b7d1;
+      animation: titlePulse 2s ease-in-out infinite;
+      line-height: 1.5;
+    }
+
+    @keyframes titlePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+      color: #4ecdc4;
+      margin-top: 20px;
+      text-shadow: 2px 2px 0 #000;
+      animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0.3; }
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 25px;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding-bottom: 40px;
+    }
+
+    .card {
+      background: #16213e;
+      border: 4px solid #0f3460;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s;
+      cursor: pointer;
+      box-shadow: 
+        0 0 0 2px #0f3460,
+        0 8px 0 #0a2642,
+        inset 0 2px 4px rgba(255,255,255,0.1);
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 
+        0 0 0 2px #4ecdc4,
+        0 12px 0 #0a2642,
+        0 0 20px rgba(78, 205, 196, 0.5),
+        inset 0 2px 4px rgba(255,255,255,0.2);
+      border-color: #4ecdc4;
+    }
+
+    .card:active {
+      transform: translateY(-4px);
+      box-shadow: 
+        0 0 0 2px #4ecdc4,
+        0 4px 0 #0a2642,
+        inset 0 2px 4px rgba(255,255,255,0.1);
+    }
+
+    .card-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .number-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: #ff6b6b;
+      color: #fff;
+      padding: 8px 12px;
+      font-size: 0.7rem;
+      z-index: 10;
+      border: 2px solid #fff;
+      box-shadow: 
+        0 0 0 2px #0f3460,
+        4px 4px 0 rgba(0,0,0,0.3);
+      text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+    }
+
+    .image-wrapper {
+      width: 100%;
+      height: 180px;
+      background: #0a2642;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 4px solid #0f3460;
+    }
+
+    .image-wrapper::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.1) 2px,
+        rgba(0,0,0,0.1) 4px
+      );
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .image-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+      transition: transform 0.3s;
+    }
+
+    /* 画像上のタイトルオーバーレイ */
+    .image-title-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.7), transparent);
+      padding: 15px 10px 10px 10px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .image-title-overlay .title {
+      font-size: 0.8rem;
+      line-height: 1.4;
+      color: #fff;
+      text-shadow: 2px 2px 0 #000, 0 0 8px rgba(0,0,0,0.9);
+      margin: 0;
+      min-height: auto;
+      display: block;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .card:hover .image-wrapper img {
+      transform: scale(1.1);
+    }
+
+    .no-image {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      color: #4ecdc4;
+      font-size: 0.6rem;
+      text-align: center;
+      padding: 20px;
+      background: repeating-linear-gradient(
+        45deg,
+        #0a2642,
+        #0a2642 10px,
+        #0f3460 10px,
+        #0f3460 20px
+      );
+    }
+
+    .content {
+      padding: 15px;
+      background: linear-gradient(to bottom, #16213e, #0f3460);
+    }
+
+    .title {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 10px;
+      color: #fff;
+      text-shadow: 2px 2px 0 #000;
+      min-height: 3.2em;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* すべてのゲームでコンテンツエリアのタイトルを非表示（画像上に表示） */
+    .content .title {
+      display: none;
+    }
+
+    .play-button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background: #4ecdc4;
+      color: #000;
+      text-align: center;
+      font-size: 0.7rem;
+      border: 2px solid #fff;
+      box-shadow: 
+        0 0 0 2px #0f3460,
+        0 6px 0 #0a2642,
+        inset 0 2px 4px rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      transition: all 0.05s cubic-bezier(0.4, 0, 0.2, 1);
+      margin-top: 10px;
+      text-shadow: none;
+      text-decoration: none;
+      cursor: pointer;
+      position: relative;
+      user-select: none;
+    }
+
+    .play-button:hover {
+      background: #45b7d1;
+      transform: translateY(2px);
+      box-shadow: 
+        0 0 0 2px #0f3460,
+        0 4px 0 #0a2642,
+        inset 0 2px 4px rgba(255,255,255,0.4);
+    }
+
+    .play-button:active {
+      transform: translateY(6px);
+      box-shadow: 
+        0 0 0 2px #0f3460,
+        0 0 0 #0a2642,
+        inset 0 4px 8px rgba(0,0,0,0.5);
+      background: #3aa8b8;
+    }
+
+    .play-button.clicked {
+      animation: buttonClick 0.15s ease-out;
+    }
+
+    @keyframes buttonClick {
+      0% {
+        transform: translateY(6px) scale(0.98);
+      }
+      50% {
+        transform: translateY(6px) scale(0.95);
+      }
+      100% {
+        transform: translateY(6px) scale(1);
+      }
+    }
+
+    .controls {
+      max-width: 1000px;
+      margin: 0 auto 30px auto;
+      padding: 20px;
+      background: #0f3460;
+      border: 4px solid #4ecdc4;
+      box-shadow: 
+        0 0 0 2px #0a2642,
+        0 8px 0 #0a2642,
+        inset 0 2px 4px rgba(255,255,255,0.1);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      background: #16213e;
+      color: #4ecdc4;
+      border: 2px solid #0a2642;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.6rem;
+      outline: none;
+      box-shadow: inset 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    input::placeholder {
+      color: #4ecdc4;
+      opacity: 0.5;
+    }
+
+    input:focus {
+      border-color: #4ecdc4;
+      box-shadow: 
+        inset 0 4px 8px rgba(0,0,0,0.3),
+        0 0 10px rgba(78, 205, 196, 0.3);
+    }
+
+    button {
+      padding: 12px 20px;
+      background: #ff6b6b;
+      color: #fff;
+      border: 2px solid #fff;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.6rem;
+      cursor: pointer;
+      text-transform: uppercase;
+      box-shadow: 
+        0 0 0 2px #0f3460,
+        0 6px 0 #0a2642,
+        inset 0 2px 4px rgba(255,255,255,0.4);
+      transition: all 0.05s cubic-bezier(0.4, 0, 0.2, 1);
+      text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+      position: relative;
+      user-select: none;
+    }
+
+    button:hover {
+      background: #ff5252;
+      transform: translateY(2px);
+      box-shadow: 
+        0 0 0 2px #0f3460,
+        0 4px 0 #0a2642,
+        inset 0 2px 4px rgba(255,255,255,0.4);
+    }
+
+    button:active {
+      transform: translateY(6px);
+      box-shadow: 
+        0 0 0 2px #0f3460,
+        0 0 0 #0a2642,
+        inset 0 4px 8px rgba(0,0,0,0.5);
+      background: #e53935;
+    }
+
+    button.clicked {
+      animation: buttonClick 0.15s ease-out;
+    }
+
+    .btn-random {
+      background: #ffd700;
+      color: #000;
+    }
+
+    .btn-random:hover {
+      background: #ffed4e;
+    }
+
+    .empty-message {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 40px;
+      color: #4ecdc4;
+      font-size: 0.8rem;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+      
+      .subtitle {
+        font-size: 0.6rem;
+      }
+      
+      .container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      
+      .controls {
+        flex-direction: column;
+      }
+      
+      .search-box {
+        width: 100%;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card {
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+
+    /* ゲーム表示エリア */
+    .game-view {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: #1a1a2e;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .back-button-container {
+      padding: 15px 20px;
+      background: #0f3460;
+      border-bottom: 4px solid #4ecdc4;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      z-index: 1001;
+    }
+
+    .btn-back {
+      padding: 12px 24px;
+      background: #ff6b6b;
+      color: #fff;
+      border: 2px solid #fff;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.6rem;
+      cursor: pointer;
+      text-transform: uppercase;
+      box-shadow: 
+        0 0 0 2px #0f3460,
+        0 6px 0 #0a2642,
+        inset 0 2px 4px rgba(255,255,255,0.4);
+      transition: all 0.05s cubic-bezier(0.4, 0, 0.2, 1);
+      text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+      position: relative;
+      user-select: none;
+    }
+
+    .btn-back:hover {
+      background: #ff5252;
+      transform: translateY(2px);
+      box-shadow: 
+        0 0 0 2px #0f3460,
+        0 4px 0 #0a2642,
+        inset 0 2px 4px rgba(255,255,255,0.4);
+    }
+
+    .btn-back:active {
+      transform: translateY(6px);
+      box-shadow: 
+        0 0 0 2px #0f3460,
+        0 0 0 #0a2642,
+        inset 0 4px 8px rgba(0,0,0,0.5);
+      background: #e53935;
+    }
+
+    .btn-back.clicked {
+      animation: buttonClick 0.15s ease-out;
+    }
+
+    .game-frame-wrapper {
+      flex: 1;
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #game-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    .launcher-view {
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>2025 BEST GAME</h1>
+  <div class="subtitle">▶ PRESS START TO PLAY ◀</div>
+</div>
+
+<div class="controls">
+  <div class="search-box">
+    <input type="text" id="search-input" placeholder="SEARCH...">
+  </div>
+  <button class="btn-random" id="random-btn">🎲 RANDOM</button>
+  <button id="reset-btn">RESET</button>
+</div>
+
+<div class="launcher-view" id="launcher-view">
+  <div class="container" id="game-container"></div>
+</div>
+
+<div class="game-view" id="game-view" style="display: none;">
+  <div class="back-button-container">
+    <button class="btn-back" id="back-btn">◀ BACK TO SELECTION</button>
+  </div>
+  <div class="game-frame-wrapper">
+    <iframe id="game-frame" src="about:blank" frameborder="0" allowfullscreen></iframe>
+  </div>
+</div>
+
+<script>
+const GAMES = [
+  { id: 1, title: 'カラーワールド', url: 'https://titan11111.github.io/007-iro_game/', image: '007.png' },
+  { id: 2, title: '買い物ゲーム', url: 'https://titan11111.github.io/011-kaimono_game/', image: '011.png' },
+  { id: 3, title: 'ロボットランナー', url: 'https://titan11111.github.io/016-nigeru/', image: '016.png' },
+  { id: 4, title: '散歩探偵', url: 'https://titan11111.github.io/021-sanpo/', image: '021.png' },
+  { id: 5, title: '坊主相談', url: 'https://titan11111.github.io/026-bouzu/', image: '026.png' },
+  { id: 6, title: 'シューティング', url: 'https://titan11111.github.io/031-shoot/', image: '031.png' },
+  { id: 7, title: 'シャドウキャッスル', url: 'https://titan11111.github.io/034-demon_castle/', image: '034.png' },
+  { id: 8, title: '爆速', url: 'https://titan11111.github.io/052-bakusoku/', image: '052.png' },
+  { id: 9, title: 'ブロック崩し', url: 'https://titan11111.github.io/055-block/', image: '055.png' },
+  { id: 10, title: 'ローグライト', url: 'https://titan11111.github.io/062-roguelite/', image: '062.png' },
+  { id: 11, title: '天誅', url: 'https://titan11111.github.io/082-tenchuuu/', image: '082.png' },
+  { id: 12, title: '魂の旅人', url: 'https://titan11111.github.io/083-bungaku/', image: '083.png' },
+  { id: 13, title: 'ニューヨークチャレンジ', url: 'https://titan11111.github.io/092-newyork/', image: '092.png' }
+];
+
+const container = document.getElementById("game-container");
+const searchInput = document.getElementById("search-input");
+const randomBtn = document.getElementById("random-btn");
+const resetBtn = document.getElementById("reset-btn");
+const launcherView = document.getElementById("launcher-view");
+const gameView = document.getElementById("game-view");
+const gameFrame = document.getElementById("game-frame");
+const backBtn = document.getElementById("back-btn");
+
+// クリック音を生成する関数
+let audioContext = null;
+function playClickSound() {
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  
+  const oscillator = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+  
+  oscillator.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+  
+  // 「かちっ」という音を生成
+  oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+  oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.05);
+  oscillator.type = 'square';
+  
+  gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+  
+  oscillator.start(audioContext.currentTime);
+  oscillator.stop(audioContext.currentTime + 0.05);
+}
+
+function renderGames(gameList) {
+  container.innerHTML = "";
+
+  if (gameList.length === 0) {
+    container.innerHTML = '<div class="empty-message">NO GAMES FOUND</div>';
+    return;
+  }
+
+  gameList.forEach((game, index) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.setAttribute("data-game-id", game.id);
+    card.style.animationDelay = `${index * 0.05}s`;
+    card.style.opacity = "0";
+
+    const link = document.createElement("a");
+    link.href = game.url;
+    link.target = "_blank";
+    link.className = "card-link";
+
+    const numberBadge = document.createElement("div");
+    numberBadge.className = "number-badge";
+    numberBadge.textContent = `#${String(game.id).padStart(2, "0")}`;
+
+    const imageWrapper = document.createElement("div");
+    imageWrapper.className = "image-wrapper";
+
+    const img = document.createElement("img");
+    img.src = game.image;
+    img.alt = game.title;
+    img.loading = "lazy";
+
+    img.onerror = () => {
+      img.style.display = "none";
+      const noImage = document.createElement("div");
+      noImage.className = "no-image";
+      noImage.textContent = "NO IMAGE";
+      imageWrapper.appendChild(noImage);
+    };
+
+    imageWrapper.appendChild(img);
+
+    // すべてのゲームで画像上にタイトルを表示
+    const imageTitleOverlay = document.createElement("div");
+    imageTitleOverlay.className = "image-title-overlay";
+    const imageTitle = document.createElement("div");
+    imageTitle.className = "title";
+    imageTitle.textContent = game.title;
+    imageTitleOverlay.appendChild(imageTitle);
+    imageWrapper.appendChild(imageTitleOverlay);
+
+    const content = document.createElement("div");
+    content.className = "content";
+
+    const title = document.createElement("div");
+    title.className = "title";
+    title.textContent = game.title;
+
+    const playButton = document.createElement("button");
+    playButton.type = "button";
+    playButton.className = "play-button";
+    playButton.textContent = "▶ PLAY NOW";
+    playButton.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      playClickSound();
+      playButton.classList.add('clicked');
+      setTimeout(() => {
+        playButton.classList.remove('clicked');
+      }, 150);
+      // ゲームをiframeで表示
+      showGame(game.url);
+    };
+
+    content.appendChild(title);
+    content.appendChild(playButton);
+
+    // カード全体をクリックしてもゲームを開く
+    card.onclick = (e) => {
+      if (e.target !== playButton && !playButton.contains(e.target)) {
+        playClickSound();
+        showGame(game.url);
+      }
+    };
+
+    link.appendChild(numberBadge);
+    link.appendChild(imageWrapper);
+    link.appendChild(content);
+
+    card.appendChild(link);
+    container.appendChild(card);
+  });
+}
+
+function filterGames() {
+  const keyword = searchInput.value.toLowerCase();
+  const filtered = GAMES.filter(game => 
+    game.title.toLowerCase().includes(keyword)
+  );
+  renderGames(filtered);
+}
+
+function pickRandom() {
+  const randomGame = GAMES[Math.floor(Math.random() * GAMES.length)];
+  window.open(randomGame.url, '_blank');
+}
+
+searchInput.addEventListener("input", filterGames);
+randomBtn.addEventListener("click", (e) => {
+  playClickSound();
+  randomBtn.classList.add('clicked');
+  setTimeout(() => {
+    randomBtn.classList.remove('clicked');
+  }, 150);
+  pickRandom();
+});
+resetBtn.addEventListener("click", (e) => {
+  playClickSound();
+  resetBtn.classList.add('clicked');
+  setTimeout(() => {
+    resetBtn.classList.remove('clicked');
+  }, 150);
+  searchInput.value = "";
+  filterGames();
+});
+
+// ゲーム表示関数
+function showGame(url) {
+  gameFrame.src = url;
+  launcherView.style.display = 'none';
+  gameView.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+// ランチャーに戻る関数
+function backToLauncher() {
+  playClickSound();
+  backBtn.classList.add('clicked');
+  setTimeout(() => {
+    backBtn.classList.remove('clicked');
+  }, 150);
+  
+  gameFrame.src = '';
+  gameView.style.display = 'none';
+  launcherView.style.display = 'block';
+  document.body.style.overflow = 'auto';
+}
+
+// 戻るボタンのイベント
+backBtn.addEventListener("click", backToLauncher);
+
+// ESCキーで戻る
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && gameView.style.display !== "none") {
+    backToLauncher();
+  }
+});
+
+// 初回描画
+renderGames(GAMES);
+</script>
+
+</body>
+</html>
