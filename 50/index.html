@@ -1,0 +1,2202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>自分の家 - ホラーゲーム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            overflow: hidden;
+            background: #000;
+            font-family: 'Arial', sans-serif;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        #gameContainer {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        #instructions {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 255, 255, 0.9);
+            text-align: center;
+            font-size: 18px;
+            padding: 30px 40px;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            pointer-events: none;
+            z-index: 200;
+            line-height: 1.8;
+            max-width: 90%;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+        
+        #instructions h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        
+        #instructions .controls {
+            margin-top: 20px;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        #instructions .start-hint {
+            margin-top: 30px;
+            font-size: 20px;
+            color: #ffaa44;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        #flashlight {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        .vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            box-shadow: inset 0 0 200px rgba(0, 0, 0, 0.8);
+            pointer-events: none;
+        }
+        
+        #objective {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 170, 68, 0.5);
+            font-size: 14px;
+            line-height: 1.6;
+            max-width: 300px;
+            pointer-events: none;
+            z-index: 150;
+        }
+        
+        #objective h3 {
+            color: #ffaa44;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        #objective .progress {
+            margin-top: 10px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        #objective .key-item {
+            color: #88ff88;
+            margin: 5px 0;
+        }
+        
+        #objective .key-item.found {
+            color: #88ff88;
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        
+        #hint {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.8);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 150;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        #hint.show {
+            opacity: 1;
+        }
+        
+        #location {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 150;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        #floorplan {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 200px;
+            height: 240px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            padding: 10px;
+            pointer-events: none;
+            z-index: 150;
+        }
+        
+        #floorplan h4 {
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0 0 8px 0;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        #floorplan svg {
+            width: 100%;
+            height: calc(100% - 25px);
+        }
+        
+        .floorplan-room {
+            fill: rgba(100, 100, 100, 0.3);
+            stroke: rgba(255, 255, 255, 0.5);
+            stroke-width: 0.5;
+        }
+        
+        .floorplan-room.current {
+            fill: rgba(255, 170, 68, 0.5);
+            stroke: rgba(255, 170, 68, 1);
+            stroke-width: 1.5;
+        }
+        
+        .floorplan-wall {
+            stroke: rgba(255, 255, 255, 0.8);
+            stroke-width: 1;
+            fill: rgba(60, 60, 60, 0.8);
+        }
+        
+        .floorplan-door {
+            stroke: rgba(255, 200, 0, 0.8);
+            stroke-width: 1;
+            fill: rgba(255, 200, 0, 0.3);
+        }
+        
+        .floorplan-player {
+            fill: #ff0000;
+            stroke: rgba(255, 255, 255, 0.8);
+            stroke-width: 1;
+            r: 3;
+        }
+        
+        .key-glow {
+            animation: keyPulse 2s infinite;
+        }
+        
+        @keyframes keyPulse {
+            0%, 100% { 
+                box-shadow: 0 0 20px rgba(255, 170, 68, 0.8);
+            }
+            50% { 
+                box-shadow: 0 0 40px rgba(255, 170, 68, 1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="ui">
+            <div id="crosshair"></div>
+            <div id="instructions">
+                <h2>自分の家 - ホラーゲーム</h2>
+                <div class="controls">
+                    <strong>【操作方法】</strong><br>
+                    <strong>スマホ:</strong> スワイプで視点移動 | タッチで移動<br>
+                    <strong>PC:</strong> マウスで視点移動 | WASD/矢印キーで移動
+                </div>
+                <div class="start-hint">画面をタップ/クリックして開始</div>
+            </div>
+            <div id="objective">
+                <h3>🎯 目的</h3>
+                <div>家の中に隠された<strong style="color: #ffaa44;">3つの鍵</strong>を見つけて、玄関から脱出してください。</div>
+                <div class="progress">
+                    <div class="key-item" id="key1">🔑 鍵1: LDK（リビング・ダイニング・キッチン）</div>
+                    <div class="key-item" id="key2">🔑 鍵2: 廊下</div>
+                    <div class="key-item" id="key3">🔑 鍵3: 寝室</div>
+                </div>
+            </div>
+            <div id="hint"></div>
+            <div id="floorplan">
+                <h4>間取り図</h4>
+                <svg viewBox="0 0 200 240" preserveAspectRatio="xMidYMid meet">
+                    <!-- 外壁 -->
+                    <rect x="0" y="0" width="200" height="240" class="floorplan-wall" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2" />
+                    <!-- 玄関（x=-1.5～1.5, z=-15～-12）下中央 -->
+                    <!-- SVG座標: x=90～110 (幅20), y=0～24 (高さ24) -->
+                    <rect x="90" y="0" width="20" height="24" class="floorplan-room" id="floorplan-entrance" />
+                    <text x="100" y="14" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="8">玄関</text>
+                    <!-- ホール（廊下）（x=-2～2, z=-12～5）玄関の上、中央 -->
+                    <!-- SVG座標: x=86.7～113.3 (幅26.7), y=24～133.3 (高さ109.3) -->
+                    <rect x="86.7" y="24" width="26.7" height="109.3" class="floorplan-room" id="floorplan-corridor" />
+                    <text x="100" y="80" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="10">廊下</text>
+                    <!-- LDK（x=-15～-2, z=-15～5）左側、大きな空間 -->
+                    <!-- SVG座標: x=0～86.7 (幅86.7), y=0～133.3 (高さ133.3) -->
+                    <rect x="0" y="0" width="86.7" height="133.3" class="floorplan-room" id="floorplan-ldk" />
+                    <text x="43.3" y="66" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11">LDK</text>
+                    <!-- 寝室（和室8帖）（x=2～10, z=-12～-4）右側上 -->
+                    <!-- SVG座標: x=113.3～166.7 (幅53.4), y=24～80 (高さ56) -->
+                    <rect x="113.3" y="24" width="53.4" height="56" class="floorplan-room" id="floorplan-bedroom" />
+                    <text x="140" y="52" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="10">寝室</text>
+                    <!-- 子供部屋1（和室6帖）（x=2～10, z=-4～4）右側中 -->
+                    <!-- SVG座標: x=113.3～166.7 (幅53.4), y=80～146.7 (高さ66.7) -->
+                    <rect x="113.3" y="80" width="53.4" height="66.7" class="floorplan-room" id="floorplan-bedroom1" />
+                    <text x="140" y="113" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">子供部屋1</text>
+                    <!-- バスルーム（洗面室）（x=10～15, z=-8～-4）右側上 -->
+                    <!-- SVG座標: x=166.7～200 (幅33.3), y=46.7～80 (高さ33.3) -->
+                    <rect x="166.7" y="46.7" width="33.3" height="33.3" class="floorplan-room" id="floorplan-bathroom" />
+                    <text x="183.3" y="63" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="8">浴室</text>
+                    <!-- トイレ（x=10～15, z=-4～0）右側中 -->
+                    <!-- SVG座標: x=166.7～200 (幅33.3), y=80～120 (高さ40) -->
+                    <rect x="166.7" y="80" width="33.3" height="40" class="floorplan-room" id="floorplan-toilet" />
+                    <text x="183.3" y="100" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="8">トイレ</text>
+                    <!-- 物置（x=-6～-2, z=5～10）左側上 -->
+                    <!-- SVG座標: x=60～86.7 (幅26.7), y=80～133.3 (高さ53.3) -->
+                    <rect x="60" y="80" width="26.7" height="53.3" class="floorplan-room" id="floorplan-storage" />
+                    <text x="73.3" y="106" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="7">物置</text>
+                    <!-- 壁（内部）- 新しい座標に基づいて配置（正確な計算） -->
+                    <!-- 玄関と廊下の間の壁（z=-12, x=-1.5～1.5は開口部） -->
+                    <!-- z=-12 → y=24 -->
+                    <line x1="86.7" y1="24" x2="90" y2="24" class="floorplan-wall" stroke-width="2" />
+                    <line x1="110" y1="24" x2="113.3" y2="24" class="floorplan-wall" stroke-width="2" />
+                    <!-- LDKと廊下の間の壁（x=-2, z=-15～5、z=-12で開口部） -->
+                    <!-- x=-2 → x=86.7, z=-15～-12.5 (y=240～20), z=-11.5～5 (y=28～133.3) -->
+                    <line x1="86.7" y1="0" x2="86.7" y2="20" class="floorplan-wall" stroke-width="2" />
+                    <line x1="86.7" y1="28" x2="86.7" y2="133.3" class="floorplan-wall" stroke-width="2" />
+                    <!-- 寝室と廊下の間の壁（x=2, z=-12～-4） -->
+                    <!-- x=2 → x=113.3, z=-12～-4 → y=24～80 -->
+                    <line x1="113.3" y1="24" x2="113.3" y2="80" class="floorplan-wall" stroke-width="2" />
+                    <!-- 子供部屋1と廊下の間の壁（x=2, z=-4～4） -->
+                    <!-- x=2 → x=113.3, z=-4～4 → y=80～146.7 -->
+                    <line x1="113.3" y1="80" x2="113.3" y2="146.7" class="floorplan-wall" stroke-width="2" />
+                    <!-- バスルームと寝室の間の壁（x=10, z=-8～-4） -->
+                    <!-- x=10 → x=166.7, z=-8～-4 → y=46.7～80 -->
+                    <line x1="166.7" y1="46.7" x2="166.7" y2="80" class="floorplan-wall" stroke-width="2" />
+                    <!-- トイレと子供部屋1の間の壁（x=10, z=-4～0） -->
+                    <!-- x=10 → x=166.7, z=-4～0 → y=80～120 -->
+                    <line x1="166.7" y1="80" x2="166.7" y2="120" class="floorplan-wall" stroke-width="2" />
+                    <!-- 物置とLDKの間の壁（z=5, x=-6～-2） -->
+                    <!-- z=5 → y=133.3, x=-6～-2 → x=60～86.7 -->
+                    <line x1="60" y1="133.3" x2="83.3" y2="133.3" class="floorplan-wall" stroke-width="2" />
+                    <line x1="90" y1="133.3" x2="86.7" y2="133.3" class="floorplan-wall" stroke-width="2" />
+                    <!-- ドア（開口部） - 新しい座標に基づいて配置 -->
+                    <!-- 玄関と廊下の間のドア（x=-1.5～1.5, z=-12） -->
+                    <!-- x=90～110, y=24 -->
+                    <line x1="90" y1="24" x2="110" y2="24" class="floorplan-door" stroke-width="3" stroke="rgba(255,200,0,0.8)" />
+                    <!-- LDKと廊下の間のドア（x=-2, z=-12付近、z=-12.5～-11.5） -->
+                    <!-- x=86.7, y=20～28 -->
+                    <line x1="86.7" y1="20" x2="86.7" y2="28" class="floorplan-door" stroke-width="3" stroke="rgba(255,200,0,0.8)" />
+                    <!-- 寝室と廊下の間のドア（x=2, z=-8付近、z=-8.5～-7.5） -->
+                    <!-- x=113.3, y=約52～56 -->
+                    <line x1="113.3" y1="52" x2="113.3" y2="56" class="floorplan-door" stroke-width="2" stroke="rgba(255,200,0,0.8)" />
+                    <!-- 子供部屋1と廊下の間のドア（x=2, z=0付近、z=-0.5～0.5） -->
+                    <!-- x=113.3, y=約116～120 -->
+                    <line x1="113.3" y1="116" x2="113.3" y2="120" class="floorplan-door" stroke-width="2" stroke="rgba(255,200,0,0.8)" />
+                    <!-- バスルームと寝室の間のドア（x=10, z=-6付近、z=-6.5～-5.5） -->
+                    <!-- x=166.7, y=約63～67 -->
+                    <line x1="166.7" y1="63" x2="166.7" y2="67" class="floorplan-door" stroke-width="2" stroke="rgba(255,200,0,0.8)" />
+                    <!-- トイレと子供部屋1の間のドア（x=10, z=-2付近、z=-2.5～-1.5） -->
+                    <!-- x=166.7, y=約100～104 -->
+                    <line x1="166.7" y1="100" x2="166.7" y2="104" class="floorplan-door" stroke-width="2" stroke="rgba(255,200,0,0.8)" />
+                    <!-- 物置とLDKの間のドア（z=5, x=-4付近、x=-4.5～-3.5） -->
+                    <!-- y=133.3, x=約70～73.3 -->
+                    <line x1="70" y1="133.3" x2="73.3" y2="133.3" class="floorplan-door" stroke-width="2" stroke="rgba(255,200,0,0.8)" />
+                    <!-- 現在地（赤点） -->
+                    <circle id="floorplan-player" class="floorplan-player" cx="100" cy="135" style="display: none;" />
+                </svg>
+            </div>
+            <div id="location">場所: -</div>
+            <div id="flashlight"></div>
+            <div class="vignette"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // ============================================
+        // ホラーゲーム - 「自分の家」
+        // ディレクター: 心理的恐怖を最大化する演出設計
+        // ============================================
+
+        // シーン、カメラ、レンダラーの初期化
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(0x000000, 1, 50); // 暗闇の霧効果
+        
+        const camera = new THREE.PerspectiveCamera(
+            75,
+            window.innerWidth / window.innerHeight,
+            0.1,
+            1000
+        );
+        camera.position.set(0, 1.6, 0); // 人間の目の高さ
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.getElementById('gameContainer').appendChild(renderer.domElement);
+
+        // ============================================
+        // ライティングシステム - 恐怖演出の核心
+        // ============================================
+        
+        // 環境光（非常に暗く）
+        const ambientLight = new THREE.AmbientLight(0x111111, 0.2);
+        scene.add(ambientLight);
+        
+        // ちらつく天井の電灯（LDK）x=-8, z=-10
+        const flickeringLight = new THREE.PointLight(0xffaa44, 0.8, 15);
+        flickeringLight.position.set(-8, 3, -10);
+        flickeringLight.castShadow = true;
+        flickeringLight.shadow.mapSize.width = 1024;
+        flickeringLight.shadow.mapSize.height = 1024;
+        scene.add(flickeringLight);
+        
+        // 懐中電灯（プレイヤーの視点から）
+        const flashlight = new THREE.SpotLight(0xffffff, 1.5, 20, Math.PI / 6, 0.3, 2);
+        flashlight.position.copy(camera.position);
+        flashlight.target.position.set(0, 1.6, -1);
+        flashlight.castShadow = true;
+        scene.add(flashlight);
+        scene.add(flashlight.target);
+        
+        // 廊下の暗いライト x=0, z=-5
+        const hallwayLight = new THREE.PointLight(0x4444ff, 0.3, 10);
+        hallwayLight.position.set(0, 2.5, -5);
+        scene.add(hallwayLight);
+        
+        // 寝室の微かな光 x=6, z=-8
+        const masterBedroomLight = new THREE.PointLight(0xff4444, 0.2, 8);
+        masterBedroomLight.position.set(6, 2, -8);
+        scene.add(masterBedroomLight);
+        
+        // 子供部屋1の微かな光 x=6, z=0
+        const bedroom1Light = new THREE.PointLight(0x44ff44, 0.2, 8);
+        bedroom1Light.position.set(6, 2, 0);
+        scene.add(bedroom1Light);
+
+        // ============================================
+        // 家の構造 - 3LDK（築50年）の間取り
+        // ============================================
+        
+        // 床（3LDK用に拡大）
+        const floorGeometry = new THREE.PlaneGeometry(50, 50);
+        const floorMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x2a2a2a,
+            roughness: 0.8,
+            metalness: 0.1
+        });
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        scene.add(floor);
+        
+        // 天井
+        const ceiling = new THREE.Mesh(
+            new THREE.PlaneGeometry(50, 50),
+            new THREE.MeshStandardMaterial({ color: 0x1a1a1a })
+        );
+        ceiling.rotation.x = Math.PI / 2;
+        ceiling.position.y = 3;
+        scene.add(ceiling);
+        
+        // 壁のマテリアル（築50年の古めかしい感じ）
+        const wallMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x3a3a2a,  // 少し黄色がかった古い壁
+            roughness: 0.8
+        });
+        
+        // 壁の配列（衝突判定用）
+        const walls = [];
+        
+        // ===== 外壁 =====
+        // 南側の外壁（リビング側）
+        const southWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(50, 3),
+            wallMaterial
+        );
+        southWall.position.set(0, 1.5, -15);
+        southWall.receiveShadow = true;
+        scene.add(southWall);
+        walls.push({ mesh: southWall, bounds: { minX: -25, maxX: 25, minZ: -15.02, maxZ: -14.98 } });
+        
+        // 北側の外壁
+        const northWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(50, 3),
+            wallMaterial
+        );
+        northWall.position.set(0, 1.5, 15);
+        northWall.receiveShadow = true;
+        scene.add(northWall);
+        walls.push({ mesh: northWall, bounds: { minX: -25, maxX: 25, minZ: 14.98, maxZ: 15.02 } });
+        
+        // 西側の外壁
+        const westWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(30, 3),
+            wallMaterial
+        );
+        westWall.rotation.y = Math.PI / 2;
+        westWall.position.set(-15, 1.5, 0);
+        westWall.receiveShadow = true;
+        scene.add(westWall);
+        walls.push({ mesh: westWall, bounds: { minX: -15.02, maxX: -14.98, minZ: -15, maxZ: 15 } });
+        
+        // 東側の外壁
+        const eastWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(30, 3),
+            wallMaterial
+        );
+        eastWall.rotation.y = -Math.PI / 2;
+        eastWall.position.set(15, 1.5, 0);
+        eastWall.receiveShadow = true;
+        scene.add(eastWall);
+        walls.push({ mesh: eastWall, bounds: { minX: 14.98, maxX: 15.02, minZ: -15, maxZ: 15 } });
+        
+        // ===== リビング・ダイニング・キッチン（LDK） =====
+        // LDKの東側の壁（廊下との仕切り、ドア開口部あり）x=-2, z=-15～5
+        const ldkEastWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(20, 3),
+            wallMaterial
+        );
+        ldkEastWall.rotation.y = -Math.PI / 2;
+        ldkEastWall.position.set(-2, 1.5, -5);
+        ldkEastWall.receiveShadow = true;
+        scene.add(ldkEastWall);
+        // ドア開口部（z=-12付近）はドアの開口部チェック関数で処理されるため、壁の範囲は全体を含める
+        walls.push({ mesh: ldkEastWall, bounds: { minX: -2.02, maxX: -1.98, minZ: -15, maxZ: 5 } });
+        
+        // ===== 廊下（ホール） =====
+        // 廊下の西側の壁（LDKとの仕切り、ドア開口部あり）x=-2, z=-12～5
+        // 上記のldkEastWallと共有
+        
+        // 廊下の東側の壁（寝室・子供部屋1との仕切り、ドア開口部あり）x=2, z=-12～5
+        const hallwayEastWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(17, 3),
+            wallMaterial
+        );
+        hallwayEastWall.rotation.y = -Math.PI / 2;
+        hallwayEastWall.position.set(2, 1.5, -3.5);
+        hallwayEastWall.receiveShadow = true;
+        scene.add(hallwayEastWall);
+        // ドア開口部はドアの開口部チェック関数で処理されるため、壁の範囲は全体を含める
+        walls.push({ mesh: hallwayEastWall, bounds: { minX: 1.98, maxX: 2.02, minZ: -12, maxZ: 5 } });
+        
+        // 廊下の南側の壁（玄関との仕切り、ドア開口部あり）z=-12, x=-2～2
+        const hallwaySouthWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(4, 3),
+            wallMaterial
+        );
+        hallwaySouthWall.position.set(0, 1.5, -12);
+        hallwaySouthWall.receiveShadow = true;
+        scene.add(hallwaySouthWall);
+        // ドア開口部（x=-1.5～1.5）はドアの開口部チェック関数で処理されるため、壁の範囲は全体を含める
+        walls.push({ mesh: hallwaySouthWall, bounds: { minX: -2, maxX: 2, minZ: -12.02, maxZ: -11.98 } });
+        
+        // ===== 寝室（和室8帖） =====
+        // 寝室の西側の壁（廊下との仕切り、ドア開口部あり）x=2, z=-12～-4
+        // 上記のhallwayEastWallと共有
+        
+        // 寝室の東側の壁（外壁側）x=10, z=-12～-4
+        const bedroomEastWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(8, 3),
+            wallMaterial
+        );
+        bedroomEastWall.rotation.y = -Math.PI / 2;
+        bedroomEastWall.position.set(10, 1.5, -8);
+        bedroomEastWall.receiveShadow = true;
+        scene.add(bedroomEastWall);
+        walls.push({ mesh: bedroomEastWall, bounds: { minX: 9.98, maxX: 10.02, minZ: -12, maxZ: -4 } });
+        
+        // 寝室の南側の壁 z=-12, x=2～10
+        const bedroomSouthWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(8, 3),
+            wallMaterial
+        );
+        bedroomSouthWall.position.set(6, 1.5, -12);
+        bedroomSouthWall.receiveShadow = true;
+        scene.add(bedroomSouthWall);
+        walls.push({ mesh: bedroomSouthWall, bounds: { minX: 2, maxX: 10, minZ: -12.02, maxZ: -11.98 } });
+        
+        // 寝室の北側の壁 z=-4, x=2～10
+        const bedroomNorthWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(8, 3),
+            wallMaterial
+        );
+        bedroomNorthWall.position.set(6, 1.5, -4);
+        bedroomNorthWall.receiveShadow = true;
+        scene.add(bedroomNorthWall);
+        walls.push({ mesh: bedroomNorthWall, bounds: { minX: 2, maxX: 10, minZ: -4.02, maxZ: -3.98 } });
+        
+        // 寝室のドア（廊下側）x=2, z=-8付近
+        const bedroomDoor = new THREE.Mesh(
+            new THREE.BoxGeometry(0.1, 2.5, 1.5),
+            new THREE.MeshStandardMaterial({ color: 0x4a2a1a })
+        );
+        bedroomDoor.position.set(2, 1.25, -8);
+        bedroomDoor.castShadow = true;
+        bedroomDoor.receiveShadow = true;
+        scene.add(bedroomDoor);
+        
+        // ===== 子供部屋1（和室6帖） =====
+        // 子供部屋1の西側の壁（廊下との仕切り、ドア開口部あり）x=2, z=-4～4
+        // 上記のhallwayEastWallと共有
+        
+        // 子供部屋1の東側の壁（外壁側）x=10, z=-4～4
+        const bedroom1EastWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(8, 3),
+            wallMaterial
+        );
+        bedroom1EastWall.rotation.y = -Math.PI / 2;
+        bedroom1EastWall.position.set(10, 1.5, 0);
+        bedroom1EastWall.receiveShadow = true;
+        scene.add(bedroom1EastWall);
+        walls.push({ mesh: bedroom1EastWall, bounds: { minX: 9.98, maxX: 10.02, minZ: -4, maxZ: 4 } });
+        
+        // 子供部屋1の南側の壁 z=-4, x=2～10（寝室の北側の壁と共有）
+        
+        // 子供部屋1の北側の壁 z=4, x=2～10
+        const bedroom1NorthWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(8, 3),
+            wallMaterial
+        );
+        bedroom1NorthWall.position.set(6, 1.5, 4);
+        bedroom1NorthWall.receiveShadow = true;
+        scene.add(bedroom1NorthWall);
+        walls.push({ mesh: bedroom1NorthWall, bounds: { minX: 2, maxX: 10, minZ: 3.98, maxZ: 4.02 } });
+        
+        // 子供部屋1のドア（廊下側）x=2, z=0付近
+        const bedroom1Door = new THREE.Mesh(
+            new THREE.BoxGeometry(0.1, 2.5, 1.5),
+            new THREE.MeshStandardMaterial({ color: 0x4a2a1a })
+        );
+        bedroom1Door.position.set(2, 1.25, 0);
+        bedroom1Door.castShadow = true;
+        bedroom1Door.receiveShadow = true;
+        scene.add(bedroom1Door);
+        
+        // ===== 玄関 =====
+        // 玄関の床（タイル風）x=-1.5～1.5, z=-15～-12
+        const entranceFloor = new THREE.Mesh(
+            new THREE.PlaneGeometry(3, 3),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x3a3a3a,
+                roughness: 0.3,
+                metalness: 0.1
+            })
+        );
+        entranceFloor.rotation.x = -Math.PI / 2;
+        entranceFloor.position.set(0, 0, -13.5);
+        entranceFloor.receiveShadow = true;
+        scene.add(entranceFloor);
+        
+        // 玄関マット
+        const entranceMat = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.5, 1),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x2a1a0a,
+                roughness: 0.9
+            })
+        );
+        entranceMat.rotation.x = -Math.PI / 2;
+        entranceMat.position.set(0, 0.01, -13.5);
+        scene.add(entranceMat);
+        
+        // 玄関の天井（玄関ポーチ）
+        const entranceCeiling = new THREE.Mesh(
+            new THREE.PlaneGeometry(3, 3),
+            new THREE.MeshStandardMaterial({ color: 0x2a2a2a })
+        );
+        entranceCeiling.rotation.x = Math.PI / 2;
+        entranceCeiling.position.set(0, 2.5, -13.5);
+        scene.add(entranceCeiling);
+        
+        // 玄関の壁（外壁との接続部分）
+        const entranceWallLeft = new THREE.Mesh(
+            new THREE.PlaneGeometry(3, 3),
+            wallMaterial
+        );
+        entranceWallLeft.rotation.y = -Math.PI / 2;
+        entranceWallLeft.position.set(-1.5, 1.5, -13.5);
+        entranceWallLeft.receiveShadow = true;
+        scene.add(entranceWallLeft);
+        // 玄関の壁は衝突判定に含めない（玄関は通れる必要がある）
+        
+        const entranceWallRight = new THREE.Mesh(
+            new THREE.PlaneGeometry(3, 3),
+            wallMaterial
+        );
+        entranceWallRight.rotation.y = -Math.PI / 2;
+        entranceWallRight.position.set(1.5, 1.5, -13.5);
+        entranceWallRight.receiveShadow = true;
+        scene.add(entranceWallRight);
+        // 玄関の壁は衝突判定に含めない（玄関は通れる必要がある）
+        
+        // ドア枠（フレーム）
+        const doorFrameTop = new THREE.Mesh(
+            new THREE.BoxGeometry(1.4, 0.2, 0.15),
+            new THREE.MeshStandardMaterial({ color: 0x5a4a3a })
+        );
+        doorFrameTop.position.set(0, 2.6, -13.5);
+        scene.add(doorFrameTop);
+        
+        const doorFrameLeft = new THREE.Mesh(
+            new THREE.BoxGeometry(0.2, 2.5, 0.15),
+            new THREE.MeshStandardMaterial({ color: 0x5a4a3a })
+        );
+        doorFrameLeft.position.set(-0.7, 1.25, -13.5);
+        scene.add(doorFrameLeft);
+        
+        const doorFrameRight = new THREE.Mesh(
+            new THREE.BoxGeometry(0.2, 2.5, 0.15),
+            new THREE.MeshStandardMaterial({ color: 0x5a4a3a })
+        );
+        doorFrameRight.position.set(0.7, 1.25, -13.5);
+        scene.add(doorFrameRight);
+        
+        // 玄関のドア（外側）- よりリアルな表現
+        const frontDoor = new THREE.Mesh(
+            new THREE.BoxGeometry(0.12, 2.4, 1.1),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x4a2a1a,
+                roughness: 0.7,
+                metalness: 0.1
+            })
+        );
+        frontDoor.position.set(0, 1.25, -13.5);
+        frontDoor.castShadow = true;
+        frontDoor.receiveShadow = true;
+        scene.add(frontDoor);
+        
+        // ドアのパネル（装飾）
+        const doorPanel1 = new THREE.Mesh(
+            new THREE.BoxGeometry(0.02, 0.8, 0.9),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x3a1a0a,
+                roughness: 0.8
+            })
+        );
+        doorPanel1.position.set(0.05, 1.5, -13.5);
+        scene.add(doorPanel1);
+        
+        const doorPanel2 = new THREE.Mesh(
+            new THREE.BoxGeometry(0.02, 0.8, 0.9),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x3a1a0a,
+                roughness: 0.8
+            })
+        );
+        doorPanel2.position.set(0.05, 0.8, -13.5);
+        scene.add(doorPanel2);
+        
+        // ドアノブ（外側）
+        const doorKnobOuter = new THREE.Mesh(
+            new THREE.SphereGeometry(0.06, 8, 8),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x888888,
+                metalness: 0.9,
+                roughness: 0.1
+            })
+        );
+        doorKnobOuter.position.set(0.5, 1.25, -13.5);
+        scene.add(doorKnobOuter);
+        
+        // ドアノブの取っ手
+        const doorHandle = new THREE.Mesh(
+            new THREE.BoxGeometry(0.15, 0.05, 0.05),
+            new THREE.MeshStandardMaterial({ 
+                color: 0xaaaaaa,
+                metalness: 0.9,
+                roughness: 0.1
+            })
+        );
+        doorHandle.position.set(0.6, 1.25, -13.5);
+        scene.add(doorHandle);
+        
+        // ドアの鍵穴
+        const doorKeyhole = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.02, 0.02, 0.05, 8),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x000000,
+                metalness: 0.5
+            })
+        );
+        doorKeyhole.rotation.x = Math.PI / 2;
+        doorKeyhole.position.set(0.45, 1.25, -13.5);
+        scene.add(doorKeyhole);
+        
+        // 玄関の天井ライト
+        const entranceLight = new THREE.PointLight(0xffffff, 0.3, 3);
+        entranceLight.position.set(0, 2.3, -13.5);
+        scene.add(entranceLight);
+        
+        // 玄関のドアのライト（すべての鍵を取得したら光る）
+        const exitDoorLight = new THREE.PointLight(0x00ff00, 0, 5);
+        exitDoorLight.position.set(0, 2, -13.5);
+        scene.add(exitDoorLight);
+        
+        // ===== バスルーム（洗面室） =====
+        // バスルームの西側の壁（寝室との仕切り、ドア開口部あり）x=10, z=-8～-4
+        const bathroomWestWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(4, 3),
+            wallMaterial
+        );
+        bathroomWestWall.rotation.y = Math.PI / 2;
+        bathroomWestWall.position.set(10, 1.5, -6);
+        bathroomWestWall.receiveShadow = true;
+        scene.add(bathroomWestWall);
+        // ドア開口部はドアの開口部チェック関数で処理されるため、壁の範囲は全体を含める
+        walls.push({ mesh: bathroomWestWall, bounds: { minX: 9.98, maxX: 10.02, minZ: -8, maxZ: -4 } });
+        
+        // バスルームの東側の壁（外壁側）x=15, z=-8～-4
+        const bathroomEastWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(4, 3),
+            wallMaterial
+        );
+        bathroomEastWall.rotation.y = -Math.PI / 2;
+        bathroomEastWall.position.set(15, 1.5, -6);
+        bathroomEastWall.receiveShadow = true;
+        scene.add(bathroomEastWall);
+        walls.push({ mesh: bathroomEastWall, bounds: { minX: 14.98, maxX: 15.02, minZ: -8, maxZ: -4 } });
+        
+        // バスルームの南側の壁 z=-8, x=10～15
+        const bathroomSouthWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(5, 3),
+            wallMaterial
+        );
+        bathroomSouthWall.position.set(12.5, 1.5, -8);
+        bathroomSouthWall.receiveShadow = true;
+        scene.add(bathroomSouthWall);
+        walls.push({ mesh: bathroomSouthWall, bounds: { minX: 10, maxX: 15, minZ: -8.02, maxZ: -7.98 } });
+        
+        // バスルームの北側の壁（トイレとの仕切り）z=-4, x=10～15
+        const bathroomNorthWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(5, 3),
+            wallMaterial
+        );
+        bathroomNorthWall.position.set(12.5, 1.5, -4);
+        bathroomNorthWall.receiveShadow = true;
+        scene.add(bathroomNorthWall);
+        walls.push({ mesh: bathroomNorthWall, bounds: { minX: 10, maxX: 15, minZ: -4.02, maxZ: -3.98 } });
+        
+        // バスルームのドア（寝室側）x=10, z=-6付近
+        const bathroomDoor = new THREE.Mesh(
+            new THREE.BoxGeometry(0.1, 2.5, 1.5),
+            new THREE.MeshStandardMaterial({ color: 0x4a2a1a })
+        );
+        bathroomDoor.position.set(10, 1.25, -6);
+        bathroomDoor.castShadow = true;
+        bathroomDoor.receiveShadow = true;
+        scene.add(bathroomDoor);
+        
+        // ===== トイレ =====
+        // トイレの西側の壁（子供部屋1との仕切り、ドア開口部あり）x=10, z=-4～0
+        const toiletWestWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(4, 3),
+            wallMaterial
+        );
+        toiletWestWall.rotation.y = Math.PI / 2;
+        toiletWestWall.position.set(10, 1.5, -2);
+        toiletWestWall.receiveShadow = true;
+        scene.add(toiletWestWall);
+        // ドア開口部はドアの開口部チェック関数で処理されるため、壁の範囲は全体を含める
+        walls.push({ mesh: toiletWestWall, bounds: { minX: 9.98, maxX: 10.02, minZ: -4, maxZ: 0 } });
+        
+        // トイレの東側の壁（外壁側）x=15, z=-4～0
+        const toiletEastWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(4, 3),
+            wallMaterial
+        );
+        toiletEastWall.rotation.y = -Math.PI / 2;
+        toiletEastWall.position.set(15, 1.5, -2);
+        toiletEastWall.receiveShadow = true;
+        scene.add(toiletEastWall);
+        walls.push({ mesh: toiletEastWall, bounds: { minX: 14.98, maxX: 15.02, minZ: -4, maxZ: 0 } });
+        
+        // トイレの北側の壁 z=0, x=10～15
+        const toiletNorthWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(5, 3),
+            wallMaterial
+        );
+        toiletNorthWall.position.set(12.5, 1.5, 0);
+        toiletNorthWall.receiveShadow = true;
+        scene.add(toiletNorthWall);
+        walls.push({ mesh: toiletNorthWall, bounds: { minX: 10, maxX: 15, minZ: -0.02, maxZ: 0.02 } });
+        
+        // トイレのドア（子供部屋1側）x=10, z=-2付近
+        const toiletDoor = new THREE.Mesh(
+            new THREE.BoxGeometry(0.1, 2.5, 1.2),
+            new THREE.MeshStandardMaterial({ color: 0x4a2a1a })
+        );
+        toiletDoor.position.set(10, 1.25, -2);
+        toiletDoor.castShadow = true;
+        toiletDoor.receiveShadow = true;
+        scene.add(toiletDoor);
+        
+        // ===== 物置 =====
+        // 物置の壁（LDKの左上、北側）x=-6～-2, z=5～10（参考間取り図の収納に合わせて調整）
+        const storageWall1 = new THREE.Mesh(
+            new THREE.PlaneGeometry(4, 5),
+            wallMaterial
+        );
+        storageWall1.rotation.y = Math.PI / 2;
+        storageWall1.position.set(-6, 1.5, 7.5);
+        storageWall1.receiveShadow = true;
+        scene.add(storageWall1);
+        walls.push({ mesh: storageWall1, bounds: { minX: -6.02, maxX: -5.98, minZ: 5, maxZ: 10 } });
+        
+        const storageWall2 = new THREE.Mesh(
+            new THREE.PlaneGeometry(4, 5),
+            wallMaterial
+        );
+        storageWall2.position.set(-4, 1.5, 10);
+        storageWall2.receiveShadow = true;
+        scene.add(storageWall2);
+        walls.push({ mesh: storageWall2, bounds: { minX: -6, maxX: -2, minZ: 9.98, maxZ: 10.02 } });
+        
+        const storageWall3 = new THREE.Mesh(
+            new THREE.PlaneGeometry(4, 5),
+            wallMaterial
+        );
+        storageWall3.rotation.y = Math.PI / 2;
+        storageWall3.position.set(-2, 1.5, 7.5);
+        storageWall3.receiveShadow = true;
+        scene.add(storageWall3);
+        walls.push({ mesh: storageWall3, bounds: { minX: -2.02, maxX: -1.98, minZ: 5, maxZ: 10 } });
+        
+        // 物置の南側の壁（LDKとの仕切り、ドア開口部あり）z=5, x=-6～-2
+        const storageSouthWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(4, 3),
+            wallMaterial
+        );
+        storageSouthWall.position.set(-4, 1.5, 5);
+        storageSouthWall.receiveShadow = true;
+        scene.add(storageSouthWall);
+        // ドア開口部はドアの開口部チェック関数で処理されるため、壁の範囲は全体を含める
+        walls.push({ mesh: storageSouthWall, bounds: { minX: -6, maxX: -2, minZ: 4.98, maxZ: 5.02 } });
+        
+        // 物置のドア（LDK側、z=5付近）
+        const storageDoor = new THREE.Mesh(
+            new THREE.BoxGeometry(0.1, 2.5, 1.2),
+            new THREE.MeshStandardMaterial({ color: 0x4a2a1a })
+        );
+        storageDoor.position.set(-4, 1.25, 5);
+        storageDoor.castShadow = true;
+        storageDoor.receiveShadow = true;
+        scene.add(storageDoor);
+        
+        // ===== 家具の配置（参考間取り図に基づく） =====
+        // LDK（リビング・ダイニング・キッチン）x=-15～-2, z=-15～5
+        const sofa = new THREE.Mesh(
+            new THREE.BoxGeometry(3, 0.8, 1.5),
+            new THREE.MeshStandardMaterial({ color: 0x4a3a2a })
+        );
+        sofa.position.set(-8, 0.4, -10); // LDKの中央付近
+        sofa.castShadow = true;
+        sofa.receiveShadow = true;
+        scene.add(sofa);
+        
+        const table = new THREE.Mesh(
+            new THREE.BoxGeometry(1.5, 0.4, 1.5),
+            new THREE.MeshStandardMaterial({ color: 0x3a2a1a })
+        );
+        table.position.set(-8, 0.2, -10); // 鍵1の近く
+        table.castShadow = true;
+        table.receiveShadow = true;
+        scene.add(table);
+        
+        const tv = new THREE.Mesh(
+            new THREE.BoxGeometry(1.5, 1, 0.2),
+            new THREE.MeshStandardMaterial({ color: 0x000000 })
+        );
+        tv.position.set(-8, 1.2, -14.8); // LDKの南側
+        scene.add(tv);
+        
+        const fridge = new THREE.Mesh(
+            new THREE.BoxGeometry(0.8, 2, 0.8),
+            new THREE.MeshStandardMaterial({ color: 0xffffff })
+        );
+        fridge.position.set(-10, 1, -5); // LDKのキッチンエリア
+        scene.add(fridge);
+        
+        const windowFrame = new THREE.Mesh(
+            new THREE.PlaneGeometry(2, 1.5),
+            new THREE.MeshStandardMaterial({ color: 0x1a1a1a })
+        );
+        windowFrame.position.set(-8, 1.5, -14.9); // LDKの南側
+        scene.add(windowFrame);
+        
+        const clock = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.3, 0.3, 0.1, 32),
+            new THREE.MeshStandardMaterial({ color: 0xffffff })
+        );
+        clock.rotation.x = Math.PI / 2;
+        clock.position.set(-10, 2, -14.8); // LDKの南側
+        scene.add(clock);
+        
+        const chair = new THREE.Mesh(
+            new THREE.BoxGeometry(0.6, 1, 0.6),
+            new THREE.MeshStandardMaterial({ color: 0x4a3a2a })
+        );
+        chair.position.set(-6, 0.5, -10); // LDKの中央付近
+        scene.add(chair);
+        
+        // 廊下（ホール）x=-2～2, z=-12～5
+        const mirror = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.5, 2),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x888888,
+                metalness: 0.9,
+                roughness: 0.1
+            })
+        );
+        mirror.position.set(0, 1.5, -5); // 廊下の中央付近（鍵2の近く）
+        scene.add(mirror);
+        
+        // 寝室（和室8帖）x=2～10, z=-12～-4
+        const masterBed = new THREE.Mesh(
+            new THREE.BoxGeometry(2, 0.5, 1.5),
+            new THREE.MeshStandardMaterial({ color: 0x4a3a2a })
+        );
+        masterBed.position.set(6, 0.25, -8); // 寝室（x=2～10, z=-12～-4）
+        scene.add(masterBed);
+        
+        const masterCloset = new THREE.Mesh(
+            new THREE.BoxGeometry(0.1, 2, 1),
+            new THREE.MeshStandardMaterial({ color: 0x3a2a1a })
+        );
+        masterCloset.position.set(9, 1, -8); // 寝室の東側
+        scene.add(masterCloset);
+        
+        // 子供部屋1（和室6帖）x=2～10, z=-4～4
+        const bedroom1Bed = new THREE.Mesh(
+            new THREE.BoxGeometry(1.5, 0.5, 1.2),
+            new THREE.MeshStandardMaterial({ color: 0x4a3a2a })
+        );
+        bedroom1Bed.position.set(6, 0.25, 0); // 子供部屋1の中央付近
+        scene.add(bedroom1Bed);
+        
+        // バスルーム（洗面室）x=10～15, z=-8～-4
+        const bathroomMirror = new THREE.Mesh(
+            new THREE.PlaneGeometry(1, 1.5),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x888888,
+                metalness: 0.9,
+                roughness: 0.1
+            })
+        );
+        bathroomMirror.position.set(12.5, 1.2, -6); // バスルームの中央付近
+        scene.add(bathroomMirror);
+        
+        // 古いfrontDoorの定義は削除（新しい間取りで既に定義済み）
+
+        // ============================================
+        // 怪奇現象システム - じわじわくる恐怖
+        // ============================================
+        
+        let gameStarted = false;
+        let timeElapsed = 0;
+        let eventsTriggered = {
+            shadowBehind: false,        // 1. 背後に一瞬見える影
+            doorClose: false,            // 2. ドアが勝手に閉まる
+            mirrorFigure: false,         // 3. 鏡に人影が映る
+            hallwayFigure: false,        // 4. 廊下を横切る影
+            randomFlicker: false,        // 5. ランダムなちらつき
+            shadowBehindAgain: false,    // 6. 背後に再び現れる
+            windowFigure: false,         // 7. 窓の外に人影
+            tvOn: false,                 // 8. テレビが勝手につく
+            fridgeOpen: false,           // 9. 冷蔵庫のドアが開く
+            stairsSound: false,          // 10. 階段の上から物音
+            closetOpen: false,           // 11. クローゼットのドアが少し開く
+            bloodHandprint: false,       // 12. 洗面所の鏡に血の手形
+            bedSound: false,             // 13. ベッドの下から物音
+            lightsOut: false,            // 14. 電気が一瞬消える
+            doorKnobMove: false,         // 15. ドアノブが動く
+            windowHandprint: false,      // 16. 窓ガラスに手形
+            waterDrop: false,            // 17. 天井から水滴が落ちる
+            clockStop: false,            // 18. 時計が止まる
+            chairMove: false,            // 19. リビングの椅子が動く
+            doorKnock: false             // 20. 玄関のドアがノックされる
+        };
+        
+        // 背後に一瞬見える影（黒いシルエット）
+        const shadowFigure = new THREE.Mesh(
+            new THREE.BoxGeometry(0.6, 1.8, 0.3),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x000000,
+                emissive: 0x000000
+            })
+        );
+        shadowFigure.visible = false;
+        scene.add(shadowFigure);
+        
+        // 廊下を横切る影
+        const hallwayFigure = new THREE.Mesh(
+            new THREE.BoxGeometry(0.5, 1.7, 0.2),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x000000,
+                emissive: 0x000000
+            })
+        );
+        hallwayFigure.visible = false;
+        scene.add(hallwayFigure);
+        
+        // 鏡に映る人影
+        const mirrorFigure = new THREE.Mesh(
+            new THREE.BoxGeometry(0.4, 1.6, 0.1),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x111111,
+                emissive: 0x000000
+            })
+        );
+        mirrorFigure.visible = false;
+        scene.add(mirrorFigure);
+        
+        // 窓の外の人影（位置を拡大: -5.1 → -10.1）
+        const windowFigure = new THREE.Mesh(
+            new THREE.BoxGeometry(0.5, 1.7, 0.1),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x000000,
+                emissive: 0x000000
+            })
+        );
+        windowFigure.position.set(-8, 1.5, -14.9); // LDKの窓（x=-8, z=-14.9）
+        windowFigure.visible = false;
+        scene.add(windowFigure);
+        
+        // テレビの画面（光る）
+        const tvScreen = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.4, 0.9),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x000000,
+                emissive: 0x000000
+            })
+        );
+        tvScreen.position.set(-8, 1.2, -14.7); // LDKのTV（x=-8, z=-14.8）
+        tvScreen.visible = false;
+        scene.add(tvScreen);
+        
+        // 冷蔵庫のドア（開閉用）
+        const fridgeDoor = new THREE.Mesh(
+            new THREE.BoxGeometry(0.05, 1.8, 0.75),
+            new THREE.MeshStandardMaterial({ color: 0xffffff })
+        );
+        fridgeDoor.position.set(-10.4, 1, -5); // LDKの冷蔵庫（x=-10, z=-5）
+        scene.add(fridgeDoor);
+        
+        // 血の手形（洗面所の鏡）
+        const bloodHandprint = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.3, 0.4),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x8b0000,
+                emissive: 0x440000
+            })
+        );
+        bloodHandprint.position.set(12.5, 1.0, -6); // バスルームの鏡（x=12.5, z=-6）
+        bloodHandprint.visible = false;
+        scene.add(bloodHandprint);
+        
+        // 天井から落ちる水滴
+        const waterDrop = new THREE.Mesh(
+            new THREE.SphereGeometry(0.05, 8, 8),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x4444ff,
+                transparent: true,
+                opacity: 0.7
+            })
+        );
+        waterDrop.visible = false;
+        scene.add(waterDrop);
+        
+        // 階段の上の人影（物置付近に配置）
+        const stairsFigure = new THREE.Mesh(
+            new THREE.BoxGeometry(0.4, 1.6, 0.2),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x000000,
+                emissive: 0x000000
+            })
+        );
+        stairsFigure.position.set(-4, 1.8, 8); // 物置付近（x=-4, z=8）
+        stairsFigure.visible = false;
+        scene.add(stairsFigure);
+        
+        // ベッドの下の影（位置を拡大: (-3, -1) → (-6, -2)）
+        const bedShadow = new THREE.Mesh(
+            new THREE.BoxGeometry(1.5, 0.3, 1.2),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x000000,
+                emissive: 0x000000
+            })
+        );
+        bedShadow.position.set(6, 0.1, -8); // 寝室のベッド（x=6, z=-8）
+        bedShadow.visible = false;
+        scene.add(bedShadow);
+        
+        // 窓ガラスの手形
+        const windowHandprint = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.4, 0.5),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x8b0000,
+                emissive: 0x440000,
+                transparent: true,
+                opacity: 0.6
+            })
+        );
+        windowHandprint.position.set(-8, 1.3, -14.95); // LDKの窓（x=-8, z=-14.9）
+        windowHandprint.visible = false;
+        scene.add(windowHandprint);
+        
+        // 時計の針（動く）
+        const clockHand = new THREE.Mesh(
+            new THREE.BoxGeometry(0.02, 0.2, 0.02),
+            new THREE.MeshStandardMaterial({ color: 0x000000 })
+        );
+        clockHand.position.set(-10, 2, -14.8); // LDKの時計（x=-10, z=-14.8）
+        scene.add(clockHand);
+        
+        // ドアノブ（動く、位置を拡大: (-3.9, 0.75) → (-7.9, 0.75)）
+        const doorKnob = new THREE.Mesh(
+            new THREE.SphereGeometry(0.05, 8, 8),
+            new THREE.MeshStandardMaterial({ color: 0x888888 })
+        );
+        doorKnob.position.set(-7.9, 1.25, 0.75);
+        scene.add(doorKnob);
+        
+        // ============================================
+        // 鍵探索システム - 3つの鍵を配置
+        // ============================================
+        
+        // 鍵1: LDK（リビング・ダイニング・キッチン）のテーブルの上
+        const key1 = new THREE.Mesh(
+            new THREE.BoxGeometry(0.15, 0.05, 0.3),
+            new THREE.MeshStandardMaterial({ 
+                color: 0xffaa44,
+                metalness: 0.9,
+                roughness: 0.1,
+                emissive: 0xffaa44,
+                emissiveIntensity: 0.5
+            })
+        );
+        key1.position.set(-8, 0.5, -10); // LDK（x=-15～-2, z=-15～5）
+        key1.rotation.y = Math.PI / 4;
+        key1.userData = { type: 'key', id: 1, found: false };
+        scene.add(key1);
+        
+        // 鍵1の光るエフェクト
+        const key1Light = new THREE.PointLight(0xffaa44, 1, 3);
+        key1Light.position.copy(key1.position);
+        key1Light.position.y += 0.2;
+        scene.add(key1Light);
+        
+        // 鍵2: 廊下（鏡の前の床の上）
+        const key2 = new THREE.Mesh(
+            new THREE.BoxGeometry(0.15, 0.05, 0.3),
+            new THREE.MeshStandardMaterial({ 
+                color: 0xffaa44,
+                metalness: 0.9,
+                roughness: 0.1,
+                emissive: 0xffaa44,
+                emissiveIntensity: 0.5
+            })
+        );
+        key2.position.set(0, 0.3, -5); // 廊下（x=-2～2, z=-12～5）
+        key2.rotation.y = -Math.PI / 4;
+        key2.userData = { type: 'key', id: 2, found: false };
+        scene.add(key2);
+        
+        // 鍵2の光るエフェクト
+        const key2Light = new THREE.PointLight(0xffaa44, 1, 3);
+        key2Light.position.copy(key2.position);
+        key2Light.position.y += 0.2;
+        scene.add(key2Light);
+        
+        // 鍵3: 寝室（ベッドの上）
+        const key3 = new THREE.Mesh(
+            new THREE.BoxGeometry(0.15, 0.05, 0.3),
+            new THREE.MeshStandardMaterial({ 
+                color: 0xffaa44,
+                metalness: 0.9,
+                roughness: 0.1,
+                emissive: 0xffaa44,
+                emissiveIntensity: 0.5
+            })
+        );
+        key3.position.set(6, 0.6, -8); // 寝室（x=2～10, z=-12～-4）
+        key3.rotation.y = Math.PI / 3;
+        key3.userData = { type: 'key', id: 3, found: false };
+        scene.add(key3);
+        
+        // 鍵3の光るエフェクト
+        const key3Light = new THREE.PointLight(0xffaa44, 1, 3);
+        key3Light.position.copy(key3.position);
+        key3Light.position.y += 0.2;
+        scene.add(key3Light);
+        
+        // 鍵の配列
+        const keyObjects = [key1, key2, key3];
+        const keyLights = [key1Light, key2Light, key3Light];
+        
+        // 鍵の取得状態
+        let keysFound = {
+            1: false,
+            2: false,
+            3: false
+        };
+        
+        // 玄関のドア（脱出ポイント）
+        const exitDoor = frontDoor; // 既存の玄関ドアを使用
+        exitDoor.userData = { type: 'exit' };
+
+        // ============================================
+        // コントロールシステム - スマホ対応
+        // ============================================
+        
+        let isPointerLocked = false;
+        let moveForward = false;
+        let moveBackward = false;
+        let moveLeft = false;
+        let moveRight = false;
+        
+        let euler = new THREE.Euler(0, 0, 0, 'YXZ');
+        let PI_2 = Math.PI / 2;
+        
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchCurrentX = 0;
+        let touchCurrentY = 0;
+        let isTouching = false;
+        
+        // マウス/タッチイベント
+        function onMouseMove(event) {
+            if (!isPointerLocked) return;
+            
+            const movementX = event.movementX || event.mozMovementX || 0;
+            const movementY = event.movementY || event.mozMovementY || 0;
+            
+            euler.setFromQuaternion(camera.quaternion);
+            euler.y -= movementX * 0.002;
+            euler.x -= movementY * 0.002;
+            euler.x = Math.max(-PI_2, Math.min(PI_2, euler.x));
+            camera.quaternion.setFromEuler(euler);
+        }
+        
+        function onTouchMove(event) {
+            if (!isTouching) return;
+            event.preventDefault();
+            
+            const touch = event.touches[0];
+            const deltaX = touch.clientX - touchCurrentX;
+            const deltaY = touch.clientY - touchCurrentY;
+            
+            touchCurrentX = touch.clientX;
+            touchCurrentY = touch.clientY;
+            
+            euler.setFromQuaternion(camera.quaternion);
+            euler.y -= deltaX * 0.003;
+            euler.x -= deltaY * 0.003;
+            euler.x = Math.max(-PI_2, Math.min(PI_2, euler.x));
+            camera.quaternion.setFromEuler(euler);
+        }
+        
+        function startGame() {
+            if (!gameStarted) {
+                gameStarted = true;
+                const instructions = document.getElementById('instructions');
+                if (instructions) {
+                    instructions.style.opacity = '0';
+                    instructions.style.transition = 'opacity 1s';
+                    setTimeout(() => {
+                        instructions.style.display = 'none';
+                    }, 1000);
+                }
+            }
+        }
+        
+        function onTouchStart(event) {
+            startGame();
+            
+            isTouching = true;
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+            touchCurrentX = touchStartX;
+            touchCurrentY = touchStartY;
+        }
+        
+        function onTouchEnd(event) {
+            isTouching = false;
+        }
+        
+        // キーボード/タッチ移動
+        const keys = {};
+        let isKeyboardActive = false; // キーボード操作がアクティブかどうか
+        
+        function onKeyDown(event) {
+            // ゲームが開始されていない場合は無視
+            if (!gameStarted) return;
+            
+            keys[event.code] = true;
+            isKeyboardActive = true;
+            updateMovement();
+            
+            // デフォルトの動作を防ぐ（ページスクロールなど）
+            if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) {
+                event.preventDefault();
+            }
+        }
+        
+        function onKeyUp(event) {
+            keys[event.code] = false;
+            
+            // すべての移動キーが離されたかチェック
+            const anyKeyPressed = keys['KeyW'] || keys['KeyS'] || keys['KeyA'] || keys['KeyD'] ||
+                                 keys['ArrowUp'] || keys['ArrowDown'] || keys['ArrowLeft'] || keys['ArrowRight'];
+            if (!anyKeyPressed) {
+                isKeyboardActive = false;
+            }
+            
+            updateMovement();
+        }
+        
+        function updateMovement() {
+            // キーボード入力に基づいて移動フラグを更新
+            moveForward = keys['KeyW'] || keys['ArrowUp'];
+            moveBackward = keys['KeyS'] || keys['ArrowDown'];
+            moveLeft = keys['KeyA'] || keys['ArrowLeft'];
+            moveRight = keys['KeyD'] || keys['ArrowRight'];
+        }
+        
+        // 仮想ジョイスティック（スマホ用）
+        let virtualJoystick = {
+            active: false,
+            x: 0,
+            y: 0,
+            centerX: 0,
+            centerY: 0
+        };
+        
+        function updateVirtualJoystick() {
+            // キーボードがアクティブな場合は、タッチ操作を無視
+            if (isKeyboardActive) {
+                virtualJoystick.active = false;
+                return;
+            }
+            
+            // タッチ操作がない場合は、何もしない（キーボード入力の状態を保持）
+            if (!isTouching) {
+                virtualJoystick.active = false;
+                return;
+            }
+            
+            // タッチ操作がアクティブな場合のみ、タッチ入力で移動フラグを更新
+            const deltaX = touchCurrentX - touchStartX;
+            const deltaY = touchCurrentY - touchStartY;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            
+            if (distance > 30) {
+                virtualJoystick.active = true;
+                
+                // 上下移動
+                if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                    moveForward = deltaY < -20;
+                    moveBackward = deltaY > 20;
+                    moveLeft = false;
+                    moveRight = false;
+                } else {
+                    // 左右移動
+                    moveLeft = deltaX < -20;
+                    moveRight = deltaX > 20;
+                    moveForward = false;
+                    moveBackward = false;
+                }
+            } else {
+                virtualJoystick.active = false;
+                // タッチ操作が小さい場合は移動しない
+                moveForward = moveBackward = moveLeft = moveRight = false;
+            }
+        }
+        
+        // イベントリスナー登録
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('touchmove', onTouchMove, { passive: false });
+        document.addEventListener('touchstart', onTouchStart);
+        document.addEventListener('touchend', onTouchEnd);
+        document.addEventListener('keydown', onKeyDown);
+        document.addEventListener('keyup', onKeyUp);
+        
+        // クリック/タップでロック
+        document.addEventListener('click', () => {
+            startGame();
+            renderer.domElement.requestPointerLock = 
+                renderer.domElement.requestPointerLock ||
+                renderer.domElement.mozRequestPointerLock ||
+                renderer.domElement.webkitRequestPointerLock;
+            if (renderer.domElement.requestPointerLock) {
+                renderer.domElement.requestPointerLock();
+            }
+        });
+        
+        document.addEventListener('pointerlockchange', () => {
+            isPointerLocked = document.pointerLockElement === renderer.domElement ||
+                             document.mozPointerLockElement === renderer.domElement ||
+                             document.webkitPointerLockElement === renderer.domElement;
+        });
+
+        // ============================================
+        // アニメーションループ - 恐怖演出の実行
+        // ============================================
+        
+        const velocity = new THREE.Vector3();
+        const direction = new THREE.Vector3();
+        const moveSpeed = 0.05;
+        
+        let flickerTimer = 0;
+        let lastFlickerTime = 0;
+        
+        // 現在の場所を判定する関数（参考間取り図に基づく新しい座標）
+        function getCurrentLocation(x, z) {
+            // 玄関（x=-1.5～1.5, z=-15～-12）下中央
+            if (x >= -1.5 && x <= 1.5 && z >= -15 && z <= -12) {
+                return '玄関';
+            }
+            
+            // ホール（廊下）（x=-2～2, z=-12～5）玄関の上、中央
+            if (x >= -2 && x <= 2 && z >= -12 && z <= 5) {
+                // 各部屋の範囲をチェックして除外
+                // LDK（x=-15～-2, z=-15～5）の範囲外なので除外不要
+                return '廊下';
+            }
+            
+            // LDK（リビング・ダイニング・キッチン）（x=-15～-2, z=-15～5）左側
+            if (x >= -15 && x <= -2 && z >= -15 && z <= 5) {
+                return 'LDK';
+            }
+            
+            // 寝室（和室8帖）（x=2～10, z=-12～-4）右側上
+            if (x >= 2 && x <= 10 && z >= -12 && z <= -4) {
+                return '寝室';
+            }
+            
+            // 子供部屋1（和室6帖）（x=2～10, z=-4～4）右側中
+            if (x >= 2 && x <= 10 && z >= -4 && z <= 4) {
+                return '子供部屋1';
+            }
+            
+            // バスルーム（洗面室）（x=10～15, z=-8～-4）右側上
+            if (x >= 10 && x <= 15 && z >= -8 && z <= -4) {
+                return 'バスルーム';
+            }
+            
+            // トイレ（x=10～15, z=-4～0）右側中
+            if (x >= 10 && x <= 15 && z >= -4 && z <= 0) {
+                return 'トイレ';
+            }
+            
+            // 子供部屋2（x=-15～-2, z=5～10）左側上（LDKの一部として使用、後で調整）
+            if (x >= -15 && x <= -2 && z >= 5 && z <= 10) {
+                return 'LDK'; // 一時的にLDKとして扱う
+            }
+            
+            // 物置（x=-6～-2, z=10～14）左側上
+            if (x >= -6 && x <= -2 && z >= 10 && z <= 14) {
+                return '物置';
+            }
+            
+            return '不明';
+        }
+        
+        // 座標変換ヘルパー関数（実際の座標 → SVG座標）
+        function worldToSVG(worldX, worldZ) {
+            // 実際の座標系（x: -15～15, z: -15～15）をSVG座標系（viewBox: 0 0 200 240）に変換
+            const svgX = ((worldX + 15) / 30) * 200;
+            const svgY = 240 - ((worldZ + 15) / 30) * 240; // z軸を反転（上方向を正とする）
+            return { x: Math.max(0, Math.min(200, svgX)), y: Math.max(0, Math.min(240, svgY)) };
+        }
+        
+        // 見取り図を更新する関数
+        function updateFloorplan(currentLocation, playerX, playerZ) {
+            const roomMap = {
+                'LDK': 'floorplan-ldk',
+                '廊下': 'floorplan-corridor',
+                '寝室': 'floorplan-bedroom',
+                '子供部屋1': 'floorplan-bedroom1',
+                '子供部屋2': 'floorplan-bedroom2',
+                'バスルーム': 'floorplan-bathroom',
+                'トイレ': 'floorplan-toilet',
+                '物置': 'floorplan-storage',
+                '玄関': 'floorplan-entrance'
+            };
+            
+            // すべての部屋からcurrentクラスを削除
+            Object.values(roomMap).forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.classList.remove('current');
+                }
+            });
+            
+            // 現在の部屋にcurrentクラスを追加
+            const currentRoomId = roomMap[currentLocation];
+            if (currentRoomId) {
+                const element = document.getElementById(currentRoomId);
+                if (element) {
+                    element.classList.add('current');
+                }
+            }
+            
+            // プレイヤーの現在地を赤点で表示
+            const playerPoint = document.getElementById('floorplan-player');
+            if (playerPoint && playerX !== undefined && playerZ !== undefined) {
+                const svgPos = worldToSVG(playerX, playerZ);
+                playerPoint.setAttribute('cx', svgPos.x);
+                playerPoint.setAttribute('cy', svgPos.y);
+                playerPoint.style.display = 'block';
+            } else if (playerPoint) {
+                playerPoint.style.display = 'none';
+            }
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (!gameStarted) return;
+            
+            timeElapsed += 0.016; // 約60fps想定
+            
+            // プレイヤー移動 - キーボード入力を確実に反映
+            updateMovement();
+            updateVirtualJoystick();
+            
+            velocity.x -= velocity.x * 0.1;
+            velocity.z -= velocity.z * 0.1;
+            direction.z = Number(moveForward) - Number(moveBackward);
+            direction.x = Number(moveRight) - Number(moveLeft);
+            direction.normalize();
+            
+            if (moveForward || moveBackward) velocity.z -= direction.z * moveSpeed;
+            if (moveLeft || moveRight) velocity.x -= direction.x * moveSpeed;
+            
+            // カメラの向きに応じて移動
+            const cameraDirection = new THREE.Vector3();
+            camera.getWorldDirection(cameraDirection);
+            cameraDirection.y = 0;
+            cameraDirection.normalize();
+            
+            const right = new THREE.Vector3();
+            right.crossVectors(cameraDirection, camera.up).normalize();
+            
+            const moveVector = new THREE.Vector3();
+            if (moveForward) moveVector.add(cameraDirection.multiplyScalar(moveSpeed));
+            if (moveBackward) moveVector.add(cameraDirection.multiplyScalar(-moveSpeed));
+            if (moveLeft) moveVector.add(right.multiplyScalar(-moveSpeed));
+            if (moveRight) moveVector.add(right.multiplyScalar(moveSpeed));
+            
+            // 壁の衝突判定（通り抜け防止）
+            const playerRadius = 0.3; // プレイヤーの半径
+            const newPosition = new THREE.Vector3();
+            newPosition.copy(camera.position);
+            newPosition.add(moveVector);
+            
+            // ドアの開口部（通れる場所）- 各壁の衝突判定で使用（新しい座標）
+            const doorOpenings = [
+                { x: 0, z: -12, widthX: 3.0, widthZ: 2.0, wallType: 'z', wallPos: -12 }, // 玄関と廊下の間（z方向の壁、z=-12）
+                { x: -2, z: -12, widthX: 1.5, widthZ: 2.5, wallType: 'x', wallPos: -2 }, // LDKと廊下の間（x方向の壁、x=-2）
+                { x: 2, z: -8, widthX: 1.5, widthZ: 2.5, wallType: 'x', wallPos: 2 }, // 寝室と廊下の間（x方向の壁、x=2）
+                { x: 2, z: 0, widthX: 1.5, widthZ: 2.5, wallType: 'x', wallPos: 2 }, // 子供部屋1と廊下の間（x方向の壁、x=2）
+                { x: 10, z: -6, widthX: 1.5, widthZ: 2.5, wallType: 'x', wallPos: 10 }, // バスルームと寝室の間（x方向の壁、x=10）
+                { x: 10, z: -2, widthX: 1.2, widthZ: 2.0, wallType: 'x', wallPos: 10 }, // トイレと子供部屋1の間（x方向の壁、x=10）
+                { x: -4, z: 5, widthX: 1.2, widthZ: 2.0, wallType: 'z', wallPos: 5 }  // 物置とLDKの間（z方向の壁、z=5）
+            ];
+            
+            // ドアの開口部かどうかをチェックする関数
+            function isInDoorOpening(posX, posZ, wallBounds) {
+                const wallThickness = 0.02;
+                for (const door of doorOpenings) {
+                    // x方向の壁（zが固定、x方向に長い）の場合
+                    if (Math.abs(wallBounds.minZ - wallBounds.maxZ) < wallThickness * 2) {
+                        const wallZ = (wallBounds.minZ + wallBounds.maxZ) / 2;
+                        // wallTypeが'z'の場合、z方向の壁なので、この条件には該当しない
+                        // しかし、古い定義との互換性のために残す
+                        if (door.wallType !== 'x' && Math.abs(wallZ - door.z) < 0.1 &&
+                            Math.abs(posZ - door.z) < door.widthZ / 2 + playerRadius &&
+                            Math.abs(posX - door.x) < door.widthX / 2 + playerRadius) {
+                            return true;
+                        }
+                    }
+                    // z方向の壁（xが固定、z方向に長い）の場合
+                    if (Math.abs(wallBounds.minX - wallBounds.maxX) < wallThickness * 2) {
+                        const wallX = (wallBounds.minX + wallBounds.maxX) / 2;
+                        // wallTypeに基づいて判定
+                        if (door.wallType === 'x' && Math.abs(wallX - door.wallPos) < 0.1) {
+                            // x方向の壁の場合、wallPosと比較
+                            if (Math.abs(posX - door.x) < door.widthX / 2 + playerRadius &&
+                                Math.abs(posZ - door.z) < door.widthZ / 2 + playerRadius) {
+                                return true;
+                            }
+                        } else if (door.wallType === 'z' && Math.abs(wallX - door.x) < 0.1) {
+                            // z方向の壁の場合、door.xと比較
+                            if (Math.abs(posX - door.x) < door.widthX / 2 + playerRadius &&
+                                Math.abs(posZ - door.z) < door.widthZ / 2 + playerRadius) {
+                                return true;
+                            }
+                        } else if (!door.wallType && Math.abs(wallX - door.x) < 0.1) {
+                            // 古い定義との互換性
+                            if (Math.abs(posX - door.x) < door.widthX / 2 + playerRadius &&
+                                Math.abs(posZ - door.z) < door.widthZ / 2 + playerRadius) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+            
+            let canMove = true;
+            for (const wall of walls) {
+                const bounds = wall.bounds;
+                // プレイヤーの位置が壁の範囲内かチェック
+                if (newPosition.x + playerRadius > bounds.minX && 
+                    newPosition.x - playerRadius < bounds.maxX &&
+                    newPosition.z + playerRadius > bounds.minZ && 
+                    newPosition.z - playerRadius < bounds.maxZ) {
+                    // ドアの開口部でない場合のみ衝突
+                    if (!isInDoorOpening(newPosition.x, newPosition.z, bounds)) {
+                        canMove = false;
+                        break;
+                    }
+                }
+            }
+            
+            // 衝突していない場合のみ移動
+            if (canMove) {
+                camera.position.add(moveVector);
+            }
+            camera.position.y = 1.6; // 常に目の高さを維持
+            
+            // 現在の場所を判定して表示
+            const currentLocation = getCurrentLocation(camera.position.x, camera.position.z);
+            const locationElement = document.getElementById('location');
+            if (locationElement) {
+                locationElement.textContent = `場所: ${currentLocation}`;
+            }
+            
+            // 見取り図を更新
+            updateFloorplan(currentLocation, camera.position.x, camera.position.z);
+            
+            // 懐中電灯をカメラに追従
+            flashlight.position.copy(camera.position);
+            const flashlightTarget = new THREE.Vector3();
+            camera.getWorldDirection(flashlightTarget);
+            flashlightTarget.multiplyScalar(5);
+            flashlightTarget.add(camera.position);
+            flashlight.target.position.copy(flashlightTarget);
+            
+            // ちらつく電灯の演出
+            flickerTimer += 0.016;
+            if (flickerTimer - lastFlickerTime > Math.random() * 2 + 0.5) {
+                const flickerIntensity = 0.3 + Math.random() * 0.7;
+                flickeringLight.intensity = flickerIntensity * 0.8;
+                lastFlickerTime = flickerTimer;
+            }
+            
+            // ============================================
+            // 鍵探索システム - プレイヤーの動線を明確に
+            // ============================================
+            
+            const playerPos = camera.position;
+            
+            // 鍵のアニメーション（回転と光るエフェクト）
+            keyObjects.forEach((key, index) => {
+                if (!keysFound[key.userData.id]) {
+                    // 鍵を回転させる
+                    key.rotation.y += 0.02;
+                    
+                    // 光るエフェクトの強度を変化
+                    const lightIntensity = 0.5 + Math.sin(timeElapsed * 3 + index) * 0.3;
+                    keyLights[index].intensity = lightIntensity;
+                    key.material.emissiveIntensity = lightIntensity;
+                }
+            });
+            
+            // 鍵との距離をチェック（取得判定）
+            keyObjects.forEach((key, index) => {
+                if (!keysFound[key.userData.id]) {
+                    // 3D距離を計算
+                    const distance = playerPos.distanceTo(key.position);
+                    
+                    // 水平距離を計算（y座標の差を無視）
+                    const horizontalDistance = Math.sqrt(
+                        Math.pow(playerPos.x - key.position.x, 2) + 
+                        Math.pow(playerPos.z - key.position.z, 2)
+                    );
+                    
+                    // 鍵に近づいたらヒントを表示（水平距離ベース）
+                    if (horizontalDistance < 3) {
+                        const hintElement = document.getElementById('hint');
+                        if (hintElement) {
+                            hintElement.textContent = `🔑 鍵${key.userData.id}に近づいています... (距離: ${Math.floor(horizontalDistance * 10) / 10}m)`;
+                            hintElement.classList.add('show');
+                        }
+                    } else {
+                        const hintElement = document.getElementById('hint');
+                        if (hintElement && hintElement.textContent.includes(`鍵${key.userData.id}`)) {
+                            hintElement.classList.remove('show');
+                        }
+                    }
+                    
+                    // 鍵を取得（水平距離2m以内、かつy座標の差が2m以内）
+                    const yDistance = Math.abs(playerPos.y - key.position.y);
+                    if (horizontalDistance < 2 && yDistance < 2) {
+                        keysFound[key.userData.id] = true;
+                        key.visible = false;
+                        keyLights[index].intensity = 0;
+                        
+                        // UI更新
+                        const keyElement = document.getElementById(`key${key.userData.id}`);
+                        if (keyElement) {
+                            keyElement.classList.add('found');
+                            keyElement.textContent = `✅ 鍵${key.userData.id}: 取得済み`;
+                        }
+                        
+                        // ヒント表示
+                        const hintElement = document.getElementById('hint');
+                        if (hintElement) {
+                            hintElement.textContent = `🔑 鍵${key.userData.id}を取得しました！`;
+                            hintElement.classList.add('show');
+                            setTimeout(() => {
+                                hintElement.classList.remove('show');
+                            }, 3000);
+                        }
+                        
+                        // すべての鍵を取得したかチェック
+                        const allKeysFound = keysFound[1] && keysFound[2] && keysFound[3];
+                        if (allKeysFound) {
+                            setTimeout(() => {
+                                const hintElement = document.getElementById('hint');
+                                if (hintElement) {
+                                    hintElement.textContent = '🎉 すべての鍵を取得しました！玄関（東側）から脱出してください！';
+                                    hintElement.classList.add('show');
+                                }
+                                
+                                // 玄関のドアを光らせる
+                                exitDoor.material.emissive.setHex(0x00ff00);
+                                exitDoor.material.emissiveIntensity = 0.8;
+                                // 玄関のドアのライトを点灯
+                                exitDoorLight.intensity = 2;
+                            }, 2000);
+                        }
+                    }
+                }
+            });
+            
+            // 脱出判定（すべての鍵を取得して玄関に近づいたら）
+            const allKeysFound = keysFound[1] && keysFound[2] && keysFound[3];
+            if (allKeysFound) {
+                const exitDistance = playerPos.distanceTo(exitDoor.position);
+                
+                // 常に玄関のドアへの距離と方向を表示
+                const hintElement = document.getElementById('hint');
+                if (hintElement) {
+                    const dx = exitDoor.position.x - playerPos.x;
+                    const dz = exitDoor.position.z - playerPos.z;
+                    let direction = '';
+                    if (Math.abs(dx) > Math.abs(dz)) {
+                        direction = dx > 0 ? '東' : '西';
+                    } else {
+                        direction = dz > 0 ? '北' : '南';
+                    }
+                    
+                    if (exitDistance < 2) {
+                        hintElement.textContent = `🚪 玄関まで ${Math.floor(exitDistance * 10) / 10}m (${direction}) - Eキーまたはタップで脱出`;
+                    } else {
+                        hintElement.textContent = `🚪 玄関まで ${Math.floor(exitDistance * 10) / 10}m (${direction}) - 緑色に光るドアを探してください`;
+                    }
+                    hintElement.classList.add('show');
+                }
+                
+                // 玄関のドアのライトを点滅させる（見つけやすくする）
+                exitDoorLight.intensity = 1.5 + Math.sin(timeElapsed * 3) * 0.5;
+                
+                if (exitDistance < 2) {
+                    // 脱出（Eキーまたはタップ）
+                    if (keys['KeyE'] || (isTouching && exitDistance < 1.5)) {
+                        // エンディング
+                        const objective = document.getElementById('objective');
+                        if (objective) {
+                            objective.innerHTML = `
+                                <h3>🎉 脱出成功！</h3>
+                                <div style="margin-top: 15px; font-size: 16px;">
+                                    あなたは無事に家から脱出しました...<br>
+                                    しかし、何かがあなたを追いかけてくる気がする...
+                                </div>
+                            `;
+                        }
+                        
+                        if (hintElement) {
+                            hintElement.textContent = 'THE END';
+                            hintElement.style.fontSize = '24px';
+                            hintElement.style.color = '#00ff00';
+                        }
+                        
+                        // ゲームを停止（オプション）
+                        // gameStarted = false;
+                    }
+                }
+            }
+            
+            // ============================================
+            // 怪奇現象のトリガー - 20個のリアルな恐怖イベント
+            // ============================================
+            
+            // イベント1: 背後に一瞬見える影（リビング中央付近、3秒後）
+            if (timeElapsed > 3 && !eventsTriggered.shadowBehind) {
+                if (playerPos.z > -8 && playerPos.z < -4) {
+                    shadowFigure.position.set(
+                        playerPos.x,
+                        1.0,
+                        playerPos.z + 3
+                    );
+                    shadowFigure.visible = true;
+                    eventsTriggered.shadowBehind = true;
+                    setTimeout(() => { shadowFigure.visible = false; }, 500);
+                }
+            }
+            
+            // イベント2: ドアが勝手に閉まる（寝室のドア付近、5秒後）
+            if (timeElapsed > 5 && !eventsTriggered.doorClose) {
+                if (playerPos.x < -6 && playerPos.x > -10 && playerPos.z > -2 && playerPos.z < 2) {
+                    const originalRotation = bedroomDoor.rotation.y;
+                    let closeProgress = 0;
+                    const closeInterval = setInterval(() => {
+                        closeProgress += 0.05;
+                        bedroomDoor.rotation.y = originalRotation + (Math.PI / 2) * closeProgress;
+                        if (closeProgress >= 1) {
+                            clearInterval(closeInterval);
+                            eventsTriggered.doorClose = true;
+                        }
+                    }, 16);
+                }
+            }
+            
+            // イベント3: 鏡に人影が映る（鏡の前、7秒後）
+            if (timeElapsed > 7 && !eventsTriggered.mirrorFigure) {
+                if (Math.abs(playerPos.z - (-5)) < 3 && Math.abs(playerPos.x) < 2) { // 廊下の鏡の前（x=0, z=-5）
+                    mirrorFigure.position.set(playerPos.x - 0.5, 1.0, -5.2); // 廊下の鏡の位置
+                    mirrorFigure.visible = true;
+                    eventsTriggered.mirrorFigure = true;
+                    setTimeout(() => { mirrorFigure.visible = false; }, 1000);
+                }
+            }
+            
+            // イベント4: 廊下を横切る影（廊下中央、9秒後）
+            if (timeElapsed > 9 && !eventsTriggered.hallwayFigure) {
+                if (playerPos.z > -12 && playerPos.z < 5 && Math.abs(playerPos.x) < 2) { // 廊下の範囲（x=-2～2, z=-12～5）
+                    hallwayFigure.position.set(2, 1.0, playerPos.z + 1);
+                    hallwayFigure.visible = true;
+                    eventsTriggered.hallwayFigure = true;
+                    let crossProgress = 0;
+                    const crossInterval = setInterval(() => {
+                        crossProgress += 0.02;
+                        hallwayFigure.position.x = 2 - crossProgress * 4; // x=2からx=-2へ横切る
+                        if (crossProgress >= 1) {
+                            hallwayFigure.visible = false;
+                            clearInterval(crossInterval);
+                        }
+                    }, 16);
+                }
+            }
+            
+            // イベント5: ランダムなちらつき（10秒後から）
+            if (timeElapsed > 10 && Math.random() < 0.01) {
+                flickeringLight.intensity = 0;
+                setTimeout(() => { flickeringLight.intensity = 0.8; }, 100 + Math.random() * 200);
+            }
+            
+            // イベント6: 背後に再び現れる（12秒後、プレイヤーが振り返った時）
+            if (timeElapsed > 12 && eventsTriggered.shadowBehind) {
+                const lookDirection = new THREE.Vector3();
+                camera.getWorldDirection(lookDirection);
+                const angleToShadow = Math.acos(lookDirection.dot(new THREE.Vector3(0, 0, 1)));
+                if (angleToShadow > Math.PI / 2 && Math.random() < 0.005) {
+                    shadowFigure.position.set(playerPos.x, 1.0, playerPos.z + 2);
+                    shadowFigure.visible = true;
+                    setTimeout(() => { shadowFigure.visible = false; }, 300);
+                }
+            }
+            
+            // イベント7: 窓の外に人影（リビングの窓前、14秒後）
+            if (timeElapsed > 14 && !eventsTriggered.windowFigure) {
+                if (playerPos.z > -10 && playerPos.z < -8) {
+                    windowFigure.visible = true;
+                    eventsTriggered.windowFigure = true;
+                    setTimeout(() => { windowFigure.visible = false; }, 800);
+                }
+            }
+            
+            // イベント8: テレビが勝手につく（リビング、16秒後）
+            if (timeElapsed > 16 && !eventsTriggered.tvOn) {
+                if (playerPos.z > -10 && playerPos.z < -6) {
+                    tvScreen.material.emissive.setHex(0x444444);
+                    tvScreen.visible = true;
+                    eventsTriggered.tvOn = true;
+                    setTimeout(() => {
+                        tvScreen.material.emissive.setHex(0x000000);
+                        tvScreen.visible = false;
+                    }, 2000);
+                }
+            }
+            
+            // イベント9: 冷蔵庫のドアが開く（リビングの隅、18秒後）
+            if (timeElapsed > 18 && !eventsTriggered.fridgeOpen) {
+                if (playerPos.x > 6 && playerPos.x < 10 && playerPos.z > -8 && playerPos.z < -4) {
+                    let openProgress = 0;
+                    const openInterval = setInterval(() => {
+                        openProgress += 0.03;
+                        fridgeDoor.rotation.y = -Math.PI / 2 * openProgress;
+                        if (openProgress >= 1) {
+                            clearInterval(openInterval);
+                            setTimeout(() => {
+                                let closeProgress = 0;
+                                const closeInterval2 = setInterval(() => {
+                                    closeProgress += 0.03;
+                                    fridgeDoor.rotation.y = -Math.PI / 2 * (1 - closeProgress);
+                                    if (closeProgress >= 1) {
+                                        clearInterval(closeInterval2);
+                                        eventsTriggered.fridgeOpen = true;
+                                    }
+                                }, 16);
+                            }, 1000);
+                        }
+                    }, 16);
+                }
+            }
+            
+            // イベント10: 階段の上から物音（階段付近、20秒後）
+            if (timeElapsed > 20 && !eventsTriggered.stairsSound) {
+                if (playerPos.z > 12 && playerPos.z < 16) {
+                    stairsFigure.visible = true;
+                    eventsTriggered.stairsSound = true;
+                    setTimeout(() => { stairsFigure.visible = false; }, 600);
+                }
+            }
+            
+            // イベント11: クローゼットのドアが少し開く（寝室、22秒後）
+            if (timeElapsed > 22 && !eventsTriggered.closetOpen) {
+                if (playerPos.x < -8 && playerPos.x > -10 && playerPos.z > -4 && playerPos.z < 0) {
+                    let openProgress = 0;
+                    const openInterval = setInterval(() => {
+                        openProgress += 0.02;
+                        closetDoor.rotation.y = Math.PI / 2 * openProgress;
+                        if (openProgress >= 0.3) {
+                            clearInterval(openInterval);
+                            setTimeout(() => {
+                                let closeProgress = 0.3;
+                                const closeInterval2 = setInterval(() => {
+                                    closeProgress -= 0.02;
+                                    closetDoor.rotation.y = Math.PI / 2 * closeProgress;
+                                    if (closeProgress <= 0) {
+                                        clearInterval(closeInterval2);
+                                        eventsTriggered.closetOpen = true;
+                                    }
+                                }, 16);
+                            }, 1500);
+                        }
+                    }, 16);
+                }
+            }
+            
+            // イベント12: 洗面所の鏡に血の手形（洗面所、24秒後）
+            if (timeElapsed > 24 && !eventsTriggered.bloodHandprint) {
+                if (playerPos.x > 2 && playerPos.x < 6 && playerPos.z > 10 && playerPos.z < 14) {
+                    bloodHandprint.visible = true;
+                    eventsTriggered.bloodHandprint = true;
+                }
+            }
+            
+            // イベント13: ベッドの下から物音（寝室、26秒後）
+            if (timeElapsed > 26 && !eventsTriggered.bedSound) {
+                if (playerPos.x > -8 && playerPos.x < -4 && playerPos.z > -4 && playerPos.z < 0) {
+                    bedShadow.visible = true;
+                    eventsTriggered.bedSound = true;
+                    setTimeout(() => { bedShadow.visible = false; }, 1000);
+                }
+            }
+            
+            // イベント14: 電気が一瞬消える（28秒後）
+            if (timeElapsed > 28 && !eventsTriggered.lightsOut) {
+                const originalIntensity = flickeringLight.intensity;
+                flickeringLight.intensity = 0;
+                flashlight.intensity = 0;
+                eventsTriggered.lightsOut = true;
+                setTimeout(() => {
+                    flickeringLight.intensity = originalIntensity;
+                    flashlight.intensity = 1.5;
+                }, 300 + Math.random() * 500);
+            }
+            
+            // イベント15: ドアノブが動く（寝室のドア、30秒後）
+            if (timeElapsed > 30 && !eventsTriggered.doorKnobMove) {
+                if (playerPos.x > -9 && playerPos.x < -7 && playerPos.z > -1 && playerPos.z < 1) {
+                    let rotateProgress = 0;
+                    const rotateInterval = setInterval(() => {
+                        rotateProgress += 0.1;
+                        doorKnob.rotation.z = Math.sin(rotateProgress * Math.PI) * 0.3;
+                        if (rotateProgress >= 2) {
+                            clearInterval(rotateInterval);
+                            doorKnob.rotation.z = 0;
+                            eventsTriggered.doorKnobMove = true;
+                        }
+                    }, 50);
+                }
+            }
+            
+            // イベント16: 窓ガラスに手形（リビングの窓、32秒後）
+            if (timeElapsed > 32 && !eventsTriggered.windowHandprint) {
+                if (playerPos.z > -10 && playerPos.z < -8) {
+                    windowHandprint.visible = true;
+                    eventsTriggered.windowHandprint = true;
+                }
+            }
+            
+            // イベント17: 天井から水滴が落ちる（ランダム、34秒後から）
+            if (timeElapsed > 34 && !eventsTriggered.waterDrop && Math.random() < 0.003) {
+                waterDrop.position.set(
+                    playerPos.x + (Math.random() - 0.5) * 2,
+                    2.8,
+                    playerPos.z + (Math.random() - 0.5) * 2
+                );
+                waterDrop.visible = true;
+                let dropProgress = 0;
+                const dropInterval = setInterval(() => {
+                    dropProgress += 0.05;
+                    waterDrop.position.y = 2.8 - dropProgress * 3;
+                    if (dropProgress >= 1) {
+                        waterDrop.visible = false;
+                        clearInterval(dropInterval);
+                        eventsTriggered.waterDrop = true;
+                    }
+                }, 16);
+            }
+            
+            // イベント18: 時計が止まる（リビング、36秒後）
+            if (timeElapsed > 36 && !eventsTriggered.clockStop) {
+                if (playerPos.z > -10 && playerPos.z < -6) {
+                    clockHand.rotation.z = Math.PI / 2;
+                    eventsTriggered.clockStop = true;
+                }
+            }
+            
+            // イベント19: リビングの椅子が動く（リビング、38秒後）
+            if (timeElapsed > 38 && !eventsTriggered.chairMove) {
+                if (playerPos.x > 2 && playerPos.x < 6 && playerPos.z > -8 && playerPos.z < -4) {
+                    const originalX = chair.position.x;
+                    let moveProgress = 0;
+                    const moveInterval = setInterval(() => {
+                        moveProgress += 0.02;
+                        chair.position.x = originalX + Math.sin(moveProgress * Math.PI) * 0.2;
+                        if (moveProgress >= 1) {
+                            chair.position.x = originalX;
+                            clearInterval(moveInterval);
+                            eventsTriggered.chairMove = true;
+                        }
+                    }, 16);
+                }
+            }
+            
+            // イベント20: 玄関のドアがノックされる（玄関付近、40秒後）
+            if (timeElapsed > 40 && !eventsTriggered.doorKnock) {
+                if (playerPos.x > 6 && playerPos.x < 10 && playerPos.z > 2 && playerPos.z < 6) {
+                    let knockCount = 0;
+                    const knockInterval = setInterval(() => {
+                        frontDoor.position.x = 9.9 + Math.sin(knockCount * Math.PI * 2) * 0.05;
+                        knockCount += 0.5;
+                        if (knockCount >= 6) {
+                            frontDoor.position.x = 9.9;
+                            clearInterval(knockInterval);
+                            eventsTriggered.doorKnock = true;
+                        }
+                    }, 200);
+                }
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // リサイズ対応
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // ゲーム開始
+        animate();
+    </script>
+</body>
+</html>
+
