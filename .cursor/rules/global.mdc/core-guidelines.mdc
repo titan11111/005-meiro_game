@@ -1,0 +1,51 @@
+---
+name: "AI セッション共通ガイドライン"
+description: "Cursor で GitHub-game を開発するときのAIの初期化手順と進め方"
+priority: 100
+alwaysApply: true
+globs:
+  - "**/*"
+---
+
+# AI セッション初期化シーケンス
+
+1. `.cursor/rules/core-guidelines.mdc` 自身を読み、このファイルの方針に従うこと  
+2. `.cursor/rules/global.mdc` と `.cursor/rules/domain-github-game.mdc` を読み、ルールを要約すること  
+3. `docs/domain.md` があれば開き、「このリポジトリで何を作るか」を3〜5行で要約すること  
+4. 「現在の進捗状況」と「次のアクション」をこのファイル内から確認し、5行以内で開発者に報告すること  
+
+# 現在の進捗状況
+
+- フェーズ1: 共通ルールとドメインルールの整備 ✅  
+- フェーズ2: 代表的な1本のゲームを、index.html だけで完成させる ⏳  
+- フェーズ3: ゲームごとのフォルダ構成と命名ルールを整理する ⏳  
+
+最終更新: 2025-11-19
+
+# 次のアクション（優先順位付き）
+
+- 直近（この数セッション）
+  1. 新しい1本のゲーム用フォルダを作り、`index.html` のひな型をAIに生成させる  
+  2. PC/スマホ両対応の入力（キーボード + ボタンタップ）を持つ小さなゲームを完成させる  
+  3. 実装後に振り返り、必要なルールを `domain-github-game.mdc` に追記する  
+
+# セッション開始時のチェックリスト
+
+- [ ] `.cursor/rules/core-guidelines.mdc` を開いたか  
+- [ ] `.cursor/rules/global.mdc` と `domain-github-game.mdc` の要点を確認したか  
+- [ ] `docs/domain.md` をざっと読み、「何を作っているのか」を思い出したか  
+
+# /clear や /compact 実行後の扱い
+
+- `/clear` や `/compact` で会話履歴が消えても、真実は `.cursor/rules` と `docs/` にある  
+- その場合、AIは必ず以下の順に読み直すこと：
+  1. `.cursor/rules/core-guidelines.mdc`
+  2. `.cursor/rules/global.mdc`
+  3. `.cursor/rules/domain-github-game.mdc`
+  4. 必要に応じて `docs/domain.md`  
+
+- 読み直した結果として、
+  - 現在のフェーズ
+  - 進捗状況（1〜2行）
+  - 直近の次アクション候補（3つまで）
+  を開発者に報告してから作業を始めること  

@@ -1,5 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
+* {
+  font-family: 'Press Start 2P', monospace !important;
+}
+
+html {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -10,6 +21,8 @@ body {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+  width: 100%;
+  height: 100%;
 }
 
 .hidden {
@@ -20,6 +33,8 @@ body {
   width: 100vw;
   height: 100vh;
   position: relative;
+  transform: none;
+  transform-origin: top left;
 }
 
 #game-area {
@@ -30,32 +45,49 @@ body {
   height: 100%;
   background-image: url('./images/fi-rudo.png');
   background-size: cover;
-  background-repeat: repeat;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-attachment: fixed;
   overflow: hidden;
+  box-sizing: border-box;
+}
+
+#game-area::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
 }
 
 #player {
   position: absolute;
-  width: 48px;
-  height: 48px;
+  width: 96px;
+  height: 96px;
   background-image: url('./images/hero.png');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
   z-index: 10;
   transition: all 0.1s ease;
-  /* border: 2px solid rgba(0, 255, 0, 0.5); /* デバッグ用の緑枠線 */
+  box-sizing: border-box;
 }
 
 .enemy {
   position: absolute;
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
   z-index: 5;
-  /* border: 2px solid rgba(255, 0, 0, 0.3); /* デバッグ用の赤枠線 */
+  box-sizing: border-box;
 }
 
 /* アイテムスタイル */
@@ -118,11 +150,40 @@ body {
   display: flex;
   gap: 15px;
   align-items: center;
-  font-size: 10px;
+  font-size: 14px;
   flex-wrap: wrap;
   max-width: 80%;
+  box-sizing: border-box;
 }
 
+#hp-container {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+#combo-container {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  background: rgba(255, 200, 0, 0.2);
+  padding: 4px 8px;
+  border-radius: 5px;
+  border: 1px solid #ffcc00;
+}
+
+#combo-count {
+  color: #ffcc00;
+  font-weight: bold;
+  min-width: 30px;
+  text-align: center;
+}
+
+#exp-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 #hp-hearts {
   display: flex;
   gap: 2px;
@@ -150,15 +211,15 @@ body {
   transition: width 0.3s ease;
 }
 
-#exp-text {
-  font-size: 8px;
-  margin-left: 8px;
-}
+  #exp-text {
+    font-size: 12px;
+    margin-left: 8px;
+  }
 
-#level-display {
-  font-size: 10px;
-  color: yellow;
-}
+  #level-display {
+    font-size: 12px;
+    color: yellow;
+  }
 
 #score-display, #combo-display {
   font-size: 10px;
@@ -336,6 +397,46 @@ body {
   transform: translateY(0);
 }
 
+/* チュートリアル */
+#tutorial-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1500;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#tutorial-box {
+  background: #222;
+  border: 3px solid #fff;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 80%;
+  text-align: center;
+}
+
+#tutorial-box h2 {
+  font-size: 16px;
+  margin: 10px 0;
+}
+
+#tutorial-box p {
+  font-size: 12px;
+  margin: 10px 0;
+}
+
+#tutorial-start {
+  margin-top: 15px;
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
 /* ゲームオーバー画面 */
 #gameover-container {
   position: fixed;
@@ -416,12 +517,39 @@ body {
 }
 
 /* スマホ対応 */
-@media (max-width: 768px) {
+/* スマホ対応（600px以下） */
+@media (max-width: 600px) {
+  * {
+    font-size: 12px;
+  }
+}
+
+/* タブレット対応（601px～1024px） */
+@media (min-width: 601px) and (max-width: 1024px) {
+}
+
+/* PC対応（1025px以上） */
+@media (min-width: 1025px) {
+}
   #status-bar {
-    font-size: 8px;
+    font-size: 12px;
     padding: 6px 10px;
     gap: 10px;
     max-width: 95%;
+  }
+
+  #controller {
+    gap: 15px;
+  }
+
+  #controller-row2 {
+    gap: 15px;
+  }
+
+  #controller button {
+    width: 80px;
+    height: 80px;
+    font-size: 28px;
   }
   
   #exp-bar {
@@ -473,4 +601,3 @@ body {
     height: 40px;
     font-size: 14px;
   }
-}

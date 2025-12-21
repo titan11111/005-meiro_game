@@ -1,0 +1,33 @@
+/* ===== style.css ===== */
+* { box-sizing: border-box; }
+body { margin: 0; background:#111; color:#eee; font-family: system-ui, sans-serif; overflow:hidden; touch-action:none; overscroll-behavior:none; }
+.ui { position: absolute; inset: 0; pointer-events:none; }
+.names { display:flex; justify-content:space-between; padding:8px 16px; font-weight:700; letter-spacing:.5px; }
+#round { opacity:.9 }
+.bars { display:flex; justify-content:space-between; padding:0 16px; gap:16px; }
+.bar { width:45%; height:18px; background:#333; border:2px solid #666; }
+.hp { height:100%; width:100%; background:linear-gradient(90deg,#19c37d,#f5d90a); transition:width .15s linear; }
+#announce { position:absolute; top:45%; left:50%; transform:translate(-50%,-50%); font-size:48px; font-weight:900; text-shadow:0 2px 8px #000; opacity:0; transition:opacity .2s; }
+.help { position:absolute; bottom:8px; left:16px; right:16px; font-size:12px; opacity:.8; }
+#game { display:block; margin:0 auto; background:url('crowd.svg') bottom center/100% auto no-repeat, linear-gradient(#f97316 0%, #facc15 40%, #7c2d12 40% 60%, #1a1a1a 60%); border-top:4px solid #000; touch-action:none; }
+#modeSelect { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; background:rgba(0,0,0,.6); }
+#modeSelect button { margin:8px; padding:12px 24px; font-size:20px; cursor:pointer; }
+
+/* Mobile controls */
+#controls { position:absolute; inset:0; display:none; }
+#controls .pad { position:absolute; left:12px; bottom:12px; width:180px; height:180px; }
+#controls .pad button {
+  position:absolute; width:60px; height:60px; border-radius:8px;
+  background:rgba(255,255,255,.1); color:#fff; border:2px solid #666;
+  font-size:24px; opacity:.8;
+}
+#controls .pad .up { left:60px; top:0; }
+#controls .pad .left { left:0; top:60px; }
+#controls .pad .right { left:120px; top:60px; }
+#controls .pad .down { left:60px; top:120px; }
+#controls .actions { position:absolute; right:12px; bottom:12px; display:flex; flex-direction:column; gap:12px; }
+#controls .actions button {
+  width:80px; height:80px; border-radius:50%;
+  background:rgba(255,255,255,.1); color:#fff; border:2px solid #666;
+  font-size:20px; opacity:.8;
+}

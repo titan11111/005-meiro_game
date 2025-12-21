@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>レモネードスタンド経営ゲーム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 音声ON/OFFボタン -->
+    <button id="soundToggle" class="sound-toggle">🔊</button>
+
+    <!-- チュートリアル -->
+    <div id="tutorial" class="modal">
+        <div class="modal-content">
+            <div class="cat-icon">🐱</div>
+            <h2 id="tutorialTitle"></h2>
+            <p id="tutorialText"></p>
+            <div class="tutorial-buttons">
+                <button id="tutorialSkip" class="btn btn-gray">スキップ</button>
+                <button id="tutorialNext" class="btn btn-green">次へ</button>
+            </div>
+            <div id="tutorialDots" class="tutorial-dots"></div>
+        </div>
+    </div>
+
+    <!-- 用語集モーダル -->
+    <div id="glossary" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2 id="glossaryTitle"></h2>
+            <p id="glossaryDescription"></p>
+            <div class="glossary-example" id="glossaryExample"></div>
+            <button id="glossaryClose" class="btn btn-blue">閉じる</button>
+        </div>
+    </div>
+
+    <!-- ゲーム画面 -->
+    <div id="gameScreen" style="display: none;">
+        <div class="container">
+            <!-- ヘッダー -->
+            <div class="header">
+                <div class="header-left">
+                    <div class="day-info">Day <span id="day">1</span> (<span id="dayOfWeek">月</span>)</div>
+                    <div class="weather-info">
+                        <span id="weatherIcon">☀️</span>
+                        <span id="weatherText">晴れ</span>
+                        <span class="temp">🌡️<span id="temperature">28</span>°C</span>
+                    </div>
+                    <div class="time-info">⏰ <span id="time">9:00</span></div>
+                    <div class="reputation-info">
+                        口コミ <span id="reputation">★★★☆☆</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="info-btn" onclick="openGlossary('現金')">
+                        <span class="help-icon">?</span>
+                        💰 <span id="cash">1000</span>円
+                    </button>
+                    <button class="info-btn" onclick="openGlossary('在庫')">
+                        <span class="help-icon">?</span>
+                        🍋 <span id="lemon">20</span>個
+                    </button>
+                    <div class="info-display">
+                        🧂 <span id="sugar">10</span>袋
+                    </div>
+                </div>
+            </div>
+
+            <!-- ゲーム画面 -->
+            <div id="gameArea" class="game-area">
+                <div class="cloud cloud-1">☁️</div>
+                <div class="cloud cloud-2">☁️</div>
+                <div id="rainContainer"></div>
+                <div id="customersContainer"></div>
+                
+                <!-- 店舗 -->
+                <div class="store">
+                    <div class="store-sign">🏪 LEMONADE</div>
+                    <div class="store-counter">
+                        <div id="lemonDisplay" class="lemon-display"></div>
+                        <div class="price-tag">💵 <span id="priceDisplay">100</span>円</div>
+                    </div>
+                    <div class="store-shadow"></div>
+                </div>
+
+                <!-- 在庫切れ警告 -->
+                <div id="stockWarning" class="stock-warning" style="display: none;">
+                    ⚠️ 在庫が少ないです！
+                </div>
+            </div>
+
+            <!-- コントロールパネル -->
+            <div class="controls">
+                <button id="purchaseBtn" class="btn btn-green">
+                    💰 仕入れる<br><small>(600円)</small>
+                </button>
+                <div class="price-control">
+                    <label>💵 値段設定</label>
+                    <select id="priceSelect">
+                        <option value="50">50円（激安）</option>
+                        <option value="100" selected>100円（普通）</option>
+                        <option value="150">150円（やや高）</option>
+                        <option value="200">200円（高級）</option>
+                        <option value="250">250円（超高級）</option>
+                        <option value="300">300円（プレミアム）</option>
+                        <option value="1000">1000円（ぼったくり）</option>
+                    </select>
+                </div>
+                <button id="closeBtn" class="btn btn-red">
+                    🚪 閉店する
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 決算書画面 -->
+    <div id="resultScreen" style="display: none;">
+        <div class="container result-container">
+            <h1 class="result-title">🏪 Day <span id="resultDay">1</span> の結果</h1>
+
+            <div id="simpleResult">
+                <!-- PL -->
+                <div class="result-section">
+                    <div class="section-header">
+                        <h2>⚡️ 今日のバトル結果</h2>
+                        <button class="help-btn-small" onclick="openGlossary('PL')">?</button>
+                    </div>
+                    
+                    <div class="result-item">
+                        <button class="result-label" onclick="openGlossary('売上')">
+                            💰 売上 <span class="help-icon">?</span>
+                        </button>
+                        <div class="result-bar">
+                            <div class="bar-container">
+                                <div id="salesBar" class="bar bar-green"></div>
+                            </div>
+                            <span id="salesAmount" class="amount amount-green">0円</span>
+                        </div>
+                    </div>
+
+                    <div class="result-item">
+                        <button class="result-label" onclick="openGlossary('費用')">
+                            💸 費用 <span class="help-icon">?</span>
+                        </button>
+                        <div class="result-bar">
+                            <div class="bar-container">
+                                <div id="costBar" class="bar bar-red"></div>
+                            </div>
+                            <span id="costAmount" class="amount amount-red">0円</span>
+                        </div>
+                    </div>
+
+                    <div class="result-item profit-item">
+                        <button class="result-label" onclick="openGlossary('利益')">
+                            ✨ 利益 <span class="help-icon">?</span>
+                        </button>
+                        <div class="result-bar">
+                            <div class="bar-container">
+                                <div id="profitBar" class="bar bar-yellow"></div>
+                            </div>
+                            <span id="profitAmount" class="amount amount-yellow">0円</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BS -->
+                <div class="result-section">
+                    <div class="section-header">
+                        <h2>🎒 持ち物リスト</h2>
+                        <button class="help-btn-small" onclick="openGlossary('BS')">?</button>
+                    </div>
+
+                    <div class="result-item">
+                        <button class="result-label" onclick="openGlossary('現金')">
+                            💵 現金 <span class="help-icon">?</span>
+                        </button>
+                        <div class="result-bar">
+                            <div class="bar-container">
+                                <div id="cashBar" class="bar bar-blue"></div>
+                            </div>
+                            <span id="cashResultAmount" class="amount amount-blue">0円</span>
+                        </div>
+                    </div>
+
+                    <div class="result-item">
+                        <button class="result-label" onclick="openGlossary('在庫')">
+                            📦 在庫 <span class="help-icon">?</span>
+                        </button>
+                        <div class="result-bar">
+                            <div class="bar-container">
+                                <div id="inventoryBar" class="bar bar-purple"></div>
+                            </div>
+                            <span id="inventoryAmount" class="amount amount-purple">0円</span>
+                        </div>
+                    </div>
+
+                    <div class="result-item assets-item">
+                        <button class="result-label" onclick="openGlossary('純資産')">
+                            🏆 お店の価値 <span class="help-icon">?</span>
+                        </button>
+                        <span id="assetsAmount" class="amount amount-blue-bold">0円</span>
+                    </div>
+                </div>
+
+                <!-- 客層分析 -->
+                <div class="result-section customer-stats">
+                    <h3>📊 本日の客層分析</h3>
+                    <div id="customerStatsGrid" class="customer-grid"></div>
+                    <div id="regularCustomerInfo" class="regular-info" style="display: none;">
+                        💚 常連客: <span id="regularCount">0</span>人
+                    </div>
+                </div>
+
+                <!-- その他データ -->
+                <div class="result-section stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-label">来客数</div>
+                        <div class="stat-value" id="customerCountResult">0人</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">⭐️</div>
+                        <div class="stat-label">満足度</div>
+                        <div class="stat-value" id="satisfactionResult">☆☆☆☆☆</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon" id="weatherResultIcon">☀️</div>
+                        <div class="stat-label">天気</div>
+                        <div class="stat-value" id="weatherResultText">晴れ</div>
+                    </div>
+                </div>
+
+                <!-- 今日の学び -->
+                <div class="learning-box">
+                    <div class="learning-icon">📝</div>
+                    <div>
+                        <div class="learning-title">今日の学び</div>
+                        <div class="learning-text" id="todayLearning"></div>
+                    </div>
+                </div>
+
+                <button id="detailBtn" class="btn btn-blue">📊 詳しい決算書を見る</button>
+
+                <!-- ねこ店長コメント -->
+                <div class="cat-comment">
+                    <div class="cat-icon">🐱</div>
+                    <div>
+                        <div class="comment-title">ねこ店長のコメント：</div>
+                        <div class="comment-text" id="catComment"></div>
+                    </div>
+                </div>
+
+                <button id="nextDayBtn" class="btn btn-green btn-large">➡️ 次の日へ進む</button>
+            </div>
+
+            <!-- 詳細決算書 -->
+            <div id="detailResult" style="display: none;">
+                <button id="backBtn" class="btn btn-gray">← 戻る</button>
+                
+                <h2 class="detail-title">📊 詳しい決算書</h2>
+
+                <!-- 水の流れ -->
+                <div class="flow-section">
+                    <h3>💧 お金の流れ（PL）</h3>
+                    <div class="flow-container">
+                        <div class="flow-item">
+                            <div class="flow-emoji">💧</div>
+                            <div class="flow-box flow-green">
+                                売上 <span id="salesFlow">0</span>円
+                            </div>
+                            <div class="flow-desc">水が入ってくる</div>
+                        </div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-item">
+                            <div class="flow-emoji">🪣</div>
+                            <div class="flow-box flow-blue">会社（バケツ）</div>
+                        </div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-item">
+                            <div class="flow-emoji">💸</div>
+                            <div class="flow-box flow-red">
+                                費用 <span id="costFlow">0</span>円
+                            </div>
+                            <div class="flow-desc">水が出ていく</div>
+                        </div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-item">
+                            <div class="flow-emoji">💰</div>
+                            <div class="flow-box flow-yellow" id="profitFlow">
+                                残った水 = 利益 0円
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 天秤 -->
+                <div class="balance-section">
+                    <h3>⚖️ バランスシート（BS）</h3>
+                    <div class="balance-emoji">⚖️</div>
+                    <div class="balance-container">
+                        <div class="balance-side balance-left">
+                            <h4>資産側</h4>
+                            <div class="balance-item">
+                                <span>💵 現金</span>
+                                <span id="balanceCash">0円</span>
+                            </div>
+                            <div class="balance-item">
+                                <span>📦 在庫</span>
+                                <span id="balanceInventory">0円</span>
+                            </div>
+                            <div class="balance-total">
+                                <span>合計</span>
+                                <span id="balanceAssetsTotal">0円</span>
+                            </div>
+                        </div>
+                        <div class="balance-side balance-right">
+                            <h4>負債・純資産側</h4>
+                            <div class="balance-item">
+                                <span>💳 借金</span>
+                                <span>0円</span>
+                            </div>
+                            <div class="balance-item">
+                                <span>🏆 元手</span>
+                                <span id="balanceInitial">1000円</span>
+                            </div>
+                            <div class="balance-item">
+                                <span>📈 利益累計</span>
+                                <span id="balanceProfit">0円</span>
+                            </div>
+                            <div class="balance-total">
+                                <span>合計</span>
+                                <span id="balanceLiabilitiesTotal">0円</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="balance-note">⚖️ 左右のバランスが取れています！</div>
+                </div>
+
+                <!-- 推移 -->
+                <div class="history-section" id="historySection" style="display: none;">
+                    <h3>📈 日別推移</h3>
+                    <div id="historyContainer"></div>
+                </div>
+
+                <button id="nextDayBtn2" class="btn btn-green btn-large">➡️ 次の日へ進む</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

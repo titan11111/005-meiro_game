@@ -1,774 +1,625 @@
-// ゲームの状態管理
-let gameState = {
-    screen: 'title', // title, playing, gameOver
-    score: 0,
-    codes: 0,
-    altitude: 10000,
-    gameSpeed: 2,
-    lives: 3
+// HTML要素の取得
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const distanceDisplay = document.getElementById('distance');
+const highDistanceDisplay = document.getElementById('highDistance');
+const gameOverOverlay = document.getElementById('gameOverOverlay');
+const finalDistanceDisplay = document.getElementById('finalDistance');
+const newRecordDisplay = document.getElementById('newRecord');
+const restartButton = document.getElementById('restartButton');
+const startButton = document.getElementById('startButton');
+const startScreen = document.getElementById('startScreen');
+
+// コントロールボタン
+const leftButton = document.getElementById('leftButton');
+const rightButton = document.getElementById('rightButton');
+const upButton = document.getElementById('upButton');
+const downButton = document.getElementById('downButton');
+
+// 風インジケーター
+const windIndicator = document.getElementById('windIndicator');
+const windDirectionSpan = document.getElementById('windDirection');
+
+// パワーアップ表示要素
+const featherTimeDisplay = document.getElementById('featherTime');
+const shieldTimeDisplay = document.getElementById('shieldTime');
+const starCountDisplay = document.getElementById('starCount');
+
+// --- 画像アセット管理 ---
+const images = {};
+const imageAssets = {
+    player: 'e9ea2d15-19b1-4354-97e8-d1536184f3d5.png',
+    tower: '4da544de-f330-4362-a840-c3d5de494007.png',
+    plane: '3ee075bf-28a2-49f1-80e4-f881ddd90f2e.png',
+    bird: '0dabc06d-9be1-4a58-a5c4-1ab0d96723df.png',
+    cloud1: '02db8ec8-edcc-4d6c-9d55-7da312c5c6dc.png',
+    cloud2: '112a0cbb-492f-48d4-baec-55ec23c84cc0.png',
+    ufo: 'maou.png'
 };
 
-// プレイヤー設定
-let player = {
-    x: 0,
-    y: 0,
-    width: 30,
-    height: 30,
-    speed: 5,
-    fallSpeed: 0, // 落下速度（プレイヤーは固定位置）
-    invulnerable: false,
-    invulnerableTime: 0,
-    hasSlowMotion: false,
-    hasWarp: false,
-    hasInvisible: false,
-    activeSkill: null,
-    skillCooldown: 0
-};
+function loadImages() {
+    let loadedCount = 0;
+    for (const [key, src] of Object.entries(imageAssets)) {
+        const img = new Image();
+        img.onload = () => {
+            loadedCount++;
+            images[key] = img;
+        };
+        img.onerror = () => {
+            loadedCount++;
+            images[key] = null;
+        };
+        img.src = src; 
+    }
+}
+loadImages();
 
-// ゲーム要素の配列
-let memoryFragments = [];
+// ゲームの状態変数
+let player;
 let obstacles = [];
+let items = [];
 let particles = [];
-let gravityZones = [];
-let terrain = [];
+let distance = 0;
+let highDistance = localStorage.getItem('highDistance') || 0;
+let gameOver = false;
+let gameStarted = false;
+let gameLoopId;
 
-// キャンバスとコンテキスト
-let canvas, ctx;
-let gameLoop;
+// ゲーム設定（小学生向けに大幅緩和）
+let GAME_WIDTH = 300;
+let GAME_HEIGHT = 400;
+const PLAYER_SIZE = 40;
+const PLAYER_SPEED = 5;      // 移動を少し速くして避けやすく
+let GRAVITY = 0.005;         // 重力を弱めてふわふわに (0.008 -> 0.005)
+const OBSTACLE_HEIGHT = 20;
+let OBSTACLE_SPEED = 0.15;   // 障害物の落下速度をゆっくりに (0.2 -> 0.15)
+let OBSTACLE_SPAWN_INTERVAL = 1800; // 敵が出る間隔を広げる (1200 -> 1800)
+const ITEM_SIZE = 35;        // アイテムを少し大きく
+const ITEM_SPEED = 0.1;      // アイテムは取りやすいようゆっくり
+let ITEM_SPAWN_INTERVAL = 2000; // アイテム頻度アップ！ (4000 -> 2000)
+const MIN_OBSTACLE_GAP = 160; // 隙間をかなり広く確保 (90 -> 160)
 
-// 入力管理
-let keys = {};
-let touchInput = {
-    left: false,
-    right: false,
-    skill: false
-};
+let lastObstacleSpawnTime = 0;
+let lastItemSpawnTime = 0;
+let lastDifficultyDistance = -1;
 
-// 初期化
-document.addEventListener('DOMContentLoaded', function() {
-    initGame();
-    setupEventListeners();
-});
+// パワーアップ・環境効果
+let featherTime = 0;
+let shieldTime = 0;
+let shieldHits = 0;
+let starCount = 0;
+let windForce = 0;
+let windTimer = 0;
 
-function initGame() {
-    // キャンバスの初期化
-    canvas = document.getElementById('gameCanvas');
-    ctx = canvas.getContext('2d');
-    
-    // キャンバスサイズを設定
-    resizeCanvas();
-    
-    // ゲーム状態をリセット
-    resetGameState();
-    
-    // 初期地形の生成
-    generateTerrain();
+// 背景の星
+const starPositions = Array.from({ length: 80 }, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    size: Math.random() * 2 + 0.5, // 星を少し大きく
+    blinkOffset: Math.random() * 10
+}));
+
+// 効果音
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(freq, type='sine', vol=0.1) {
+    if (audioContext.state === 'suspended') audioContext.resume();
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.frequency.value = freq;
+    osc.type = type;
+    gain.gain.setValueAtTime(vol, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2); // 余韻を少し長く
+    osc.start();
+    osc.stop(audioContext.currentTime + 0.2);
 }
 
 function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    
-    // プレイヤーの初期位置を設定（画面の下部に固定）
-    player.x = canvas.width / 2 - player.width / 2;
-    player.y = canvas.height - 150; // 画面下部に固定
+    const wrapper = canvas.parentElement;
+    GAME_WIDTH = wrapper.clientWidth;
+    GAME_HEIGHT = wrapper.clientHeight;
+    canvas.width = GAME_WIDTH;
+    canvas.height = GAME_HEIGHT;
 }
 
-function resetGameState() {
-    gameState.screen = 'title';
-    gameState.score = 0;
-    gameState.codes = 0;
-    gameState.altitude = 10000;
-    gameState.gameSpeed = 2;
-    gameState.lives = 3;
-    
-    player.x = canvas.width / 2 - player.width / 2;
-    player.y = canvas.height - 150; // 画面下部に固定
-    player.fallSpeed = 0;
-    player.invulnerable = false;
-    player.invulnerableTime = 0;
-    player.hasSlowMotion = false;
-    player.hasWarp = false;
-    player.hasInvisible = false;
-    player.activeSkill = null;
-    player.skillCooldown = 0;
-    
-    memoryFragments = [];
-    obstacles = [];
-    particles = [];
-    gravityZones = [];
-    terrain = [];
-}
+function Player() {
+    this.x = GAME_WIDTH / 2 - PLAYER_SIZE / 2;
+    this.y = 50;
+    this.width = PLAYER_SIZE;
+    this.height = PLAYER_SIZE;
+    this.velocityY = 0;
+    this.isMovingLeft = false;
+    this.isMovingRight = false;
+    this.isStomping = false;
+    this.hasShield = false;
+    this.shieldFlashTime = 0;
+    this.trail = []; 
 
-function setupEventListeners() {
-    // スタートボタン
-    document.getElementById('startBtn').addEventListener('click', startGame);
-    
-    // リスタートボタン
-    document.getElementById('restartBtn').addEventListener('click', restartGame);
-    
-    // キーボード操作
-    document.addEventListener('keydown', function(e) {
-        keys[e.key] = true;
-        if (e.key === ' ' || e.key === 'Spacebar') {
-            e.preventDefault();
-            if (gameState.screen === 'playing') {
-                activateSkill();
-            }
+    this.draw = function() {
+        const centerX = this.x + this.width / 2;
+        const centerY = this.y + this.height / 2;
+
+        if (this.isStomping || Math.abs(this.velocityY) > 6) {
+            this.trail.forEach((pos, index) => {
+                const alpha = (index / this.trail.length) * 0.4;
+                ctx.globalAlpha = alpha;
+                if (images.player && images.player.complete && images.player.naturalWidth !== 0) {
+                     ctx.drawImage(images.player, pos.x, pos.y, this.width, this.height);
+                }
+                ctx.globalAlpha = 1.0;
+            });
         }
-    });
-    
-    document.addEventListener('keyup', function(e) {
-        keys[e.key] = false;
-    });
-    
-    // タッチ操作
-    document.getElementById('leftBtn').addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        touchInput.left = true;
-    });
-    
-    document.getElementById('leftBtn').addEventListener('touchend', function(e) {
-        e.preventDefault();
-        touchInput.left = false;
-    });
-    
-    document.getElementById('rightBtn').addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        touchInput.right = true;
-    });
-    
-    document.getElementById('rightBtn').addEventListener('touchend', function(e) {
-        e.preventDefault();
-        touchInput.right = false;
-    });
-    
-    document.getElementById('skillBtn').addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        touchInput.skill = true;
-        activateSkill();
-    });
-    
-    document.getElementById('skillBtn').addEventListener('touchend', function(e) {
-        e.preventDefault();
-        touchInput.skill = false;
-    });
-    
-    // ウィンドウリサイズ対応
-    window.addEventListener('resize', function() {
-        resizeCanvas();
-    });
-}
 
-function startGame() {
-    gameState.screen = 'playing';
-    document.getElementById('titleScreen').classList.add('hidden');
-    document.getElementById('gameScreen').classList.remove('hidden');
-    
-    // ゲームループ開始
-    gameLoop = setInterval(updateGame, 1000 / 60); // 60FPS
-}
-
-function restartGame() {
-    clearInterval(gameLoop);
-    resetGameState();
-    document.getElementById('gameOverScreen').classList.add('hidden');
-    document.getElementById('titleScreen').classList.remove('hidden');
-}
-
-function updateGame() {
-    if (gameState.screen !== 'playing') return;
-    
-    // 入力処理
-    handleInput();
-    
-    // プレイヤー更新
-    updatePlayer();
-    
-    // ゲーム要素の更新
-    updateMemoryFragments();
-    updateObstacles();
-    updateParticles();
-    updateGravityZones();
-    updateTerrain();
-    
-    // 新しい要素の生成
-    generateGameElements();
-    
-    // 当たり判定
-    checkCollisions();
-    
-    // スコア更新
-    updateScore();
-    
-    // 描画
-    render();
-    
-    // UI更新
-    updateUI();
-}
-
-function handleInput() {
-    // 左右移動
-    if (keys['ArrowLeft'] || keys['a'] || keys['A'] || touchInput.left) {
-        player.x -= player.speed;
-    }
-    if (keys['ArrowRight'] || keys['d'] || keys['D'] || touchInput.right) {
-        player.x += player.speed;
-    }
-    
-    // 画面端での制限
-    if (player.x < 0) player.x = 0;
-    if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
-}
-
-function updatePlayer() {
-    // プレイヤーは画面下部に固定されているので、y座標は変更しない
-    
-    // 無敵時間の更新
-    if (player.invulnerable) {
-        player.invulnerableTime--;
-        if (player.invulnerableTime <= 0) {
-            player.invulnerable = false;
+        if (this.hasShield) {
+            ctx.save();
+            ctx.strokeStyle = `rgba(100, 255, 218, ${0.5 + Math.sin(this.shieldFlashTime * 0.2) * 0.4})`;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, this.width * 0.8, 0, 2 * Math.PI); // シールド大きく
+            ctx.stroke();
+            ctx.restore();
+            this.shieldFlashTime++;
         }
-    }
-    
-    // スキルクールダウン
-    if (player.skillCooldown > 0) {
-        player.skillCooldown--;
-    }
-    
-    // アクティブスキルの効果時間管理
-    if (player.activeSkill) {
-        player.activeSkill.duration--;
-        if (player.activeSkill.duration <= 0) {
-            deactivateSkill();
+
+        if (images.player && images.player.complete && images.player.naturalWidth !== 0) {
+            ctx.drawImage(images.player, this.x, this.y, this.width, this.height);
+        } else {
+            ctx.fillStyle = '#2c3e50';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, this.width/2, 0, Math.PI*2);
+            ctx.fill();
         }
-    }
-}
-
-function updateMemoryFragments() {
-    for (let i = memoryFragments.length - 1; i >= 0; i--) {
-        let fragment = memoryFragments[i];
-        fragment.y += gameState.gameSpeed; // 下に移動
-        fragment.rotation += 0.1;
-        
-        // 画面下に出たら削除
-        if (fragment.y > canvas.height + 50) {
-            memoryFragments.splice(i, 1);
-        }
-    }
-}
-
-function updateObstacles() {
-    for (let i = obstacles.length - 1; i >= 0; i--) {
-        let obstacle = obstacles[i];
-        obstacle.y += gameState.gameSpeed; // 下に移動
-        
-        // 動くタイプの障害物
-        if (obstacle.type === 'moving') {
-            obstacle.x += obstacle.speedX;
-            if (obstacle.x <= 0 || obstacle.x + obstacle.width >= canvas.width) {
-                obstacle.speedX *= -1;
-            }
-        }
-        
-        // 画面下に出たら削除
-        if (obstacle.y > canvas.height + 50) {
-            obstacles.splice(i, 1);
-        }
-    }
-}
-
-function updateParticles() {
-    for (let i = particles.length - 1; i >= 0; i--) {
-        let particle = particles[i];
-        particle.x += particle.speedX;
-        particle.y += particle.speedY;
-        particle.life--;
-        particle.alpha = particle.life / particle.maxLife;
-        
-        if (particle.life <= 0) {
-            particles.splice(i, 1);
-        }
-    }
-}
-
-function updateGravityZones() {
-    for (let i = gravityZones.length - 1; i >= 0; i--) {
-        let zone = gravityZones[i];
-        zone.y += gameState.gameSpeed; // 下に移動
-        
-        // 画面下に出たら削除
-        if (zone.y > canvas.height + 50) {
-            gravityZones.splice(i, 1);
-        }
-    }
-}
-
-function updateTerrain() {
-    for (let i = terrain.length - 1; i >= 0; i--) {
-        let block = terrain[i];
-        block.y += gameState.gameSpeed; // 下に移動
-        
-        // 画面下に出たら削除
-        if (block.y > canvas.height + 50) {
-            terrain.splice(i, 1);
-        }
-    }
-}
-
-function generateGameElements() {
-    // 記憶片の生成（画面上部から）
-    if (Math.random() < 0.02) {
-        memoryFragments.push({
-            x: Math.random() * (canvas.width - 30),
-            y: -30, // 画面上部から出現
-            width: 30,
-            height: 30,
-            rotation: 0,
-            type: getRandomFragmentType()
-        });
-    }
-    
-    // 障害物の生成（画面上部から）
-    if (Math.random() < 0.015) {
-        obstacles.push({
-            x: Math.random() * (canvas.width - 50),
-            y: -50, // 画面上部から出現
-            width: 50,
-            height: 50,
-            type: getRandomObstacleType(),
-            speedX: Math.random() * 2 - 1
-        });
-    }
-    
-    // 反重力ゾーンの生成（画面上部から）
-    if (Math.random() < 0.005) {
-        gravityZones.push({
-            x: Math.random() * (canvas.width - 100),
-            y: -100, // 画面上部から出現
-            width: 100,
-            height: 100,
-            type: 'antiGravity'
-        });
-    }
-    
-    // 地形の生成（画面上部から）
-    if (Math.random() < 0.01) {
-        generateTerrain();
-    }
-}
-
-function getRandomFragmentType() {
-    const types = ['slow', 'warp', 'invisible'];
-    return types[Math.floor(Math.random() * types.length)];
-}
-
-function getRandomObstacleType() {
-    const types = ['static', 'moving', 'spike'];
-    return types[Math.floor(Math.random() * types.length)];
-}
-
-function generateTerrain() {
-    for (let i = 0; i < 3; i++) {
-        terrain.push({
-            x: Math.random() * (canvas.width - 80),
-            y: -100 - i * 150, // 画面上部から出現
-            width: 80 + Math.random() * 40,
-            height: 20,
-            type: 'platform'
-        });
-    }
-}
-
-function checkCollisions() {
-    // プレイヤーが無敵状態でない場合のみ当たり判定
-    if (!player.invulnerable) {
-        // 障害物との当たり判定
-        for (let obstacle of obstacles) {
-            if (isColliding(player, obstacle)) {
-                takeDamage();
-                break;
-            }
-        }
-        
-        // 地形との当たり判定
-        for (let block of terrain) {
-            if (isColliding(player, block)) {
-                takeDamage();
-                break;
-            }
-        }
-    }
-    
-    // 記憶片との当たり判定
-    for (let i = memoryFragments.length - 1; i >= 0; i--) {
-        let fragment = memoryFragments[i];
-        if (isColliding(player, fragment)) {
-            collectMemoryFragment(fragment);
-            memoryFragments.splice(i, 1);
-            break;
-        }
-    }
-    
-    // 反重力ゾーンとの当たり判定
-    for (let zone of gravityZones) {
-        if (isColliding(player, zone)) {
-            applyGravityEffect(zone);
-        }
-    }
-}
-
-function isColliding(obj1, obj2) {
-    // 透明化スキルが有効な場合、当たり判定を無効化
-    if (player.activeSkill && player.activeSkill.type === 'invisible') {
-        return false;
-    }
-    
-    return obj1.x < obj2.x + obj2.width &&
-           obj1.x + obj1.width > obj2.x &&
-           obj1.y < obj2.y + obj2.height &&
-           obj1.y + obj1.height > obj2.y;
-}
-
-function takeDamage() {
-    gameState.lives--;
-    player.invulnerable = true;
-    player.invulnerableTime = 120; // 2秒間無敵
-    
-    // ダメージエフェクト
-    createParticles(player.x + player.width / 2, player.y + player.height / 2, '#ff6b6b', 10);
-    
-    if (gameState.lives <= 0) {
-        gameOver();
-    }
-}
-
-function collectMemoryFragment(fragment) {
-    gameState.codes++;
-    
-    // スキル解放
-    switch (fragment.type) {
-        case 'slow':
-            player.hasSlowMotion = true;
-            break;
-        case 'warp':
-            player.hasWarp = true;
-            break;
-        case 'invisible':
-            player.hasInvisible = true;
-            break;
-    }
-    
-    // 回収エフェクト
-    createParticles(fragment.x + fragment.width / 2, fragment.y + fragment.height / 2, '#ffd93d', 15);
-}
-
-function applyGravityEffect(zone) {
-    if (zone.type === 'antiGravity') {
-        // 反重力ゾーンでは少し上に押し上げる
-        player.y -= 2;
-        if (player.y < canvas.height - 200) {
-            player.y = canvas.height - 200;
-        }
-    }
-}
-
-function activateSkill() {
-    if (player.skillCooldown > 0 || player.activeSkill) return;
-    
-    let skillType = null;
-    
-    // 利用可能なスキルの中から選択
-    if (player.hasSlowMotion) {
-        skillType = 'slow';
-    } else if (player.hasWarp) {
-        skillType = 'warp';
-    } else if (player.hasInvisible) {
-        skillType = 'invisible';
-    }
-    
-    if (!skillType) return;
-    
-    player.activeSkill = {
-        type: skillType,
-        duration: 300 // 5秒間
     };
-    
-    player.skillCooldown = 600; // 10秒間のクールダウン
-    
-    // スキル効果の適用
-    switch (skillType) {
-        case 'slow':
-            gameState.gameSpeed *= 0.3;
-            break;
-        case 'warp':
-            // ワープ効果：プレイヤーを上に移動
-            player.y -= 50;
-            if (player.y < canvas.height - 200) {
-                player.y = canvas.height - 200;
+
+    this.update = function() {
+        // ストンプの加速をマイルドに
+        if (this.isStomping) {
+            this.velocityY += 0.4; 
+            if (this.velocityY > 8) this.velocityY = 8; // 最高速度を抑える
+        } else {
+            this.velocityY += GRAVITY;
+        }
+
+        if (featherTime > 0 && this.velocityY > 1.5) {
+            this.velocityY = 1.5; // 羽使用時はもっとゆっくり
+        }
+
+        this.y += this.velocityY;
+        
+        let moveX = 0;
+        if (this.isMovingLeft) moveX -= PLAYER_SPEED;
+        if (this.isMovingRight) moveX += PLAYER_SPEED;
+        this.x += moveX + windForce;
+
+        if (this.x < 0) this.x = 0;
+        if (this.x + this.width > GAME_WIDTH) this.x = GAME_WIDTH - this.width;
+
+        this.trail.push({x: this.x, y: this.y});
+        if (this.trail.length > 5) this.trail.shift();
+
+        this.hasShield = shieldTime > 0;
+
+        if (this.y > GAME_HEIGHT) {
+            endGame();
+        }
+    };
+}
+
+function Obstacle(x, y, width, height, type) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.type = type;
+    this.vx = 0;
+    this.cloudType = Math.random() < 0.5 ? 'cloud1' : 'cloud2';
+
+    this.draw = function() {
+        const useImage = (key) => images[key] && images[key].complete && images[key].naturalWidth !== 0;
+
+        if (this.type === 'pillar') {
+            if (useImage('tower')) {
+                const img = images.tower;
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(this.x, this.y, this.width, this.height);
+                ctx.clip();
+                ctx.drawImage(img, this.x, this.y, this.width, this.height);
+                ctx.strokeStyle = "rgba(0,0,0,0.2)"; // 枠線を薄く
+                ctx.strokeRect(this.x, this.y, this.width, this.height);
+                ctx.restore();
+            } else {
+                ctx.fillStyle = '#555';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
             }
-            break;
-        case 'invisible':
-            // 透明化は当たり判定で処理
-            break;
+        } else {
+            let imgKey = null;
+            if (this.type === 'cloud') imgKey = this.cloudType;
+            else if (this.type === 'crow') imgKey = 'bird';
+            else if (this.type === 'helicopter' || this.type === 'airplane') imgKey = 'plane';
+            else if (this.type === 'ufo') imgKey = 'ufo';
+
+            if (imgKey && useImage(imgKey)) {
+                ctx.drawImage(images[imgKey], this.x, this.y, this.width, this.height);
+            } else {
+                ctx.fillStyle = this.type === 'cloud' ? '#ecf0f1' : '#e74c3c';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+        }
+    };
+
+    this.update = function() {
+        this.y -= OBSTACLE_SPEED;
+        if (this.type !== 'pillar') {
+            this.x += this.vx;
+            if (this.x <= 0 || this.x + this.width >= GAME_WIDTH) {
+                this.vx *= -1;
+            }
+            if (this.type === 'cloud') {
+                this.x += windForce * 0.5; // 雲は風に流される
+            }
+        }
+    };
+}
+
+function Item(x, y, type) {
+    this.x = x;
+    this.y = y;
+    this.width = ITEM_SIZE;
+    this.height = ITEM_SIZE;
+    this.type = type;
+    this.time = 0;
+
+    this.draw = function() {
+        const bobY = this.y + Math.sin(this.time * 0.05) * 8; // ふわふわ大きく
+        
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '28px serif';
+        
+        let icon = '';
+        if (this.type === 'feather') icon = '🪶';
+        else if (this.type === 'shield') icon = '🛡️';
+        else if (this.type === 'star') icon = '🌟';
+
+        ctx.shadowColor = '#fff';
+        ctx.shadowBlur = 15;
+        ctx.fillText(icon, this.x + this.width/2, bobY + this.height/2);
+        ctx.shadowBlur = 0;
+    };
+
+    this.update = function() {
+        this.y -= ITEM_SPEED;
+        this.time++;
+    };
+}
+
+function Particle(x, y, type) {
+    this.x = x;
+    this.y = y;
+    this.life = 1.0;
+    this.type = type;
+    
+    if (type === 'wind') {
+        this.vx = windForce * 8 + (Math.random()-0.5)*2;
+        this.vy = (Math.random()-0.5);
+        this.decay = 0.04;
+    } else if (type === 'star_get') { // 星を取った時のキラキラ
+        this.vx = (Math.random() - 0.5) * 8;
+        this.vy = (Math.random() - 0.5) * 8;
+        this.decay = 0.02;
+        this.color = `hsl(${Math.random()*60 + 40}, 100%, 50%)`;
+    } else {
+        this.vx = (Math.random() - 0.5) * 4;
+        this.vy = (Math.random() - 0.5) * 4;
+        this.decay = 0.03;
+        this.color = '#f1c40f';
     }
-    
-    // エフェクト生成
-    createParticles(player.x + player.width / 2, player.y + player.height / 2, '#ffd93d', 20);
+
+    this.update = function() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.life -= this.decay;
+    };
+
+    this.draw = function() {
+        ctx.globalAlpha = Math.max(0, this.life);
+        if (this.type === 'wind') {
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(this.x - this.vx * 2, this.y - this.vy * 2);
+            ctx.stroke();
+        } else {
+            ctx.fillStyle = this.color || '#f1c40f';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.type === 'star_get' ? 4 : 2, 0, Math.PI*2);
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1.0;
+    };
 }
 
-function deactivateSkill() {
-    if (!player.activeSkill) return;
+function initGame() {
+    distance = 0;
+    player = new Player();
+    obstacles = [];
+    items = [];
+    particles = [];
     
-    switch (player.activeSkill.type) {
-        case 'slow':
-            gameState.gameSpeed = 2;
-            break;
-        case 'warp':
-            // ワープ後は元の位置に戻る
-            player.y = canvas.height - 150;
-            break;
-    }
+    // リセット時にパラメータを初期値に戻す
+    GRAVITY = 0.005;
+    OBSTACLE_SPEED = 0.15;
+    OBSTACLE_SPAWN_INTERVAL = 1800;
     
-    player.activeSkill = null;
-}
-
-function createParticles(x, y, color, count) {
-    for (let i = 0; i < count; i++) {
-        particles.push({
-            x: x,
-            y: y,
-            speedX: (Math.random() - 0.5) * 10,
-            speedY: (Math.random() - 0.5) * 10,
-            color: color,
-            life: 60,
-            maxLife: 60,
-            alpha: 1
-        });
-    }
-}
-
-function updateScore() {
-    gameState.score += gameState.gameSpeed;
-    gameState.altitude = Math.max(0, 10000 - Math.floor(gameState.score / 10));
+    featherTime = 0;
+    shieldTime = 0;
+    shieldHits = 0;
+    starCount = 0;
+    gameOver = false;
     
-    // 速度の増加
-    if (gameState.score % 1000 === 0) {
-        gameState.gameSpeed += 0.1;
-    }
-}
-
-function gameOver() {
-    gameState.screen = 'gameOver';
-    clearInterval(gameLoop);
+    windForce = 0;
+    windTimer = 0;
+    windIndicator.style.display = 'none';
+    gameOverOverlay.style.display = 'none';
+    startScreen.style.display = 'none';
     
-    // ゲームオーバー画面を表示
-    document.getElementById('gameScreen').classList.add('hidden');
-    document.getElementById('gameOverScreen').classList.remove('hidden');
-    
-    // 最終スコア表示
-    document.getElementById('finalScore').textContent = `距離: ${Math.floor(gameState.score)}m`;
-    document.getElementById('finalCodes').textContent = `回収したコード: ${gameState.codes}`;
-    
-    // 解放したスキルの表示
-    let unlockedSkills = [];
-    if (player.hasSlowMotion) unlockedSkills.push('スローモーション');
-    if (player.hasWarp) unlockedSkills.push('ワープ');
-    if (player.hasInvisible) unlockedSkills.push('透明化');
-    
-    document.getElementById('unlockedSkills').textContent = 
-        `解放したスキル: ${unlockedSkills.length > 0 ? unlockedSkills.join(', ') : 'なし'}`;
-}
-
-function render() {
-    // キャンバスをクリア
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // 背景の描画
-    drawBackground();
-    
-    // パーティクルの描画
-    drawParticles();
-    
-    // 反重力ゾーンの描画
-    drawGravityZones();
-    
-    // 地形の描画
-    drawTerrain();
-    
-    // 障害物の描画
-    drawObstacles();
-    
-    // 記憶片の描画
-    drawMemoryFragments();
-    
-    // プレイヤーの描画
-    drawPlayer();
+    resizeCanvas();
+    if (gameLoopId) cancelAnimationFrame(gameLoopId);
+    gameLoopId = requestAnimationFrame(gameLoop);
 }
 
 function drawBackground() {
-    // 星の描画（落下感を出すため、星も下に流れる）
-    for (let i = 0; i < 100; i++) {
-        const x = (i * 123) % canvas.width;
-        const y = ((i * 456 + gameState.score * 3) % (canvas.height + 100)) - 100;
-        const alpha = Math.sin(i + gameState.score * 0.01) * 0.5 + 0.5;
-        
-        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.7})`;
-        ctx.fillRect(x, y, 2, 2);
-    }
-}
+    let topColor, bottomColor;
 
-function drawParticles() {
-    for (let particle of particles) {
-        ctx.save();
-        ctx.globalAlpha = particle.alpha;
-        ctx.fillStyle = particle.color;
-        ctx.fillRect(particle.x, particle.y, 3, 3);
-        ctx.restore();
-    }
-}
-
-function drawGravityZones() {
-    for (let zone of gravityZones) {
-        ctx.save();
-        ctx.globalAlpha = 0.3;
-        ctx.fillStyle = '#4a9eff';
-        ctx.fillRect(zone.x, zone.y, zone.width, zone.height);
-        
-        // 境界線
-        ctx.globalAlpha = 0.8;
-        ctx.strokeStyle = '#4a9eff';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
-        ctx.restore();
-    }
-}
-
-function drawTerrain() {
-    for (let block of terrain) {
-        ctx.fillStyle = '#666666';
-        ctx.fillRect(block.x, block.y, block.width, block.height);
-        
-        // ハイライト
-        ctx.fillStyle = '#888888';
-        ctx.fillRect(block.x, block.y, block.width, 3);
-    }
-}
-
-function drawObstacles() {
-    for (let obstacle of obstacles) {
-        switch (obstacle.type) {
-            case 'static':
-                ctx.fillStyle = '#ff6b6b';
-                break;
-            case 'moving':
-                ctx.fillStyle = '#ff9f40';
-                break;
-            case 'spike':
-                ctx.fillStyle = '#ff4757';
-                break;
-        }
-        
-        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-        
-        // スパイクの場合、三角形を描画
-        if (obstacle.type === 'spike') {
-            ctx.beginPath();
-            ctx.moveTo(obstacle.x + obstacle.width / 2, obstacle.y);
-            ctx.lineTo(obstacle.x, obstacle.y + obstacle.height);
-            ctx.lineTo(obstacle.x + obstacle.width, obstacle.y + obstacle.height);
-            ctx.closePath();
-            ctx.fill();
-        }
-    }
-}
-
-function drawMemoryFragments() {
-    for (let fragment of memoryFragments) {
-        ctx.save();
-        ctx.translate(fragment.x + fragment.width / 2, fragment.y + fragment.height / 2);
-        ctx.rotate(fragment.rotation);
-        
-        // タイプに応じた色
-        switch (fragment.type) {
-            case 'slow':
-                ctx.fillStyle = '#4a9eff';
-                break;
-            case 'warp':
-                ctx.fillStyle = '#6bcf7f';
-                break;
-            case 'invisible':
-                ctx.fillStyle = '#ffd93d';
-                break;
-        }
-        
-        ctx.fillRect(-fragment.width / 2, -fragment.height / 2, fragment.width, fragment.height);
-        
-        // 光るエフェクト
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = ctx.fillStyle;
-        ctx.fillRect(-fragment.width / 2, -fragment.height / 2, fragment.width, fragment.height);
-        
-        ctx.restore();
-    }
-}
-
-function drawPlayer() {
-    ctx.save();
-    
-    // 無敵時間中の点滅
-    if (player.invulnerable && Math.floor(player.invulnerableTime / 10) % 2 === 0) {
-        ctx.globalAlpha = 0.5;
-    }
-    
-    // 透明化スキル中の透明度
-    if (player.activeSkill && player.activeSkill.type === 'invisible') {
-        ctx.globalAlpha = 0.3;
-    }
-    
-    // プレイヤーの描画
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(player.x, player.y, player.width, player.height);
-    
-    // 光るエフェクト
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = '#ffffff';
-    ctx.fillRect(player.x, player.y, player.width, player.height);
-    
-    ctx.restore();
-}
-
-function updateUI() {
-    document.getElementById('score').textContent = `距離: ${Math.floor(gameState.score)}m`;
-    document.getElementById('codes').textContent = `コード: ${gameState.codes}`;
-    document.getElementById('altitude').textContent = `高度: ${gameState.altitude}m`;
-    
-    // スキル表示
-    let skillText = 'スキル: ';
-    if (player.activeSkill) {
-        switch (player.activeSkill.type) {
-            case 'slow':
-                skillText += 'スローモーション';
-                break;
-            case 'warp':
-                skillText += 'ワープ';
-                break;
-            case 'invisible':
-                skillText += '透明化';
-                break;
-        }
-    } else if (player.skillCooldown > 0) {
-        skillText += `待機中(${Math.ceil(player.skillCooldown / 60)}s)`;
+    if (distance < 1000) {
+        topColor = `hsl(210, 70%, ${Math.max(30, 75 - distance/25)}%)`; 
+        bottomColor = `hsl(200, 80%, ${Math.max(50, 95 - distance/25)}%)`;
+    } else if (distance < 2500) {
+        const progress = (distance - 1000) / 1500;
+        topColor = `hsl(${30 + progress * 240}, 50%, ${Math.max(10, 50 - progress*40)}%)`;
+        bottomColor = `hsl(${40 + progress * 200}, 60%, ${Math.max(20, 60 - progress*40)}%)`;
     } else {
-        let availableSkills = [];
-        if (player.hasSlowMotion) availableSkills.push('スロー');
-        if (player.hasWarp) availableSkills.push('ワープ');
-        if (player.hasInvisible) availableSkills.push('透明');
+        topColor = '#050520';
+        bottomColor = '#101035';
+    }
+
+    const grad = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
+    grad.addColorStop(0, topColor);
+    grad.addColorStop(1, bottomColor);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+    if (distance > 300) {
+        const starOpacity = Math.min(1, (distance - 300) / 1000);
+        ctx.fillStyle = `rgba(255, 255, 255, ${starOpacity})`;
+        starPositions.forEach(s => {
+            const blink = Math.sin(Date.now() * 0.003 + s.blinkOffset) > 0.5 ? 1 : 0.6;
+            ctx.globalAlpha = starOpacity * blink;
+            ctx.beginPath();
+            ctx.arc(s.x * GAME_WIDTH, s.y * GAME_HEIGHT, s.size, 0, Math.PI*2);
+            ctx.fill();
+        });
+        ctx.globalAlpha = 1.0;
+    }
+}
+
+function gameLoop() {
+    ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    drawBackground();
+    const now = Date.now();
+
+    // 難易度調整（非常にゆっくり）
+    if (distance - lastDifficultyDistance >= 200) { // 200mごとに少しだけ変化
+        OBSTACLE_SPEED += 0.005; // 速度上昇を微量に
+        if (OBSTACLE_SPAWN_INTERVAL > 800) OBSTACLE_SPAWN_INTERVAL -= 10;
+        lastDifficultyDistance = distance;
+    }
+
+    // 風イベント（優しく）
+    if (windTimer > 0) {
+        windTimer--;
+        if (Math.random() < 0.2) particles.push(new Particle(windForce > 0 ? 0 : GAME_WIDTH, Math.random()*GAME_HEIGHT, 'wind'));
+        if (windTimer === 0) {
+            windForce = 0;
+            windIndicator.style.display = 'none';
+        }
+    } else if (distance > 500 && Math.random() < 0.0005) { // 発生頻度を下げる
+        windTimer = 300;
+        windForce = (Math.random() < 0.5 ? -1 : 1) * 0.5; // 風力弱め
+        windIndicator.style.display = 'block';
+        windDirectionSpan.textContent = windForce > 0 ? "RIGHT →" : "← LEFT";
+    }
+
+    const fallMultiplier = featherTime > 0 ? 0.5 : 1;
+    GRAVITY = (OBSTACLE_SPEED * 0.03 + 0.002) * fallMultiplier; // 速度に応じて重力微調整
+    
+    player.update();
+    player.draw();
+
+    if (now - lastObstacleSpawnTime > OBSTACLE_SPAWN_INTERVAL) {
+        spawnObstacle();
+        lastObstacleSpawnTime = now;
+    }
+    if (now - lastItemSpawnTime > ITEM_SPAWN_INTERVAL) {
+        spawnItem();
+        lastItemSpawnTime = now;
+    }
+
+    obstacles.forEach((o, i) => {
+        o.update();
+        o.draw();
+        if (checkCollision(player, o)) {
+            if (shieldTime > 0) {
+                playSound(150, 'square', 0.05);
+                for(let k=0; k<5; k++) particles.push(new Particle(o.x+o.width/2, o.y+o.height/2, 'hit'));
+                obstacles.splice(i, 1);
+                shieldHits--;
+                if (shieldHits <= 0) shieldTime = 0;
+            } else if (player.isStomping && o.type !== 'pillar') {
+                playSound(300, 'triangle', 0.1);
+                obstacles.splice(i, 1);
+                player.velocityY = -3; // ポーンと跳ねる（低めに）
+                distance += 50; 
+                // キラキラエフェクト追加
+                for(let k=0; k<8; k++) particles.push(new Particle(o.x, o.y, 'star_get'));
+            } else {
+                endGame();
+            }
+        }
+    });
+    obstacles = obstacles.filter(o => o.y + o.height > -100);
+
+    items.forEach((item, i) => {
+        item.update();
+        item.draw();
+        if (checkCollision(player, item)) {
+            playSound(500 + Math.random()*300, 'sine', 0.1); // 優しい音
+            if (item.type === 'feather') featherTime = 400; // 時間延長
+            if (item.type === 'shield') { shieldTime = 1500; shieldHits = 3; } // 時間延長
+            if (item.type === 'star') { starCount++; distance += 100; }
+            
+            // アイテムゲット演出強化
+            for(let k=0; k<10; k++) particles.push(new Particle(item.x, item.y, 'star_get'));
+            
+            items.splice(i, 1);
+        }
+    });
+    items = items.filter(i => i.y + i.height > -100);
+
+    particles.forEach((p, i) => {
+        p.update();
+        p.draw();
+        if (p.life <= 0) particles.splice(i, 1);
+    });
+
+    distance += 0.8; // 距離の進みを少しゆっくりに
+    updateDisplays();
+
+    if (!gameOver) {
+        gameLoopId = requestAnimationFrame(gameLoop);
+    }
+}
+
+// 衝突判定（激甘設定：マージンを大きく）
+function checkCollision(player, rect) {
+    const margin = 15; // 判定をかなり小さくして、かすったくらいでは死なないように
+    return (
+        player.x + margin < rect.x + rect.width - margin &&
+        player.x + player.width - margin > rect.x + margin &&
+        player.y + margin < rect.y + rect.height - margin &&
+        player.y + player.height - margin > rect.y + margin
+    );
+}
+
+function spawnObstacle() {
+    // 隙間をとても広く確保
+    const gap = Math.max(PLAYER_SIZE * 4, MIN_OBSTACLE_GAP);
+    const gapX = Math.random() * (GAME_WIDTH - gap);
+
+    // 柱はたまにしか出ないようにする
+    if (Math.random() < 0.4) { 
+        if (gapX > 0) obstacles.push(new Obstacle(0, GAME_HEIGHT, gapX, OBSTACLE_HEIGHT, 'pillar'));
+        if (gapX + gap < GAME_WIDTH) obstacles.push(new Obstacle(gapX + gap, GAME_HEIGHT, GAME_WIDTH - (gapX + gap), OBSTACLE_HEIGHT, 'pillar'));
+    } else {
+        // 敵キャラ（柱がない時は敵を出す）
+        const types = ['cloud', 'crow', 'helicopter', 'airplane', 'ufo'];
+        const type = types[Math.floor(Math.random() * types.length)];
+        // UFOはレア
+        if (type === 'ufo' && Math.random() > 0.3) return;
+
+        let w = 40, h = 30;
+        if (type === 'cloud') { w=60; h=35; }
+        if (type === 'helicopter') { w=50; h=30; }
+
+        // 画面中央付近に出現させる
+        const x = Math.random() * (GAME_WIDTH - w);
+        const enemy = new Obstacle(x, GAME_HEIGHT + 50, w, h, type);
         
-        skillText += availableSkills.length > 0 ? availableSkills.join('/') : 'なし';
+        // 敵の横移動をゆっくりに
+        enemy.vx = (Math.random() - 0.5) * 0.5; 
+        obstacles.push(enemy);
+    }
+}
+
+function spawnItem() {
+    const types = ['shield', 'feather', 'star', 'star']; // 星が出やすい
+    const type = types[Math.floor(Math.random() * types.length)];
+    items.push(new Item(Math.random() * (GAME_WIDTH - ITEM_SIZE), GAME_HEIGHT, type));
+}
+
+function updateDisplays() {
+    distanceDisplay.textContent = Math.floor(distance);
+    highDistanceDisplay.textContent = Math.floor(highDistance);
+    featherTimeDisplay.textContent = Math.ceil(featherTime/60);
+    shieldTimeDisplay.textContent = Math.ceil(shieldTime/60);
+    starCountDisplay.textContent = starCount;
+
+    if (featherTime > 0) featherTime--;
+    if (shieldTime > 0) shieldTime--;
+}
+
+function endGame() {
+    if (gameOver) return;
+    gameOver = true;
+    
+    if (distance > highDistance) {
+        highDistance = distance;
+        localStorage.setItem('highDistance', highDistance);
+        newRecordDisplay.style.display = 'block';
+    } else {
+        newRecordDisplay.style.display = 'none';
     }
     
-    document.getElementById('skillDisplay').textContent = skillText;
+    finalDistanceDisplay.textContent = Math.floor(distance);
+    gameOverOverlay.style.display = 'flex';
 }
+
+window.addEventListener('resize', resizeCanvas);
+
+const setupBtn = (btn, actionStart, actionEnd) => {
+    if(!btn) return;
+    const start = (e) => { 
+        if(e.cancelable) e.preventDefault(); 
+        actionStart(); 
+    };
+    const end = (e) => { 
+        if(e.cancelable) e.preventDefault(); 
+        actionEnd(); 
+    };
+    btn.addEventListener('mousedown', start);
+    btn.addEventListener('mouseup', end);
+    btn.addEventListener('touchstart', start, {passive: false});
+    btn.addEventListener('touchend', end, {passive: false});
+};
+
+setupBtn(startButton, () => { if(!gameStarted) { gameStarted = true; initGame(); } }, () => {});
+setupBtn(restartButton, () => { initGame(); }, () => {});
+
+setupBtn(leftButton, () => { if(player) player.isMovingLeft = true; }, () => { if(player) player.isMovingLeft = false; });
+setupBtn(rightButton, () => { if(player) player.isMovingRight = true; }, () => { if(player) player.isMovingRight = false; });
+
+let jumpInt;
+setupBtn(upButton, () => {
+    // 浮上力を優しく
+    jumpInt = setInterval(() => { if(player) player.velocityY -= 0.4; }, 50);
+}, () => { clearInterval(jumpInt); });
+
+setupBtn(downButton, () => { if(player) player.isStomping = true; }, () => { if(player) player.isStomping = false; });
+
+window.addEventListener('keydown', (e) => {
+    if(!player) return;
+    if(['ArrowLeft', 'a'].includes(e.key)) player.isMovingLeft = true;
+    if(['ArrowRight', 'd'].includes(e.key)) player.isMovingRight = true;
+    if(['ArrowUp', 'w'].includes(e.key)) player.velocityY -= 0.5;
+    if(['ArrowDown', 's'].includes(e.key)) player.isStomping = true;
+});
+
+window.addEventListener('keyup', (e) => {
+    if(!player) return;
+    if(['ArrowLeft', 'a'].includes(e.key)) player.isMovingLeft = false;
+    if(['ArrowRight', 'd'].includes(e.key)) player.isMovingRight = false;
+    if(['ArrowDown', 's'].includes(e.key)) player.isStomping = false;
+});

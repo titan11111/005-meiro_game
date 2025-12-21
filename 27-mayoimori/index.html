@@ -2,41 +2,59 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>迷い森からの脱出</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>栗拾いミッション</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="modalOverlay" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">📡 本部からの通信</div>
+            <div class="modal-body" id="modalText"></div>
+            <button id="modalBtn" class="modal-btn">了解</button>
+        </div>
+    </div>
+
     <div class="game-container">
         <header class="game-header">
-            <h1>🌲 迷い森からの脱出</h1>
-            <div class="game-info">
-                <div class="steps">歩数: <span id="stepCount">0</span></div>
-                <div class="status">状態: <span id="gameStatus">探索中</span></div>
+            <div class="header-top">
+                <h1>MISSION: 栗回収</h1>
+                <div class="level-badge">STAGE <span id="levelCount">1</span>/10</div>
+            </div>
+            <div class="score-board">
+                <div class="score-box player">
+                    <span class="icon">🧑</span> <span id="playerScore">0</span>
+                </div>
+                <div class="vs">VS</div>
+                <div class="score-box enemy">
+                    <span class="icon">👾</span> <span id="enemyScore">0</span>
+                </div>
             </div>
         </header>
         
         <main class="game-main">
-            <div class="game-field" id="gameField">
-                <!-- ゲームフィールドがここに生成されます -->
+            <div class="field-container">
+                <div class="game-field" id="gameField"></div>
             </div>
             
             <div class="game-controls">
-                <div class="control-buttons">
-                    <button class="control-btn" id="upBtn">↑</button>
-                    <div class="control-row">
-                        <button class="control-btn" id="leftBtn">←</button>
-                        <button class="control-btn" id="downBtn">↓</button>
-                        <button class="control-btn" id="rightBtn">→</button>
-                    </div>
+                <button id="gunBtn" class="gun-btn hidden">🔫 麻酔銃を使用！</button>
+
+                <div class="d-pad">
+                    <button class="d-btn up" id="upBtn">▲</button>
+                    <button class="d-btn left" id="leftBtn">◀</button>
+                    <button class="d-btn right" id="rightBtn">▶</button>
+                    <button class="d-btn down" id="downBtn">▼</button>
+                    <div class="d-center"></div>
                 </div>
-                <button class="restart-btn" id="restartBtn">新しいゲーム</button>
+                <button class="restart-btn" id="restartBtn">最初から</button>
             </div>
         </main>
         
         <footer class="game-footer">
-            <p>🎯 出口を探して森から脱出しよう！</p>
-            <p>矢印キーまたはボタンで移動</p>
+            <p>👾より多くの🌰を集めて脱出せよ！</p>
         </footer>
     </div>
 

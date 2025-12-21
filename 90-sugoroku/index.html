@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎴 にほんご探訪！ことばの旅 🎴</title>
+    <style>
+        /* CSSのスタイルは提供されたものを全て採用 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Courier New', monospace; background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%); color: #fff; min-height: 100vh; padding: 10px; }
+        .game-container { background: #e8f4f8; border: 12px solid #333; border-radius: 20px; padding: 20px; max-width: 1000px; margin: 0 auto; box-shadow: 0 0 40px rgba(0, 0, 0, 0.8); }
+        .title { text-align: center; font-size: 28px; color: #ff0000; text-shadow: 3px 3px 0 #ffeb3b, 6px 6px 0 #333; margin-bottom: 15px; background: #fff; padding: 15px; border: 5px solid #333; border-radius: 10px; }
+        .map-selector { display: flex; gap: 10px; justify-content: center; margin: 15px 0; }
+        .map-button { background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%); border: 5px solid #f57c00; padding: 15px 30px; font-size: 18px; font-weight: bold; border-radius: 10px; cursor: pointer; color: #333; font-family: 'Courier New', monospace; }
+        .map-button.active { background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%); border-color: #2e7d32; color: #fff; }
+        .info-panel { background: linear-gradient(135deg, #ffeb3b 0%, #fdd835 100%); border: 5px solid #333; border-radius: 15px; padding: 15px; margin: 15px 0; display: flex; justify-content: space-around; flex-wrap: wrap; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); }
+        .info-item { text-align: center; margin: 5px; color: #333; font-weight: bold; }
+        .info-value { font-size: 24px; color: #ff0000; }
+        .board-container { border: 8px solid #333; border-radius: 15px; padding: 20px; margin: 20px 0; position: relative; }
+        .board-container.kumamoto { background: linear-gradient(rgba(135, 206, 235, 0.9), rgba(176, 217, 240, 0.9)); }
+        .board-container.fukuoka { background: linear-gradient(rgba(176, 217, 240, 0.9), rgba(135, 206, 235, 0.9)); }
+        .snake-path { display: flex; flex-direction: column; gap: 5px; }
+        .path-row { display: flex; gap: 5px; position: relative; }
+        .path-row.reverse { flex-direction: row-reverse; }
+        .cell { background: #ffeb3b; border: 5px solid #333; padding: 8px 4px; text-align: center; font-size: 11px; font-weight: bold; color: #333; position: relative; min-height: 85px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); border-radius: 8px; flex: 1; }
+        .cell-emoji { font-size: 30px; margin-bottom: 3px; }
+        .cell-name { font-size: 10px; line-height: 1.1; white-space: pre-line; }
+        .cell.start { background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%); color: #fff; border-width: 6px; border-color: #2e7d32; }
+        .cell.goal { background: linear-gradient(135deg, #f44336 0%, #e57373 100%); color: #fff; border-width: 6px; border-color: #c62828; }
+        .cell.quiz { background: linear-gradient(135deg, #2196f3 0%, #64b5f6 100%); color: #fff; }
+        .cell.item { background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%); color: #fff; }
+        .cell.passed { opacity: 0.5; filter: grayscale(60%); }
+        .cell.current { animation: current-glow 0.8s infinite; border-color: #ff0000; border-width: 7px; transform: scale(1.1); z-index: 20; }
+        @keyframes current-glow { 0%, 100% { box-shadow: 0 0 25px #ff9800; } 50% { box-shadow: 0 0 40px #ffeb3b; } }
+        .player-token { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 40px; z-index: 30; animation: bounce 1s infinite; filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.6)); }
+        @keyframes bounce { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-12px); } }
+        .arrow { position: absolute; font-size: 28px; color: #ff0000; z-index: 10; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); animation: arrow-pulse 1s infinite; }
+        @keyframes arrow-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .arrow-right { right: -22px; top: 50%; transform: translateY(-50%); }
+        .arrow-left { left: -22px; top: 50%; transform: translateY(-50%); }
+        .arrow-down { bottom: -30px; left: 50%; transform: translateX(-50%); }
+        .dice-container { text-align: center; margin: 30px 0; background: linear-gradient(135deg, #fff 0%, #f5f5f5 100%); border: 6px solid #333; border-radius: 15px; padding: 20px; }
+        .dice { width: 120px; height: 120px; margin: 0 auto 20px; background: #fff; border: 6px solid #333; border-radius: 20px; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
+        .dice:hover:not(.rolling) { transform: translateY(-8px) scale(1.05); }
+        .dice.rolling { animation: roll 0.1s infinite; }
+        @keyframes roll { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .dice-dots { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 85%; height: 85%; gap: 8px; }
+        .dot { width: 18px; height: 18px; background: #333; border-radius: 50%; }
+        .dice-result { font-size: 20px; color: #333; margin: 10px 0; font-weight: bold; }
+        button { background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%); color: #fff; border: 5px solid #2e7d32; padding: 18px 40px; font-size: 20px; font-weight: bold; border-radius: 15px; cursor: pointer; font-family: 'Courier New', monospace; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); margin: 5px; }
+        button:hover:not(:disabled) { transform: scale(1.1); }
+        button:disabled { background: #999; border-color: #666; cursor: not-allowed; opacity: 0.5; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); justify-content: center; align-items: center; z-index: 1000; }
+        .modal.active { display: flex; }
+        .modal-content { background: linear-gradient(135deg, #fff 0%, #f5f5f5 100%); border: 8px solid #333; border-radius: 20px; padding: 30px; max-width: 500px; width: 90%; text-align: center; }
+        .modal-title { font-size: 32px; color: #ff0000; text-shadow: 2px 2px 0 #ffeb3b; margin-bottom: 20px; }
+        .modal-text { font-size: 18px; margin: 20px 0; line-height: 1.6; color: #333; }
+        .quiz-options { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
+        .quiz-option { background: #ffeb3b; border: 4px solid #333; padding: 15px; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; color: #333; }
+        .quiz-option:hover { background: #fdd835; transform: scale(1.05); }
+        .quiz-option.correct { background: #4caf50; color: #fff; }
+        .quiz-option.wrong { background: #f44336; color: #fff; }
+        .item-box { background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%); border: 5px solid #333; border-radius: 15px; padding: 20px; margin: 15px 0; }
+        .item-name { font-size: 24px; color: #fff; margin-bottom: 10px; }
+        .item-desc { font-size: 16px; color: #fff; }
+        @media (max-width: 800px) { .cell { min-height: 70px; padding: 6px 3px; } .cell-emoji { font-size: 24px; } .cell-name { font-size: 9px; } }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="title">🎴 にほんご探訪！ことばの旅 🎴</div>
+        <div class="map-selector">
+            <button class="map-button active" id="kumamotoMapButton" onclick="switchMap('kumamoto')">🌋 熊本編（24マス）</button>
+            <button class="map-button" id="fukuokaMapButton" onclick="switchMap('fukuoka')">🏯 福岡編（24マス）</button>
+        </div>
+        <div class="info-panel">
+            <div class="info-item"><div>📍 現在地</div><div class="info-value" id="currentPosition">1/24</div></div>
+            <div class="info-item"><div>✏️ ことば力</div><div class="info-value" id="score">0点</div></div>
+            <div class="info-item"><div>🎁 アイテム</div><div class="info-value" id="itemCount">0個</div></div>
+        </div>
+        <div class="board-container kumamoto" id="boardContainer">
+            <div id="gameBoard" class="snake-path"></div>
+        </div>
+        <div class="dice-container">
+            <div class="dice" id="dice" onclick="rollDice()"><div class="dice-dots" id="diceDots"></div></div>
+            <div class="dice-result" id="diceResult">🎲 サイコロをクリック！</div>
+            <button id="rollButton" onclick="rollDice()">🎲 サイコロを振る</button>
+            <button id="moveButton" style="display: none;" onclick="movePlayer()">👣 進む（<span id="moveSteps"></span>マス）</button>
+        </div>
+        <div class="modal" id="modal">
+            <div class="modal-content">
+                <div class="modal-title" id="modalTitle"></div>
+                <div class="modal-text" id="modalText"></div>
+                <div id="modalContent"></div>
+                <button onclick="closeModal()">閉じる</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // ゲームデータ
+        const maps = {
+            kumamoto: {
+                name: "熊本",
+                cells: [{name: "スタート\n熊本城", emoji: "🏯", type: "start"}, {name: "阿蘇山", emoji: "🌋", type: "quiz"}, {name: "黒川温泉", emoji: "♨️", type: "item"}, {name: "天草", emoji: "🏝️", type: "quiz"}, {name: "馬刺し屋", emoji: "🍖", type: "normal"}, {name: "水前寺\n公園", emoji: "🌳", type: "quiz"}, {name: "くまモン\n広場", emoji: "🐻", type: "item"}, {name: "通潤橋", emoji: "🌉", type: "quiz"}, {name: "人吉城跡", emoji: "🏰", type: "normal"}, {name: "菊池渓谷", emoji: "💧", type: "quiz"}, {name: "高森湧水", emoji: "⛲", type: "item"}, {name: "山鹿温泉", emoji: "🎭", type: "normal"}, {name: "五木村", emoji: "🏔️", type: "quiz"}, {name: "球磨川", emoji: "🚣", type: "normal"}, {name: "草千里", emoji: "🌿", type: "item"}, {name: "免田温泉", emoji: "♨️", type: "normal"}, {name: "大観峰", emoji: "⛰️", type: "quiz"}, {name: "小国郷", emoji: "🎋", type: "normal"}, {name: "上天草", emoji: "🌊", type: "item"}, {name: "宇土市", emoji: "🏛️", type: "normal"}, {name: "荒尾", emoji: "⚒️", type: "quiz"}, {name: "山都町", emoji: "🌄", type: "normal"}, {name: "南阿蘇", emoji: "🗻", type: "item"}, {name: "ゴール\n熊本駅", emoji: "🎌", type: "goal"}],
+                quizzes: [{question: "熊本の方言「なんばしよっと？」の意味は？", options: ["何をしているの？", "どこに行くの？", "誰と会うの？"], correct: 0, explanation: "「なんばしよっと？」は「何をしているの？」という意味の熊本弁です！"}, {question: "阿蘇山の「阿蘇」の漢字、正しく読めるかな？", options: ["あそ", "あそう", "あぞ"], correct: 0, explanation: "「阿蘇」は「あそ」と読みます。世界最大級のカルデラを持つ活火山です！"}, {question: "熊本名物「いきなり団子」の「いきなり」の意味は？", options: ["簡単に作れる", "突然現れる", "すぐに食べられる"], correct: 2, explanation: "「いきなり」は「すぐに」という意味の熊本弁。作ってすぐ食べられるお菓子です！"}, {question: "熊本城の別名は？", options: ["銀杏城", "桜城", "松城"], correct: 0, explanation: "熊本城は「銀杏城（ぎんなんじょう）」とも呼ばれます。大きな銀杏の木があったからです！"}, {question: "「からいもち」って何のこと？", options: ["辛い餅", "さつまいも", "唐辛子"], correct: 1, explanation: "熊本では「からいも」＝さつまいものこと。「唐（から）から来た芋」が由来です！"}, {question: "「たいぎゃ」はどんな意味？", options: ["とても", "疲れた", "おいしい"], correct: 0, explanation: "「たいぎゃ」は「とても」という意味の熊本弁です！"}, {question: "通潤橋の役割は？", options: ["川を渡る橋", "水を通す水道橋", "展望台"], correct: 1, explanation: "通潤橋は水を通す石造りの水道橋です。日本最大級！"}, {question: "阿蘇の「草千里」の読み方は？", options: ["くさせんり", "そうせんり", "くさちり"], correct: 0, explanation: "「草千里（くさせんり）」は阿蘇の美しい草原地帯です！"}],
+                items: [{name: "🔮 未来の筆", desc: "次のサイコロの目を選べる！"}, {name: "💨 言霊の風", desc: "移動マスが2倍になる！"}, {name: "📖 知恵の書", desc: "次のクイズをスキップできる！"}, {name: "🎐 風鈴のお守り", desc: "1回休みを防ぐ！"}, {name: "🍀 四つ葉のクローバー", desc: "スコア1.5倍！"}, {name: "⚡ 稲妻の加速", desc: "次の移動が3倍！"}]
+            },
+            fukuoka: {
+                name: "福岡",
+                cells: [{name: "スタート\n博多駅", emoji: "🚄", type: "start"}, {name: "福岡タワー", emoji: "🗼", type: "quiz"}, {name: "太宰府", emoji: "⛩️", type: "item"}, {name: "中洲", emoji: "🌃", type: "quiz"}, {name: "屋台", emoji: "🍜", type: "normal"}, {name: "大濠公園", emoji: "🦢", type: "quiz"}, {name: "キャナル\nシティ", emoji: "🏬", type: "item"}, {name: "門司港", emoji: "⚓", type: "quiz"}, {name: "糸島", emoji: "🏖️", type: "normal"}, {name: "柳川", emoji: "🚣", type: "quiz"}, {name: "宗像大社", emoji: "⛩️", type: "item"}, {name: "筑後川", emoji: "🌊", type: "normal"}, {name: "小倉城", emoji: "🏯", type: "quiz"}, {name: "久留米", emoji: "🎋", type: "normal"}, {name: "秋月城", emoji: "🍁", type: "item"}, {name: "朝倉", emoji: "🌾", type: "normal"}, {name: "八幡製鉄", emoji: "🏭", type: "quiz"}, {name: "筥崎宮", emoji: "⛩️", type: "normal"}, {name: "志賀島", emoji: "🏝️", type: "item"}, {name: "能古島", emoji: "🌻", type: "normal"}, {name: "英彦山", emoji: "⛰️", type: "quiz"}, {name: "芦屋", emoji: "🎣", type: "normal"}, {name: "原鶴温泉", emoji: "♨️", type: "item"}, {name: "ゴール\n天神", emoji: "🎌", type: "goal"}],
+                quizzes: [{question: "福岡の方言「よかよか」の意味は？", options: ["いいよいいよ", "ありがとう", "さようなら"], correct: 0, explanation: "「よかよか」は「いいよいいよ」という意味の博多弁です！"}, {question: "博多名物の麺料理といえば？", options: ["ラーメン", "うどん", "そば"], correct: 0, explanation: "博多といえば豚骨ラーメン！細麺が特徴です。"}, {question: "「ばり」はどんな意味？", options: ["とても", "少し", "全然"], correct: 0, explanation: "「ばり」は「とても」という意味。「ばりうまい」=「とても美味しい」！"}, {question: "太宰府天満宮の祭神は？", options: ["菅原道真", "徳川家康", "豊臣秀吉"], correct: 0, explanation: "太宰府天満宮は学問の神様・菅原道真公を祀っています！"}, {question: "「しゃーしい」の意味は？", options: ["うるさい", "静か", "楽しい"], correct: 0, explanation: "「しゃーしい」は「うるさい」という意味の博多弁です！"}, {question: "門司港レトロ地区がある市は？", options: ["北九州市", "福岡市", "久留米市"], correct: 0, explanation: "門司港レトロは北九州市にあります。明治の雰囲気が残る港町！"}, {question: "「なおす」の博多弁での意味は？", options: ["片付ける", "修理する", "直す"], correct: 0, explanation: "博多弁の「なおす」は「片付ける」という意味です！"}, {question: "「ちかっぱ」の意味は？", options: ["すごく", "近く", "ちょっと"], correct: 0, explanation: "「ちかっぱ」は「すごく」という意味の博多弁です！"}],
+                items: [{name: "🎴 博多織", desc: "スコアボーナス+20点！"}, {name: "🏺 博多人形", desc: "次の移動2倍！"}, {name: "🍡 梅ヶ枝餅", desc: "クイズで正解すると+15点！"}, {name: "🎐 風鈴", desc: "サイコロの目+1！"}, {name: "⚓ 錨のお守り", desc: "後退マスを無効化！"}, {name: "🌸 桜のカード", desc: "ゴールまでの距離-3マス！"}]
+            }
+        };
+
+        let currentMap = 'kumamoto';
+        let gameState = { position: 0, score: 0, items: [], diceValue: 0, quizIndex: 0, itemIndex: 0, isRolling: false };
+
+        // サウンド関連
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(f, d, t = 'square') {
+            try {
+                const o = audioContext.createOscillator();
+                const g = audioContext.createGain();
+                o.connect(g);
+                g.connect(audioContext.destination);
+                o.frequency.value = f;
+                o.type = t;
+                g.gain.setValueAtTime(0.15, audioContext.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + d);
+                o.start();
+                o.stop(audioContext.currentTime + d);
+            } catch (e) {
+                console.warn("Audio playback failed:", e);
+            }
+        }
+
+        // マップ切り替え
+        function switchMap(m) {
+            currentMap = m;
+            gameState = { position: 0, score: 0, items: [], diceValue: 0, quizIndex: 0, itemIndex: 0, isRolling: false };
+            document.querySelectorAll('.map-button').forEach(b => b.classList.remove('active'));
+            document.getElementById(`${m}MapButton`).classList.add('active'); // ボタンのactive状態を正しく設定
+            document.getElementById('boardContainer').className = `board-container ${m}`;
+            playSound(523, 0.1);
+            setTimeout(() => playSound(659, 0.1), 100);
+            renderBoard();
+            updateInfo();
+            closeModal();
+        }
+
+        // 初期化
+        function init() {
+            renderBoard();
+            updateInfo();
+            renderDiceDots(1);
+        }
+
+        // ボードの描画
+        function renderBoard() {
+            const b = document.getElementById('gameBoard');
+            const m = maps[currentMap].cells;
+            b.innerHTML = '';
+            // 6マス x 4行 の蛇行ルート
+            [[0, 1, 2, 3, 4, 5, 'right'], [6, 7, 8, 9, 10, 11, 'left'], [12, 13, 14, 15, 16, 17, 'right'], [18, 19, 20, 21, 22, 23, 'left']].forEach(r => {
+                const d = document.createElement('div');
+                d.className = `path-row ${r[6] === 'left' ? 'reverse' : ''}`;
+                for (let i = 0; i < 6; i++) {
+                    const cellIndex = r[i];
+                    if (cellIndex !== undefined && cellIndex < m.length) {
+                        const c = createCellElement(cellIndex);
+                        // 最後のマスと行の終点以外に矢印を追加
+                        if (cellIndex < m.length - 1) {
+                            const a = document.createElement('div');
+                            a.className = 'arrow';
+                            if (i === 5) { // 行の終点 (下への矢印)
+                                a.className += ' arrow-down';
+                                a.textContent = '↓';
+                            } else { // 行内の矢印
+                                a.className += r[6] === 'right' ? ' arrow-right' : ' arrow-left';
+                                a.textContent = r[6] === 'right' ? '→' : '←';
+                            }
+                            c.appendChild(a);
+                        }
+                        d.appendChild(c);
+                    }
+                }
+                b.appendChild(d);
+            });
+        }
+
+        function createCellElement(i) {
+            const c = maps[currentMap].cells[i];
+            const e = document.createElement('div');
+            e.className = `cell ${c.type}${i < gameState.position ? ' passed' : ''}${i === gameState.position ? ' current' : ''}`;
+            e.innerHTML = `${i === gameState.position ? '<div class="player-token">👤</div>' : ''}<div class="cell-emoji">${c.emoji}</div><div class="cell-name">${c.name}</div>`;
+            return e;
+        }
+
+        // サイコロの目を描画
+        function renderDiceDots(v) {
+            const d = document.getElementById('diceDots');
+            const p = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+            d.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const e = document.createElement('div');
+                if (p[v] && p[v].includes(i)) e.className = 'dot';
+                d.appendChild(e);
+            }
+        }
+
+        // サイコロを振る
+        function rollDice() {
+            if (gameState.isRolling) return;
+            gameState.isRolling = true;
+            const d = document.getElementById('dice');
+            document.getElementById('rollButton').disabled = true;
+            document.getElementById('diceResult').textContent = '🎲 振っています...';
+            d.classList.add('rolling');
+            
+            let count = 0;
+            const interval = setInterval(() => {
+                const randomVal = Math.floor(Math.random() * 6) + 1;
+                renderDiceDots(randomVal);
+                playSound(200 + count * 20, 0.05);
+
+                if (++count >= 15) {
+                    clearInterval(interval);
+                    gameState.diceValue = Math.floor(Math.random() * 6) + 1; // 最終的な目
+                    renderDiceDots(gameState.diceValue);
+                    d.classList.remove('rolling');
+                    document.getElementById('diceResult').textContent = `🎲 ${gameState.diceValue} が出た！`;
+                    playSound(440, 0.2);
+                    
+                    document.getElementById('rollButton').style.display = 'none';
+                    document.getElementById('moveSteps').textContent = gameState.diceValue;
+                    document.getElementById('moveButton').style.display = 'inline-block';
+                    document.getElementById('moveButton').disabled = false; // 移動ボタンを有効化
+                    gameState.isRolling = false;
+                }
+            }, 80);
+        }
+
+        // プレイヤーを移動させる
+        function movePlayer() {
+            document.getElementById('moveButton').disabled = true;
+            const targetPosition = Math.min(gameState.position + gameState.diceValue, maps[currentMap].cells.length - 1);
+            
+            const interval = setInterval(() => {
+                if (gameState.position < targetPosition) {
+                    gameState.position++;
+                    renderBoard();
+                    updateInfo();
+                    playSound(330, 0.1);
+                } else {
+                    clearInterval(interval);
+                    
+                    // 移動終了後の処理
+                    if (gameState.position >= maps[currentMap].cells.length - 1) {
+                        setTimeout(() => showGoal(), 500);
+                    } else {
+                        setTimeout(() => handleCellEvent(maps[currentMap].cells[gameState.position]), 500);
+                    }
+                    
+                    // サイコロUIをリセット
+                    document.getElementById('moveButton').style.display = 'none';
+                    document.getElementById('rollButton').style.display = 'inline-block';
+                    document.getElementById('rollButton').disabled = false;
+                    document.getElementById('diceResult').textContent = '🎲 サイコロをクリック！';
+                }
+            }, 400);
+        }
+
+        // マスイベントの処理
+        function handleCellEvent(c) {
+            if (c.type === 'quiz') showQuiz();
+            else if (c.type === 'item') showItem();
+            else if (c.type === 'normal') showMessage(c.emoji + ' ' + c.name.replace(/\n/g,''), maps[currentMap].name + 'の素敵な場所ですね！');
+        }
+
+        // クイズ表示
+        function showQuiz() {
+            const quizzes = maps[currentMap].quizzes;
+            if (gameState.quizIndex >= quizzes.length) {
+                showMessage('📚 クイズ','おめでとう！このマップのクイズは全てクリアしました！');
+                return;
+            }
+            
+            const q = quizzes[gameState.quizIndex];
+            document.getElementById('modalTitle').textContent = '📚 ことばクイズ';
+            document.getElementById('modalText').textContent = q.question;
+            document.getElementById('modalContent').innerHTML = `<div class="quiz-options">${q.options.map((o, i) => `<div class="quiz-option" onclick="answerQuiz(${i})">${o}</div>`).join('')}</div>`;
+            document.getElementById('modal').classList.add('active');
+            playSound(523, 0.15);
+        }
+
+        // クイズ回答
+        function answerQuiz(a) {
+            const q = maps[currentMap].quizzes[gameState.quizIndex];
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach(e => e.style.pointerEvents = 'none'); // 回答後の操作を無効化
+
+            if (a === q.correct) {
+                options[a].classList.add('correct');
+                gameState.score += 10;
+                playSound(523, 0.1);
+                setTimeout(() => playSound(659, 0.1), 100);
+                setTimeout(() => playSound(784, 0.15), 200);
+
+                setTimeout(() => {
+                    showMessage('🎉 正解！', q.explanation + '\n\nことば力 +10点');
+                    gameState.quizIndex++;
+                    updateInfo();
+                }, 1000);
+            } else {
+                options[a].classList.add('wrong');
+                options[q.correct].classList.add('correct');
+                playSound(196, 0.3);
+                
+                setTimeout(() => {
+                    showMessage('😢 残念...','正解は「'+q.options[q.correct]+'」でした。\n\n'+q.explanation);
+                    gameState.quizIndex++; // 不正解でも次のクイズに進む
+                }, 1500);
+            }
+        }
+
+        // アイテム獲得
+        function showItem() {
+            const items = maps[currentMap].items;
+            // 獲得済みアイテムの数に応じて次のアイテムを取得
+            const itemToGet = items[gameState.items.length % items.length];
+            
+            if (!itemToGet) {
+                showMessage('🎁 アイテム','このマップのアイテムは全て獲得済みです！');
+                return;
+            }
+            
+            gameState.items.push(itemToGet);
+            
+            document.getElementById('modalTitle').textContent = '🎁 アイテムゲット！';
+            document.getElementById('modalText').textContent = '';
+            document.getElementById('modalContent').innerHTML = `<div class="item-box"><div class="item-name">${itemToGet.name}</div><div class="item-desc">${itemToGet.desc}</div></div>`;
+            document.getElementById('modal').classList.add('active');
+            
+            playSound(659, 0.1);
+            setTimeout(() => playSound(784, 0.1), 100);
+            setTimeout(() => playSound(880, 0.15), 200);
+            updateInfo();
+        }
+
+        // メッセージモーダル表示
+        function showMessage(t, tx) {
+            document.getElementById('modalTitle').textContent = t;
+            document.getElementById('modalText').textContent = tx;
+            document.getElementById('modalContent').innerHTML = '';
+            document.getElementById('modal').classList.add('active');
+        }
+
+        // ゴール処理
+        function showGoal() {
+            playSound(523, 0.15);
+            setTimeout(() => playSound(659, 0.15), 150);
+            setTimeout(() => playSound(784, 0.15), 300);
+            setTimeout(() => playSound(1047, 0.3), 450);
+            showMessage('🎌 ゴール！おめでとう！', maps[currentMap].name + 'の旅が終わりました！\n\n【最終成績】\nことば力: ' + gameState.score + '点\n獲得アイテム: ' + gameState.items.length + '個\n\nまた遊んでね！');
+        }
+
+        // モーダルを閉じる
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        // 情報パネル更新
+        function updateInfo() {
+            document.getElementById('currentPosition').textContent = (gameState.position + 1) + '/24';
+            document.getElementById('score').textContent = gameState.score + '点';
+            document.getElementById('itemCount').textContent = gameState.items.length + '個';
+        }
+
+        // ページロード時に実行
+        init();
+    </script>
+</body>
+</html>

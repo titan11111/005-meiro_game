@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>異世界ニャン還 〜魔王を倒した勇者の家電修理記〜</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+    <style>
+/* --- 基本設定 --- */
+:root {
+  --pce-blue-top: #000088;
+  --pce-blue-bottom: #0000cc;
+  --text-color: #ffffff;
+  --border-color: #eeeeee;
+  --card-bg: #f8f8f8;
+  --card-shadow: rgba(0,0,0,0.5);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+
+body {
+  font-family: 'DotGothic16', monospace;
+  background-color: #000;
+  color: var(--text-color);
+  width: 100vw; 
+  height: 100dvh; /* モバイルブラウザのアドレスバー対策 */
+  overflow: hidden; /* スクロール完全禁止 */
+  display: flex; justify-content: center; align-items: center;
+  touch-action: none;
+}
+
+.scanlines {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+  background-size: 100% 4px; pointer-events: none; z-index: 100;
+}
+
+.game-container {
+  width: 100%; height: 100%; max-width: 1024px;
+  background-color: #000; position: relative;
+  display: flex; flex-direction: column;
+}
+
+/* --- ビジュアルエリア (上半分) --- */
+/* flex-basisを使って比率をより厳密に管理 */
+.visual-area {
+  flex-grow: 1; 
+  flex-shrink: 1;
+  flex-basis: 55%; /* 画面の55%を確保 */
+  position: relative; overflow: hidden; background-color: #222; 
+  min-height: 0; /* Flexboxの子要素がはみ出さないための魔法 */
+}
+.bg-image { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 0; opacity: 0.8; }
+
+.actors-layer { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 2; pointer-events: none; }
+.actor { position: absolute; bottom: 5%; transition: all 0.3s ease; filter: drop-shadow(4px 4px 0px rgba(0,0,0,0.5)); }
+
+
+/* キャラクターサイズのレスポンシブ調整 */
+.hero { left: 5%; height: 35%; max-height: 250px; width: auto; image-rendering: pixelated; }
+.npc { right: 5%; height: 40%; max-height: 280px; width: auto; }
+.actor.item { left: 50%; transform: translateX(-50%); bottom: 10%; height: 35%; max-height: 200px; width: auto; mix-blend-mode: normal; }
+
+/* --- 猫部屋（タイトル画面）用 --- */
+.cat-room-layer { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; pointer-events: none; }
+.room-cat { position: absolute; width: 60px; height: auto; animation: floatCat 3s ease-in-out infinite; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3)); }
+@keyframes floatCat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+.title-screen {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 50;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);
+}
+.title-logo { font-size: clamp(1.5rem, 5vw, 3rem); color: #ffff00; text-shadow: 4px 4px 0 #000; margin-bottom: 20px; text-align: center; line-height: 1.2; }
+.start-btn {
+  background: #ff4444; border: 4px solid #fff; color: #fff;
+  font-family: 'DotGothic16', monospace; font-size: 1.5rem;
+  padding: 15px 40px; border-radius: 30px; cursor: pointer;
+  animation: pulse 1s infinite; box-shadow: 0 6px 0 #990000;
+}
+.start-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #990000; }
+
+/* --- UIエリア (下半分) --- */
+.ui-area {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 45%; /* 画面の45%を確保 */
+  background-color: #000; padding: 10px;
+  position: relative; z-index: 10; display: flex; flex-direction: column;
+  /* iOS Safe Area 対応 (iPhone X以降の下部バー回避) */
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  min-height: 0; /* Flexboxのはみ出し防止 */
+}
+
+.status-bar {
+  position: absolute; top: 10px; right: 10px;
+  background: rgba(0,0,0,0.8); padding: 5px 12px; border-radius: 20px;
+  z-index: 20; display: flex; align-items: center; gap: 8px;
+  font-size: 1rem; border: 2px solid #fff;
+}
+progress { -webkit-appearance: none; appearance: none; width: 100px; height: 16px; }
+progress::-webkit-progress-bar { background-color: #444; border-radius: 8px; }
+progress::-webkit-progress-value { background-color: #00ff00; border-radius: 8px; transition: width 0.5s; }
+
+/* メッセージウィンドウ */
+.message-window {
+  flex: 1; /* 残りのスペースを埋める */
+  border: 4px solid var(--border-color); border-radius: 8px;
+  background: linear-gradient(to bottom, var(--pce-blue-top), var(--pce-blue-bottom));
+  padding: 2.5rem 1rem 1rem 1rem; position: relative;
+  font-size: clamp(1rem, 4.5vw, 1.4rem); /* 文字サイズを画面幅に合わせて自動調整 */
+  line-height: 1.4;
+  text-shadow: 2px 2px 0 #000; cursor: pointer; overflow: hidden;
+}
+.speaker-name {
+  position: absolute; top: -2px; left: 1rem;
+  background-color: var(--border-color); color: #000;
+  padding: 2px 10px; border-radius: 0 0 6px 6px; font-weight: bold; font-size: 0.9rem;
+}
+.message-text { display: block; width: 100%; height: 100%; overflow-y: auto; word-break: break-all;}
+.cursor-icon { position: absolute; bottom: 10px; right: 10px; animation: blink 1s infinite; }
+.hidden { display: none !important; }
+
+/* --- コマンドウィンドウ（ここがレスポンシブの肝） --- */
+.command-window {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 40, 0.98); border: 4px solid #ffd700; 
+  padding: 8px;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  
+  display: flex; flex-direction: column; z-index: 50; 
+  align-items: center; justify-content: flex-start;
+}
+
+.command-title {
+    color: #fff; margin-bottom: 5px; font-size: 1.1rem; flex-shrink: 0;
+}
+
+.command-grid {
+  display: grid; width: 100%; 
+  flex: 1; /* 可能な限り広がる */
+  min-height: 0; /* これがないとスクロールしない */
+  gap: 8px;
+  grid-template-columns: 1fr 1fr; 
+  grid-template-rows: 1fr 1fr;
+  overflow-y: auto; /* 画面が極端に狭い場合はスクロール許可 */
+}
+
+/* 魔法ボタンのデザイン強化（小学生向けに押しやすく） */
+.spell-button {
+  background: linear-gradient(to bottom, #555, #333);
+  border: 3px solid #ccc; border-radius: 12px;
+  color: #fff; font-family: 'DotGothic16', monospace;
+  cursor: pointer; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 5px; box-shadow: 0 4px 0 #000;
+  min-height: 0; /* 縮小許可 */
+  touch-action: manipulation; /* タップ遅延なし */
+  position: relative;
+}
+.spell-button:active { transform: translateY(4px); box-shadow: 0 0 0 #000; background: #666; border-color: #ffff00; }
+
+/* 画面サイズに合わせて文字サイズなどを可変に */
+.spell-icon { font-size: clamp(1.5rem, 8vh, 2.5rem); margin-bottom: 0; flex-shrink: 0; }
+.spell-name { font-size: clamp(0.9rem, 4vw, 1.2rem); font-weight: bold; color: #ffff00; flex-shrink: 0; margin: 2px 0; }
+.spell-desc { font-size: clamp(0.6rem, 3vw, 0.8rem); color: #ddd; text-align: center; line-height: 1.1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+/* シャッフルボタン */
+.shuffle-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; margin-top: 8px; padding: 12px 0;
+  background: linear-gradient(to bottom, #ff8800, #cc5500);
+  border: 3px solid #fff; border-radius: 50px;
+  color: #fff; font-family: 'DotGothic16', monospace;
+  font-size: 1.1rem; cursor: pointer;
+  box-shadow: 0 4px 0 #883300;
+  flex-shrink: 0; /* 縮小しない */
+}
+.shuffle-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #883300; }
+
+/* --- クリア画面（フォトカード） --- */
+.photo-card-overlay {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.8); z-index: 200;
+  display: flex; justify-content: center; align-items: center;
+  backdrop-filter: blur(5px); animation: fadeIn 0.5s;
+}
+.photo-card {
+  background: var(--card-bg); padding: 15px;
+  border-radius: 8px; box-shadow: 0 10px 30px #000;
+  transform: rotate(-3deg) scale(0.9); transition: transform 0.3s;
+  text-align: center; width: 85%; max-width: 350px; border: 10px solid #fff;
+}
+.photo-card:hover { transform: rotate(0deg) scale(1.0); }
+.photo-image-area {
+  width: 100%; aspect-ratio: 1/1; background: #eee;
+  margin-bottom: 10px; border: 1px solid #ddd;
+  display: flex; justify-content: center; align-items: center;
+  overflow: hidden; position: relative;
+}
+.photo-image-area img { width: 90%; height: auto; }
+.photo-caption { font-size: 1.2rem; font-weight: bold; color: #333; margin-bottom: 10px; }
+.photo-stamp {
+  position: absolute; bottom: 5px; right: 5px;
+  border: 4px solid #ff4444; color: #ff4444; background: rgba(255,255,255,0.8);
+  font-weight: bold; padding: 5px 10px; transform: rotate(-15deg);
+  font-size: 1.4rem; opacity: 0; animation: stampIn 0.5s 0.5s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.next-btn {
+  background: #4488ff; color: #fff; border: 3px solid #fff;
+  padding: 10px 30px; font-family: inherit; font-size: 1.2rem;
+  border-radius: 20px; cursor: pointer; box-shadow: 0 4px 0 #0055cc; width: 100%;
+}
+.next-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #0055cc; }
+
+/* アニメーション */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes stampIn { from { transform: scale(3) rotate(-15deg); opacity: 0; } to { transform: scale(1) rotate(-15deg); opacity: 1; } }
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes shake { 0% { transform: translateX(-50%); } 25% { transform: translateX(-52%) rotate(-2deg); } 75% { transform: translateX(-48%) rotate(2deg); } 100% { transform: translateX(-50%); } }
+.shake-anim { animation: shake 0.5s infinite; }
+@keyframes magic-effect { 0% { transform: scale(0) rotate(0deg); opacity: 0; border-width: 20px; } 50% { opacity: 1; } 100% { transform: scale(2) rotate(180deg); opacity: 0; border-width: 0px; } }
+.magic-circle {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: min(80vw, 300px); height: min(80vw, 300px); 
+  border: 10px solid #ffff00; border-radius: 50%;
+  box-shadow: 0 0 30px #ffff00, inset 0 0 30px #ffff00; pointer-events: none; z-index: 1000;
+  animation: magic-effect 0.8s ease-out forwards;
+}
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    
+    <div class="game-container">
+        <div class="visual-area" id="visualArea">
+            <img src="haikei.png" alt="" class="bg-image" id="bgImage">
+            
+            <div class="cat-room-layer" id="catRoomLayer"></div>
+
+            <div class="title-screen" id="titleScreen">
+                <div class="title-logo">異世界ニャン還<br><span style="font-size:0.5em">〜魔王を倒した勇者の家電修理記〜</span></div>
+                <button class="start-btn" id="startBtn">調査開始！</button>
+            </div>
+            
+            <div class="actors-layer">
+                <img src="images/character.png" alt="" class="actor hero hidden" id="heroActor">
+                <img src="" alt="" class="actor npc hidden" id="npcActor">
+                <img src="" alt="" class="actor item hidden" id="itemActor">
+            </div>
+            
+            <div id="effectContainer"></div>
+            
+            <div class="status-bar hidden" id="statusBar">
+                <span>修理:</span>
+                <progress id="progressBar" value="0" max="100"></progress>
+                <span id="progressPercent">0%</span>
+            </div>
+        </div>
+
+        <div class="ui-area">
+            <div class="message-window" id="msgWindow">
+                <div class="speaker-name" id="speakerName">システム</div>
+                <div class="message-text" id="messageText">待機中...</div>
+                <div class="cursor-icon">▼</div>
+            </div>
+
+            <div class="command-window hidden" id="commandWindow">
+                <div class="command-title">▼ 魔法を選んで修理せよ！</div>
+                <div class="command-grid" id="commandGrid"></div>
+                <button class="shuffle-btn" id="shuffleBtn">🔀 魔法をいれかえる</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="photo-card-overlay hidden" id="photoCardOverlay">
+        <div class="photo-card">
+            <div class="photo-image-area">
+                <img src="" id="photoCardImg" alt="Result">
+                <div class="photo-stamp">なおった！</div>
+            </div>
+            <div class="photo-caption" id="photoCardText">洗濯機、復活！</div>
+            <button class="next-btn" id="photoNextBtn">次へすすむ ➡</button>
+        </div>
+    </div>
+
+    <script>
+/**
+ * 🎮 異世界ニャン還 〜魔王を倒した勇者の家電修理記〜
+ */
+
+// ==========================================
+// 1. データ定義
+// ==========================================
+const spells = [
+    { name: "いぬしず", icon: "🐶", desc: "吠える犬(獣)を静める", id: "inushizu" },
+    { name: "うきとめ", icon: "⚓", desc: "浮き・歪みを直す", id: "ukitome" },
+    { name: "ひかりと", icon: "☀️", desc: "光や熱を調節する", id: "hikarito" },
+    { name: "ねむたれ", icon: "💤", desc: "相手を眠らせる", id: "nemutare" },
+    { name: "かぜきる", icon: "🌀", desc: "強い風や空気圧を扱う", id: "kazekiru" },
+    { name: "らいなお", icon: "⚡", desc: "雷(電気)で修理する", id: "rainao" },
+    { name: "みずだし", icon: "💧", desc: "水を出す・洗う", id: "mizudashi" },
+    { name: "けむはれ", icon: "🌫️", desc: "煙・霧・臭いを消す", id: "kemuhare" },
+    { name: "よなきま", icon: "🔇", desc: "騒音を静かにする", id: "yonakima" },
+    { name: "ふんわり", icon: "☁️", desc: "硬い物を柔らかくする", id: "funwari" },
+    { name: "もどぱん", icon: "↩️", desc: "散らばった物を戻す", id: "modopan" },
+    { name: "ひろたる", icon: "🔎", desc: "失くした物を探す", id: "hirotaru" },
+    { name: "だまきき", icon: "🛑", desc: "勝手に動く物を止める", id: "damakiki" },
+    { name: "みみでる", icon: "🥊", desc: "詰まった物を押し出す", id: "mimideru" },
+    { name: "なかなお", icon: "❤️", desc: "ケンカを仲直りさせる", id: "nakanao" }
+];
+
+let areaData = [
+    { id: 1, name: '猫の広場', npcImg: 'images/neko_transparent_7.png', itemImg: 'images/household_item_8.png', intro: "「大変だニャ！ この『四角い箱』が泡を吹いて暴れてるニャ！」", problem: "洗濯機が激しく振動して、まるで暴れる獣のようだ。", hint: "暴れる獣（モーター）を静める必要がある。", correctSpell: "inushizu", successMsg: "魔法でモーター音が静まり、正常に動き出した！", failMsg: "洗濯機はさらに激しく暴れ出した！" },
+    { id: 2, name: '長老の家', npcImg: 'images/neko_transparent_8.png', itemImg: 'images/household_item_3.png', intro: "「ワシの宝物が、この『木の化け物』に食われたんじゃ！」", problem: "タンスの引き出しが固くて開かない。", hint: "歪んだ建て付けを、地面に戻すように直せば…？", correctSpell: "ukitome", successMsg: "カタン！と音がして、引き出しがスムーズに開いた！", failMsg: "タンスはビクともしない…" },
+    { id: 3, name: '共同浴場', npcImg: 'images/neko_transparent_6.png', itemImg: 'images/household_item_9.png', intro: "「この水たまり、熱すぎて入れないニャ〜！」", problem: "お風呂のお湯がグラグラと沸騰している。", hint: "強すぎる『熱』エネルギーを抑える魔法なら…。", correctSpell: "hikarito", successMsg: "お湯の温度が下がり、極楽のような適温になった！", failMsg: "お湯がさらに熱くなってしまった！" },
+    { id: 4, name: '宿屋', npcImg: 'images/neko3.png', itemImg: 'images/household_item_5.png', intro: "「この『フカフカの台』に乗ると眠っちゃう呪いがあるニャ！」", problem: "ただの快適すぎるベッドのようだ。猫たちが抗えずにいる。", hint: "いっそ、心地よく眠らせてあげるのが優しさかも？", correctSpell: "nemutare", successMsg: "猫たちは幸せそうな顔でスヤスヤと眠りについた…。", failMsg: "猫たちは無理やり目を覚まされ、不機嫌そうだ。" },
+    { id: 5, name: '路地裏', npcImg: 'images/neko_transparent_5.png', itemImg: 'images/household_item_1.png', intro: "「この『銀色の筒』から、すごい悪臭がするニャ…」", problem: "ゴミ箱から生ゴミの臭いが漂っている。", hint: "臭いや煙を消す魔法を使おう。", correctSpell: "kemuhare", successMsg: "悪臭が消え去り、爽やかな空気になった！", failMsg: "臭いが余計に広がってしまった！" },
+    { id: 6, name: '民家', npcImg: 'images/neko_transparent_4.png', itemImg: 'images/household_item_4.png', intro: "「お気に入りの『特等席』がベタベタするニャ…」", problem: "ソファに何かのジュースがこぼれて汚れている。", hint: "水で洗い流せばきれいになるはず。", correctSpell: "mizudashi", successMsg: "清らかな水が汚れを洗い流し、ピカピカになった！", failMsg: "ソファが水浸しになってしまった…" },
+    { id: 7, name: '図書館', npcImg: 'images/neko_resized_3.png', itemImg: 'images/household_item_7.png', intro: "「本が勝手に飛び出してくるニャ！ お化けニャ！」", problem: "本棚から本がパラパラと落ちてくる。", hint: "勝手に動く物を静める魔法が必要だ。", correctSpell: "damakiki", successMsg: "本たちは大人しくなり、元の位置に収まった。", failMsg: "本がさらに勢いよく飛び出してきた！" },
+    { id: 8, name: '台所', npcImg: 'images/neko_transparent_4.png', itemImg: 'images/household_item_6.png', intro: "「水が流れなくて、溢れそうだニャ！」", problem: "排水口が詰まっているようだ。", hint: "詰まっている物を『押し出す』魔法を使おう。", correctSpell: "mimideru", successMsg: "ポンッ！という音と共に詰まりが解消された！", failMsg: "水が逆流して溢れ出した！" },
+    { id: 9, name: '集会所', npcImg: 'images/neko5.png', itemImg: 'images/household_item_2.png', intro: "「この『平らな台』の足が折れてグラグラするニャ。」", problem: "テーブルの脚が一本折れかけている。", hint: "壊れた物を直すには、雷のエネルギー（溶接）を使う。", correctSpell: "rainao", successMsg: "稲妻が走り、テーブルの脚が瞬時に修復された！", failMsg: "テーブルが焦げてしまった…" },
+    { id: 10, name: '夜の広場', npcImg: 'images/neko_resized_2.png', itemImg: 'images/household_item_8.png', intro: "「夜中なのに、この箱がブーンってうるさいニャ…」", problem: "洗濯機の脱水音がうるさくて眠れない。", hint: "夜の騒音を止める専用の魔法がある。", correctSpell: "yonakima", successMsg: "音が吸い込まれるように消え、静寂が訪れた。", failMsg: "音がさらに大きくなり、近所迷惑に！" },
+    { id: 11, name: '物置', npcImg: 'images/neko_transparent_7.png', itemImg: 'images/household_item_3.png', intro: "「中身がぐちゃぐちゃで、何も見つからないニャ…」", problem: "タンスの中が散らかっている。", hint: "散らばった物を『元に戻す』魔法を使おう。", correctSpell: "modopan", successMsg: "服がひとりでに畳まれ、きれいに整頓された！", failMsg: "中身がさらにシャッフルされてしまった…" },
+    { id: 12, name: '冬の風呂場', npcImg: 'images/neko_transparent_7.png', itemImg: 'images/household_item_9.png', intro: "「水が冷たくて凍っちゃうニャ…」", problem: "お風呂の水が氷のように冷たい。", hint: "雷の熱（ジュール熱）で温めよう。", correctSpell: "rainao", successMsg: "ビリビリと電流が走り、あっという間にお湯が沸いた！", failMsg: "感電して猫の毛が逆立ってしまった！" },
+    { id: 13, name: '子供部屋', npcImg: 'images/neko_jump_surprised_transparent_48.png', itemImg: 'images/household_item_5.png', intro: "「ベッドが硬くて背中が痛いニャ！」", problem: "マットレスが煎餅のように硬い。", hint: "ふんわりと柔らかくする魔法を。", correctSpell: "funwari", successMsg: "ベッドが雲のようにフカフカになった！", failMsg: "ベッドが豆腐のように崩れてしまった…" },
+    { id: 14, name: 'ゴミ捨て場', npcImg: 'images/neko_transparent_8.png', itemImg: 'images/household_item_1.png', intro: "「ゴミ箱のフタが開かないニャ！ 捨てられないニャ！」", problem: "ゴミ箱のフタが錆び付いて固まっている。", hint: "浮きを止める（固着を外す）魔法を試してみよう。", correctSpell: "ukitome", successMsg: "フタがパカッと軽やかに開いた！", failMsg: "フタが完全に溶接されてしまった…" },
+    { id: 15, name: 'リビング', npcImg: 'images/neko_transparent_8.png', itemImg: 'images/household_item_4.png', intro: "「この椅子、座ると沈みすぎて出られないニャ！」", problem: "ソファが柔らかすぎて、猫が埋まっている。", hint: "風の力（空気圧）を入れて張りを戻そう。", correctSpell: "kazekiru", successMsg: "ソファに空気が戻り、ちょうどいい弾力になった！", failMsg: "ソファが破裂して綿が飛び出した！" },
+    { id: 16, name: '洗い場', npcImg: 'images/neko_transparent_7.png', itemImg: 'images/household_item_6.png', intro: "「大切な指輪を流しちゃったニャ…」", problem: "排水口の奥にキラリと光るものが見える。", hint: "失くした物を探して手元に呼ぶ魔法。", correctSpell: "hirotaru", successMsg: "指輪が光に包まれて浮き上がってきた！", failMsg: "指輪はさらに奥深くへ流れていった…" },
+    { id: 17, name: '書斎', npcImg: 'images/neko_resized_1.png', itemImg: 'images/household_item_7.png', intro: "「暗くて字が読めないニャ。」", problem: "部屋が薄暗く、本棚の本が見えにくい。", hint: "光を灯す魔法を使おう。", correctSpell: "hikarito", successMsg: "優しい光が灯り、文字がはっきり読めるようになった。", failMsg: "眩しすぎて目が開けられない！" },
+    { id: 18, name: '食堂', npcImg: 'images/neko_transparent_5.png', itemImg: 'images/household_item_2.png', intro: "「テーブルの上でコップとお皿がケンカしてるニャ！」", problem: "食器たちがカチャカチャとぶつかり合っている。", hint: "ケンカを仲直りさせる魔法があるはず。", correctSpell: "nakanao", successMsg: "食器たちは静かになり、きれいに並んだ。", failMsg: "食器たちが派手に割れてしまった！" },
+    { id: 19, name: '家電置き場', npcImg: 'images/neko_transparent_6.png', itemImg: 'images/household_item_8.png', intro: "「動かないニャ。ただの箱になっちゃったニャ。」", problem: "洗濯機の電源が入らないようだ。", hint: "電気製品を直すなら、雷の魔法。", correctSpell: "rainao", successMsg: "通電し、LEDパネルが明るく点灯した！", failMsg: "黒焦げになって煙が出てきた…" },
+    { id: 20, name: '猫の王宮', npcImg: 'images/neko1.png', itemImg: 'images/image.png', intro: "「最後に…私たちと仲良くしてくれるかニャ？」", problem: "猫たちが不安そうにこちらを見ている。", hint: "種族を超えて仲良くなる魔法。", correctSpell: "nakanao", successMsg: "勇者と猫たちの間に温かい絆が生まれた！", failMsg: "猫たちは警戒して逃げてしまった…" }
+];
+
+const audioAssets = {
+    talk: ['audio/nyan.mp3', 'audio/nyan2.mp3', 'audio/nyan3.mp3'],
+    success: 'audio/nyan6.mp3', 
+    fail: 'audio/nyan8.mp3',   
+    surprise: 'audio/nyan4.mp3',
+    sad: 'audio/nyan7.mp3',
+    ending: 'audio/nyan9.mp3',
+    bgm: 'audio/Pixel Wanderer\'s Lullaby.mp3' 
+};
+
+// ==========================================
+// 2. ゲーム状態管理
+// ==========================================
+let currentState = 'title';
+let currentArea = null;
+let textAnimInterval = null;
+let clearedCount = 0;
+let currentDisplayText = '';
+let bgmAudio = null;
+let isAudioUnlocked = false;
+
+const els = {
+    bg: document.getElementById('bgImage'),
+    hero: document.getElementById('heroActor'),
+    npc: document.getElementById('npcActor'),
+    item: document.getElementById('itemActor'),
+    msgText: document.getElementById('messageText'),
+    speaker: document.getElementById('speakerName'),
+    cmdWindow: document.getElementById('commandWindow'),
+    cmdGrid: document.getElementById('commandGrid'),
+    shuffleBtn: document.getElementById('shuffleBtn'),
+    progress: document.getElementById('progressBar'),
+    percent: document.getElementById('progressPercent'),
+    statusBar: document.getElementById('statusBar'),
+    titleScreen: document.getElementById('titleScreen'),
+    catRoomLayer: document.getElementById('catRoomLayer'),
+    startBtn: document.getElementById('startBtn'),
+    effectContainer: document.getElementById('effectContainer'),
+    photoOverlay: document.getElementById('photoCardOverlay'),
+    photoImg: document.getElementById('photoCardImg'),
+    photoText: document.getElementById('photoCardText'),
+    photoNextBtn: document.getElementById('photoNextBtn')
+};
+
+// ==========================================
+// 3. 初期化 & ループ
+// ==========================================
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    els.startBtn.addEventListener('click', onStartGame);
+    els.photoNextBtn.addEventListener('click', onPhotoClose);
+    
+    // シャッフルボタン
+    const shuffleHandler = (e) => {
+        e.stopPropagation(); e.preventDefault();
+        if (currentState === 'command_wait') reshuffleSpells();
+    };
+    els.shuffleBtn.addEventListener('click', shuffleHandler);
+    els.shuffleBtn.addEventListener('touchend', shuffleHandler);
+
+    // 画面タップイベント
+    const clickZone = document.querySelector('.ui-area');
+    const handler = (e) => {
+        // コマンドウィンドウ表示中は、ボタン以外のクリックを無視しないと誤動作の元
+        if(currentState === 'command_wait' && !e.target.closest('.spell-button') && !e.target.closest('.shuffle-btn')) {
+            return;
+        }
+        if(e.cancelable && e.type === 'touchend') e.preventDefault(); 
+        handleUserClick();
+    };
+    clickZone.addEventListener('click', handler);
+    // touchendは重複発火防止のためclickに任せるか、厳密に制御する。
+    // ここではシンプルにclickメインで運用し、iOSの反応遅延対策はCSS(touch-action)で行う
+
+    const normalEvents = areaData.filter(a => a.id !== 20);
+    const lastEvent = areaData.find(a => a.id === 20);
+    shuffleArray(normalEvents);
+    areaData = [...normalEvents, lastEvent];
+    areaData.forEach(a => a.cleared = false);
+    
+    updateCatRoom();
+});
+
+function handleUserClick() {
+    if (!isAudioUnlocked) unlockAudio();
+    if (currentState === 'title' || currentState === 'photo_wait' || currentState === 'command_wait') return;
+
+    switch (currentState) {
+        case 'opening': nextOpeningScene(); break;
+        case 'map': startNextEvent(); break;
+        case 'event_talk': showCommandWindow(); break;
+        case 'repair_success_wait': showPhotoCard(); break;
+        case 'ending': nextEndingScene(); break;
+    }
+}
+
+function unlockAudio() {
+    if(isAudioUnlocked) return;
+    if (!bgmAudio) {
+        bgmAudio = new Audio(audioAssets.bgm);
+        bgmAudio.loop = true;
+        bgmAudio.volume = 0.3;
+        bgmAudio.load();
+    }
+    const silent = new Audio();
+    silent.play().catch(()=>{});
+    isAudioUnlocked = true;
+}
+
+function updateCatRoom() {
+    els.catRoomLayer.innerHTML = '';
+    const clearedAreas = areaData.filter(a => a.cleared);
+    
+    let displayCats = [...clearedAreas];
+    if(displayCats.length < 3) {
+        const others = areaData.filter(a => !a.cleared).slice(0, 3 - displayCats.length);
+        displayCats = displayCats.concat(others);
+    }
+
+    displayCats.forEach((area, i) => {
+        const cat = document.createElement('img');
+        cat.src = area.cleared ? 'images/neko6.png' : area.npcImg;
+        cat.className = 'room-cat';
+        const left = 10 + Math.random() * 80; 
+        const top = 30 + Math.random() * 50;
+        cat.style.left = left + '%';
+        cat.style.top = top + '%';
+        cat.style.animationDelay = (i * 0.5) + 's';
+        els.catRoomLayer.appendChild(cat);
+    });
+}
+
+function onStartGame() {
+    if(!isAudioUnlocked) unlockAudio();
+    if(bgmAudio) bgmAudio.play().catch(e=>{});
+
+    els.titleScreen.classList.add('hidden');
+    els.statusBar.classList.remove('hidden');
+    
+    if (clearedCount === 0) {
+        startOpening();
+    } else {
+        currentState = 'map';
+        showMessage("システム", "調査を再開します。");
+    }
+}
+
+// ==========================================
+// 4. ゲーム進行
+// ==========================================
+const openingScenes = [
+    { bg: 'haikei.png', hero: true, npc: false, speaker: 'ナレーション', text: "魔王を倒した勇者。しかし、凱旋の途中で謎の穴に落ちてしまった……。", sound: null },
+    { bg: 'haikei.png', hero: true, npc: 'images/neko_jump_surprised_transparent_48.png', speaker: '？？？', text: "「ニャニャッ！？（だ、誰だニャ！？）」", sound: 'surprise' },
+    { bg: 'haikei.png', hero: true, npc: 'images/neko1.png', speaker: '勇者', text: "ここは……猫の国？ 見たことのない高度な道具（家電）が散らばっている。", sound: null },
+    { bg: 'haikei.png', hero: true, npc: 'images/neko_transparent_7.png', speaker: '村長猫', text: "「お願いだニャ！ 村のあちこちで『伝説の遺物』が暴走してるのニャ！ 全部直してニャ！」", sound: 'talk' }
+];
+let openingIndex = -1;
+
+function startOpening() {
+    currentState = 'opening';
+    openingIndex = -1;
+    els.catRoomLayer.innerHTML = '';
+    nextOpeningScene();
+}
+
+function nextOpeningScene() {
+    openingIndex++;
+    if (openingIndex >= openingScenes.length) {
+        currentState = 'map';
+        showMessage("システム", "画面をタップして、調査を開始してください。");
+        return;
+    }
+    const scene = openingScenes[openingIndex];
+    els.bg.src = scene.bg;
+    els.hero.classList.toggle('hidden', !scene.hero);
+    if (scene.npc) { els.npc.src = scene.npc; els.npc.classList.remove('hidden'); } 
+    else { els.npc.classList.add('hidden'); }
+    els.item.classList.add('hidden');
+    showMessage(scene.speaker, scene.text, scene.sound);
+}
+
+function startNextEvent() {
+    const targetArea = areaData.find(a => !a.cleared);
+    if (!targetArea) { startEnding(); return; }
+    currentArea = targetArea;
+    currentState = 'event_talk';
+    
+    els.bg.src = 'haikei.png';
+    els.hero.classList.remove('hidden');
+    els.hero.src = 'images/character.png'; 
+    els.npc.src = currentArea.npcImg;
+    els.npc.classList.remove('hidden');
+    els.item.src = currentArea.itemImg;
+    els.item.classList.remove('hidden');
+    els.item.classList.add('shake-anim');
+    
+    showMessage(currentArea.name, currentArea.intro, 'talk');
+}
+
+function showCommandWindow() {
+    currentState = 'command_wait';
+    els.cmdWindow.classList.remove('hidden');
+    els.msgText.classList.add('hidden'); // メッセージウィンドウは隠す（重なり防止）
+    els.speaker.textContent = '勇者の思考';
+    
+    generateSpellButtons();
+}
+
+function generateSpellButtons() {
+    els.cmdGrid.innerHTML = '';
+
+    const correctSpell = spells.find(s => s.id === currentArea.correctSpell);
+    const otherSpells = spells.filter(s => s.id !== currentArea.correctSpell);
+    shuffleArray(otherSpells);
+    const wrongSpells = otherSpells.slice(0, 3);
+    const choices = [correctSpell, ...wrongSpells];
+    shuffleArray(choices);
+
+    choices.forEach(spell => {
+        const btn = document.createElement('div');
+        btn.className = 'spell-button';
+        btn.innerHTML = `<div class="spell-icon">${spell.icon}</div><div class="spell-name">${spell.name}</div><div class="spell-desc">${spell.desc}</div>`;
+        
+        const triggerSpell = (e) => {
+            e.stopPropagation(); e.preventDefault();
+            castSpell(spell.id);
+        };
+        btn.addEventListener('click', triggerSpell);
+        btn.addEventListener('touchend', triggerSpell);
+        els.cmdGrid.appendChild(btn);
+    });
+}
+
+function reshuffleSpells() {
+    playAudio('talk');
+    generateSpellButtons();
+}
+
+function castSpell(spellId) {
+    els.cmdWindow.classList.add('hidden');
+    els.msgText.classList.remove('hidden'); // メッセージウィンドウ戻す
+    
+    const magicDiv = document.createElement('div');
+    magicDiv.className = 'magic-circle';
+    els.effectContainer.appendChild(magicDiv);
+    playAudio('talk'); 
+
+    setTimeout(() => {
+        magicDiv.remove();
+        if (spellId === currentArea.correctSpell) {
+            playAudio('success'); 
+            els.item.classList.remove('shake-anim'); 
+            showRepairResult(); 
+        } else {
+            playAudio('fail');
+            showMessage("失敗...", currentArea.failMsg);
+            currentState = 'event_talk';
+        }
+    }, 800);
+}
+
+function showRepairResult() {
+    currentState = 'repair_success_wait';
+    showMessage("修理完了！", currentArea.successMsg);
+}
+
+function showPhotoCard() {
+    currentState = 'photo_wait';
+    els.photoImg.src = currentArea.itemImg; 
+    els.photoText.textContent = `File.${currentArea.id} 修理完了！`;
+    els.photoOverlay.classList.remove('hidden');
+}
+
+function onPhotoClose() {
+    els.photoOverlay.classList.add('hidden');
+    
+    currentArea.cleared = true;
+    clearedCount++;
+    updateProgress();
+    
+    currentState = 'map';
+    els.npc.src = 'images/neko6.png'; 
+}
+
+// ==========================================
+// エンディング・共通関数
+// ==========================================
+const endingScenes = [
+    { text: "20個すべての家電トラブルを解決した！", sound: 'success' },
+    { npc: 'images/neko6.png', speaker: '猫たち', text: "「すごいニャ！ 勇者様は伝説の修理屋さんだニャ！」", sound: 'talk' },
+    { npc: 'images/neko_transparent_7.png', speaker: '勇者', text: "（……修理屋も悪くないな。でも、そろそろ帰らねば。）", sound: 'sad' },
+    { bg: 'black', hero: false, npc: false, item: false, text: "勇者は猫たちに見送られ、光の中へ消えていった。", sound: null },
+    { bg: 'haikei.png', speaker: 'エピローグ', text: "元の世界に戻った勇者の手には、お土産の『猫じゃらし』が握られていた。", sound: 'ending' },
+    { text: "THE END - Thank you for playing!", sound: null }
+];
+let endingIndex = -1;
+
+function startEnding() {
+    currentState = 'ending';
+    endingIndex = -1;
+    els.item.classList.add('hidden');
+    if(bgmAudio) bgmAudio.pause();
+    nextEndingScene();
+}
+
+function nextEndingScene() {
+    endingIndex++;
+    if (endingIndex >= endingScenes.length) return;
+    const scene = endingScenes[endingIndex];
+    if (scene.bg === 'black') { els.bg.style.display = 'none'; els.hero.classList.add('hidden'); els.npc.classList.add('hidden'); } 
+    else if (scene.bg) { els.bg.style.display = 'block'; els.bg.src = scene.bg; }
+    if (scene.npc) { els.npc.src = scene.npc; els.npc.classList.remove('hidden'); }
+    showMessage(scene.speaker || '', scene.text, scene.sound);
+}
+
+function showMessage(name, text, soundType = null) {
+    if (textAnimInterval) { clearInterval(textAnimInterval); textAnimInterval = null; }
+    els.msgText.textContent = '';
+    currentDisplayText = '';
+    els.speaker.textContent = name;
+    
+    if (soundType) playAudio(soundType);
+    const targetText = text;
+    let charIndex = 0;
+    textAnimInterval = setInterval(() => {
+        charIndex++;
+        currentDisplayText = targetText.substring(0, charIndex);
+        els.msgText.textContent = currentDisplayText;
+        els.msgText.scrollTop = els.msgText.scrollHeight;
+        if (soundType === 'talk' && Math.random() > 0.8) playRandomTalkSound();
+        if (charIndex >= targetText.length) { clearInterval(textAnimInterval); textAnimInterval = null; }
+    }, 40);
+}
+
+function playAudio(type) {
+    if (type === 'talk') playRandomTalkSound();
+    else if (audioAssets[type]) {
+        const audio = new Audio(audioAssets[type]);
+        audio.volume = 0.5;
+        audio.play().catch(e => {});
+    }
+}
+function playRandomTalkSound() {
+    const srcs = audioAssets.talk;
+    const src = srcs[Math.floor(Math.random() * srcs.length)];
+    const audio = new Audio(src);
+    audio.volume = 0.3;
+    audio.playbackRate = 0.8 + Math.random() * 0.4; 
+    audio.play().catch(e => {});
+}
+function updateProgress() {
+    const total = areaData.length;
+    const percent = Math.round((clearedCount / total) * 100);
+    els.progress.value = percent;
+    els.percent.textContent = percent + '%';
+}
+    </script>
+</body>
+</html>

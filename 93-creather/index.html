@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧬 生物生成ゲーム</title>
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(180deg, #1a4d2e 0%, #0d2818 50%, #051208 100%);
+    color: #2ecc71;
+    font-family: 'Courier New', monospace;
+    overflow: hidden;
+    height: 100vh;
+}
+
+.container {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    overflow: hidden;
+}
+
+h1 {
+    margin: 10px 0 5px 0;
+    font-size: clamp(1.5em, 5vw, 2.5em);
+    color: #2ecc71;
+    text-shadow: 0 0 10px #27ae60, 0 0 20px #1e8449;
+    letter-spacing: 2px;
+}
+
+.subtitle {
+    margin: 5px 0;
+    font-size: clamp(0.9em, 3vw, 1.2em);
+    color: #5dde63;
+}
+
+canvas {
+    border: 4px solid #27ae60;
+    background: linear-gradient(135deg, #0d3d1f 0%, #0a2e16 50%, #051208 100%);
+    box-shadow: 0 0 20px rgba(46, 204, 113, 0.3), inset 0 0 15px rgba(46, 204, 113, 0.1);
+    max-width: 100%;
+    max-height: 60vh;
+    aspect-ratio: 600 / 500;
+}
+
+.info-panel {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(13, 40, 24, 0.9);
+    border: 2px solid #27ae60;
+    border-radius: 5px;
+    width: 90%;
+    max-width: 600px;
+}
+
+#dna {
+    font-size: clamp(1em, 3vw, 1.5em);
+    color: #f1c40f;
+    letter-spacing: 2px;
+    font-weight: bold;
+    word-break: break-all;
+}
+
+#stats {
+    font-size: clamp(0.8em, 2.5vw, 1em);
+    color: #2ecc71;
+    margin-top: 10px;
+    line-height: 1.5;
+}
+
+#name {
+    font-size: clamp(0.9em, 2.8vw, 1.2em);
+    color: #3498db;
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+.info-text {
+    margin: 15px 0;
+    padding: 10px;
+    background: rgba(13, 40, 24, 0.8);
+    border-left: 4px solid #27ae60;
+    color: #5dde63;
+    font-size: clamp(0.85em, 2.5vw, 1em);
+    border-radius: 3px;
+}
+
+.controls {
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(13, 40, 24, 0.7);
+    border: 1px solid #27ae60;
+    border-radius: 5px;
+    font-size: clamp(0.75em, 2vw, 0.95em);
+    color: #5dde63;
+    max-width: 90%;
+}
+
+.controls p {
+    margin: 5px 0;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 5px;
+    }
+
+    h1 {
+        margin: 5px 0 2px 0;
+        font-size: 1.5em;
+    }
+
+    canvas {
+        border: 3px solid #27ae60;
+        max-height: 50vh;
+    }
+
+    .info-panel {
+        margin-top: 10px;
+        padding: 10px;
+        width: 95%;
+    }
+
+    .info-text {
+        margin: 10px 0;
+        padding: 8px;
+        font-size: 0.85em;
+    }
+
+    .controls {
+        margin-top: 10px;
+        padding: 8px;
+        font-size: 0.8em;
+    }
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>🧬 生物生成ゲーム 🧬</h1>
+    <p class="subtitle">DNAを入力して、未知の生物を発見しよう！</p>
+    
+    <canvas id="world"></canvas>
+    
+    <div class="info-panel">
+        <div id="dna">DNA: </div>
+        <div id="name"></div>
+        <div id="stats"></div>
+    </div>
+    
+    <div class="info-text">
+        🔬 キーボードでDNAを入力します。どんな生物が生まれるか試してみよう！
+    </div>
+    
+    <div class="controls">
+        <p>📝 キーを押す → 入力 | Backspace → 削除 | Enter → 生成 | Space → リセット</p>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById("world");
+const ctx = canvas.getContext("2d");
+let dna = "";
+
+const creatureNames = [
+    "ポリウス", "グリシア", "ベルタノ", "ズンフレット", "クリウマ", "ボルタシア",
+    "フェルニス", "ギラクタス", "タンドレス", "ノスカリア", "ビルティオス", "スルマン",
+    "クロウテス", "ヴィスタ", "グルルメン", "ジュリタ", "ポネルス", "ティシロス",
+    "ゼロナ", "クリスパ", "オンデルア", "ファンギア", "バルナ", "シルティス"
+];
+
+const colorNames = ["赤", "青", "緑", "黄", "紫", "黒", "白", "ピンク", "オレンジ"];
+const planets = ["月", "火星", "木星", "土星", "冥王星", "金星", "水星"];
+
+const TRAIT_GENES = {
+    'X': { power: 5, variation: 3, bodyType: 2, behavior: 2 },
+    'Z': { power: 4, variation: 4, bodyType: 1, behavior: 1 },
+    'K': { power: 3, variation: 2, bodyType: 0, behavior: 0 },
+    'S': { power: 2, variation: 1, bodyType: 0, behavior: 3 },
+    'V': { power: 4, variation: 3, bodyType: 2, behavior: 2 },
+    'M': { power: 3, variation: 4, bodyType: 1, behavior: 1 },
+    'W': { power: 5, variation: 2, bodyType: 2, behavior: 2 }
+};
+
+function resizeCanvas() {
+    const maxWidth = Math.min(600, window.innerWidth - 20);
+    const maxHeight = Math.min(500, window.innerHeight * 0.5);
+    canvas.width = maxWidth;
+    canvas.height = (maxWidth / 600) * 500;
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+document.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+        if (dna.length >= 3) {
+            createCreature(dna);
+        } else {
+            alert("3文字以上のDNAを入力してください！");
+        }
+        return;
+    }
+    if (e.key === " ") {
+        e.preventDefault();
+        dna = "";
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        updateDisplay();
+        return;
+    }
+    if (e.key === "Backspace") {
+        dna = dna.slice(0, -1);
+    } else if (e.key.length === 1) {
+        dna += e.key.toUpperCase();
+    }
+    updateDisplay();
+});
+
+function updateDisplay() {
+    document.getElementById("dna").textContent = "DNA: " + dna;
+}
+
+function seedRand(str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) {
+        h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+    }
+    return function() {
+        h ^= h << 13;
+        h ^= h >>> 17;
+        h ^= h << 5;
+        return (h >>> 0) / 4294967296;
+    };
+}
+
+function getPlanetColor(planetName, rand) {
+    const colors = {
+        "月": `hsl(0, 0%, ${70 + rand() * 20}%)`,
+        "火星": `hsl(${0 + rand() * 20}, 85%, ${45 + rand() * 10}%)`,
+        "木星": `hsl(${40 + rand() * 30}, 70%, ${50 + rand() * 15}%)`,
+        "土星": `hsl(${50 + rand() * 20}, 60%, ${60 + rand() * 10}%)`,
+        "冥王星": `hsl(${240 + rand() * 20}, 40%, ${30 + rand() * 10}%)`,
+        "金星": `hsl(${60 + rand() * 20}, 80%, ${55 + rand() * 10}%)`,
+        "水星": `hsl(0, 0%, ${40 + rand() * 20}%)`
+    };
+    return colors[planetName] || `hsl(${rand() * 360}, 70%, 50%)`;
+}
+
+function getHueFromColor(colorName, rand) {
+    const hues = {
+        "赤": 0 + rand() * 30,
+        "青": 180 + rand() * 40,
+        "緑": 100 + rand() * 40,
+        "黄": 50 + rand() * 20,
+        "紫": 260 + rand() * 40,
+        "黒": rand() * 360,
+        "白": rand() * 360,
+        "ピンク": 320 + rand() * 40,
+        "オレンジ": 20 + rand() * 30
+    };
+    return hues[colorName] || rand() * 360;
+}
+
+function createCreature(dna) {
+    const rand = seedRand(dna);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    
+    let totalPower = 0;
+    let totalVariation = 0;
+    let bodyTypeScore = 0;
+    
+    for (const char of dna) {
+        const trait = TRAIT_GENES[char] || {
+            power: rand() * 2,
+            variation: rand() * 2,
+            bodyType: rand() * 3,
+            behavior: rand() * 3
+        };
+        totalPower += trait.power;
+        totalVariation += trait.variation;
+        bodyTypeScore += trait.bodyType;
+    }
+    
+    const bodyType = Math.floor(bodyTypeScore / dna.length);
+    let creatureName = creatureNames[Math.floor(rand() * creatureNames.length)];
+    let colorName = colorNames[Math.floor(rand() * colorNames.length)];
+    
+    const isPlanetCreature = rand() < 0.1;
+    let planetName = "";
+    
+    if (isPlanetCreature) {
+        planetName = planets[Math.floor(rand() * planets.length)];
+        creatureName = `${planetName}生物`;
+    }
+    
+    const hue = getHueFromColor(colorName, rand);
+    let mainColor = isPlanetCreature ? getPlanetColor(planetName, rand) : `hsl(${hue}, ${60 + rand() * 30}%, ${45 + rand() * 15}%)`;
+    
+    if (bodyType === 0) {
+        drawRoundCreature(cx, cy, rand, totalPower, totalVariation, mainColor, hue);
+    } else if (bodyType === 1) {
+        drawSegmentedCreature(cx, cy, rand, totalPower, totalVariation, mainColor, hue);
+    } else {
+        drawSpikeyCreature(cx, cy, rand, totalPower, totalVariation, mainColor, hue);
+    }
+    
+    const feature = getFeature(bodyType, rand);
+    displayCreatureInfo(dna, creatureName, colorName, feature, isPlanetCreature, planetName);
+}
+
+function drawRoundCreature(cx, cy, rand, power, variation, color, hue) {
+    const bodyRadius = 40 + power * 5 + variation * 3;
+    
+    for (let i = 0; i < 20; i++) {
+        const angle = (i / 20) * Math.PI * 2;
+        const bumps = Math.sin(i * 0.5) * 8 + 5;
+        const x = cx + Math.cos(angle) * (bodyRadius + bumps);
+        const y = cy + Math.sin(angle) * (bodyRadius + bumps);
+        const bumpSize = 8 + rand() * 12;
+        
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.7 + rand() * 0.3;
+        ctx.beginPath();
+        ctx.arc(x, y, bumpSize, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (let i = 0; i < 40; i++) {
+        const angle = (i / 40) * Math.PI * 2;
+        const r = bodyRadius + Math.sin(angle * 5) * 5;
+        const x = cx + Math.cos(angle) * r;
+        const y = cy + Math.sin(angle) * r;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+    
+    const grad = ctx.createRadialGradient(cx - 10, cy - 10, 0, cx, cy, bodyRadius);
+    grad.addColorStop(0, `hsl(${hue}, 80%, 65%)`);
+    grad.addColorStop(1, `hsl(${hue}, 80%, 35%)`);
+    ctx.fillStyle = grad;
+    ctx.globalAlpha = 0.3;
+    ctx.beginPath();
+    ctx.arc(cx, cy, bodyRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    
+    const numTentacles = 4 + Math.floor(variation * 2);
+    for (let t = 0; t < numTentacles; t++) {
+        drawTentacle(cx, cy, bodyRadius, t, numTentacles, rand, power);
+    }
+    
+    drawEyes(cx, cy - 20, rand, 2);
+}
+
+function drawSegmentedCreature(cx, cy, rand, power, variation, color, hue) {
+    const segmentCount = 6 + Math.floor(variation * 2);
+    const segmentSpacing = 20;
+    
+    for (let seg = 0; seg < segmentCount; seg++) {
+        const y = cy - (segmentCount / 2) * segmentSpacing + seg * segmentSpacing;
+        const segRadius = 25 - seg * 2 + Math.sin(seg * 0.5) * 5;
+        
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.8 + seg * 0.02;
+        
+        for (let i = 0; i < 30; i++) {
+            const angle = (i / 30) * Math.PI * 2;
+            const r = segRadius + Math.cos(angle * 8) * 2;
+            const x = cx + Math.cos(angle) * r;
+            if (i === 0) ctx.beginPath();
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y + Math.sin(angle) * r);
+        }
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.strokeStyle = `hsl(${hue}, 70%, 30%)`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    }
+    
+    ctx.globalAlpha = 1;
+    
+    const numLegs = 8 + Math.floor(power * 2);
+    for (let leg = 0; leg < numLegs; leg++) {
+        const segIdx = Math.floor((leg / numLegs) * segmentCount);
+        const y = cy - (segmentCount / 2) * segmentSpacing + segIdx * segmentSpacing;
+        const side = leg % 2 === 0 ? 1 : -1;
+        
+        ctx.strokeStyle = `hsl(${hue}, 60%, 40%)`;
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(cx, y);
+        ctx.lineTo(cx + side * 25, y + 15);
+        ctx.stroke();
+        
+        ctx.fillStyle = `hsl(${hue}, 70%, 35%)`;
+        ctx.beginPath();
+        ctx.arc(cx + side * 25, y + 15, 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    drawEyes(cx, cy - (segmentCount / 2) * segmentSpacing - 10, rand, 2);
+}
+
+function drawSpikeyCreature(cx, cy, rand, power, variation, color, hue) {
+    const bodySize = 50 + power * 5;
+    
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (let i = 0; i < 30; i++) {
+        const angle = (i / 30) * Math.PI * 2;
+        const r = bodySize + Math.sin(angle * 6) * 10;
+        const x = cx + Math.cos(angle) * r;
+        const y = cy + Math.sin(angle) * r;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+    
+    const spikeCount = 12 + Math.floor(power * 3) + Math.floor(variation * 2);
+    for (let s = 0; s < spikeCount; s++) {
+        const angle = (s / spikeCount) * Math.PI * 2;
+        const startX = cx + Math.cos(angle) * bodySize;
+        const startY = cy + Math.sin(angle) * bodySize;
+        
+        const spikeLength = 20 + power * 4 + rand() * 10;
+        const endX = startX + Math.cos(angle) * spikeLength;
+        const endY = startY + Math.sin(angle) * spikeLength;
+        
+        ctx.strokeStyle = `hsl(${hue}, 80%, 30%)`;
+        ctx.lineWidth = 3 + power * 0.3;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+        
+        ctx.fillStyle = `hsl(${hue}, 90%, 25%)`;
+        ctx.beginPath();
+        ctx.arc(endX, endY, 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    drawEyes(cx, cy - bodySize / 2, rand, 3);
+}
+
+function drawTentacle(cx, cy, startRadius, index, total, rand, power) {
+    const angle = (index / total) * Math.PI * 2;
+    const startX = cx + Math.cos(angle) * startRadius;
+    const startY = cy + Math.sin(angle) * startRadius;
+    
+    const tentacleLength = 40 + power * 5 + rand() * 20;
+    const segments = 8 + Math.floor(power);
+    
+    let x = startX, y = startY;
+    
+    ctx.strokeStyle = `hsla(${Math.random() * 360}, 70%, 50%, 0.6)`;
+    ctx.lineWidth = 4 + power * 0.5;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    
+    for (let seg = 0; seg < segments; seg++) {
+        const wave = Math.sin(seg * 0.3) * Math.PI / 4;
+        const segAngle = angle + wave;
+        const segLength = tentacleLength / segments;
+        
+        x += Math.cos(segAngle) * segLength;
+        y += Math.sin(segAngle) * segLength;
+        ctx.lineTo(x, y);
+    }
+    
+    ctx.stroke();
+    
+    ctx.fillStyle = `hsla(${Math.random() * 360}, 70%, 50%, 0.7)`;
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function drawEyes(x, y, rand, count) {
+    for (let e = 0; e < count; e++) {
+        const eyeX = x + (e - (count - 1) / 2) * 15;
+        const eyeY = y;
+        const eyeSize = 6 + rand() * 4;
+        
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(eyeX, eyeY, eyeSize, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.fillStyle = "#222222";
+        ctx.beginPath();
+        ctx.arc(eyeX, eyeY, eyeSize * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(eyeX - 2, eyeY - 2, eyeSize * 0.25, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function getFeature(bodyType, rand) {
+    const features = [
+        ["背中にトゲ", "毛がフサフサ", "鱗がある"],
+        ["長い尾", "節だらけ", "柔らかい"],
+        ["触手がある", "甲羅がある", "大きな耳"]
+    ];
+    return features[bodyType][Math.floor(rand() * 3)];
+}
+
+function displayCreatureInfo(dna, name, color, feature, isPlanetCreature, planetName) {
+    const displayName = isPlanetCreature ? name : `🦴 生物: ${name}`;
+    const displayColor = isPlanetCreature ? `${planetName}産` : `🌈 色: ${color}色`;
+    
+    document.getElementById("name").textContent = displayName;
+    document.getElementById("stats").innerHTML = `
+        ${displayColor} | ✨ 特徴: ${feature}<br>
+        🧬 DNA: ${dna}
+    `;
+}
+</script>
+</body>
+</html>

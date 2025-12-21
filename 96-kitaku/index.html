@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ぼくのかえりみちRPG</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #222;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 320px;
+            height: 240px;
+            border: 4px solid #fff;
+            background-color: #87ceeb;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        #game-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        #status-bar {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #0f0;
+            padding: 5px 8px;
+            font-size: 10px;
+            border: 2px solid #0f0;
+            z-index: 10;
+            font-weight: bold;
+        }
+
+        #text-box {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            right: 5px;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: #0f0;
+            padding: 8px;
+            font-size: 10px;
+            border: 2px solid #0f0;
+            min-height: 45px;
+            max-height: 70px;
+            overflow-y: auto;
+            line-height: 1.4;
+            z-index: 10;
+        }
+
+        .stage-name {
+            color: #ffff00;
+            font-weight: bold;
+            font-size: 11px;
+            margin-bottom: 3px;
+        }
+
+        #title-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #ffff00;
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.8;
+            z-index: 1000;
+        }
+
+        .title-text {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        .subtitle {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 25px;
+        }
+
+        #ending-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #ffff00;
+            text-align: center;
+            font-size: 16px;
+            line-height: 2.2;
+            z-index: 1001;
+        }
+
+        /* スマホ対応 */
+        @media (max-width: 480px) {
+            #game-container {
+                width: 100vw;
+                height: 75vw;
+                max-width: 320px;
+                max-height: 240px;
+            }
+
+            body {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas" width="320" height="240"></canvas>
+        
+        <div id="status-bar">
+            HP: <span id="hp-text">10</span> | 勇気: <span id="courage-text">0</span> | ステージ: <span id="stage-text">1</span>
+        </div>
+        
+        <div id="text-box">
+            <div class="stage-name">【ゲーム開始】</div>
+            <div id="message-text">ゲーム中です...</div>
+        </div>
+        
+        <div id="title-overlay">
+            <div class="title-text">ぼく<br>の<br>かえり<br>みち<br>RPG</div>
+            <div class="subtitle">SPACEキー でスタート</div>
+        </div>
+        
+        <div id="ending-overlay" style="display: none;">
+            <div>ただいま。</div>
+            <div id="mom-text">おかえり。</div>
+            <div style="font-size: 12px; margin-top: 15px;">勇気: <span id="final-courage">0</span></div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+
+        const gameState = {
+            currentStage: 0,
+            playerX: 152,
+            playerY: 150,
+            stageDistance: 0,
+            hp: 10,
+            maxHp: 10,
+            courage: 0,
+            hazards: [],
+            characters: [],
+            gameRunning: false,
+            titleShown: true,
+            gameOver: false,
+            maxStageDistance: 400
+        };
+
+        const stages = [
+            {
+                name: '【学校】',
+                bgColor: '#d4a574',
+                messages: ['放課後。ひとりで帰ろう。', '↓キーで進む、←→で左右移動'],
+                hazards: [],
+                characters: []
+            },
+            {
+                name: '【商店街】',
+                bgColor: '#8b7355',
+                messages: ['商店街だ。車に注意！'],
+                hazards: [
+                    { startDist: 80, x: 100, speed: 1.5, type: 'car' },
+                    { startDist: 200, x: 200, speed: 1.5, type: 'car' }
+                ],
+                characters: [
+                    { dist: 150, x: 250, type: 'neighbor' }
+                ]
+            },
+            {
+                name: '【公園】',
+                bgColor: '#90ee90',
+                messages: ['公園だ。知らない人に注意！'],
+                hazards: [
+                    { startDist: 100, x: 150, speed: 1.3, type: 'person' }
+                ],
+                characters: []
+            },
+            {
+                name: '【川沿い】',
+                bgColor: '#87ceeb',
+                messages: ['川だ。友だちとの仲直り。'],
+                hazards: [
+                    { startDist: 120, x: 120, speed: 1.4, type: 'person' }
+                ],
+                characters: []
+            },
+            {
+                name: '【雨の道】',
+                bgColor: '#708090',
+                messages: ['雨だ！雷が鳴ってる！'],
+                hazards: [
+                    { startDist: 80, x: 100, speed: 1.6, type: 'car' },
+                    { startDist: 200, x: 180, speed: 1.6, type: 'car' }
+                ],
+                characters: []
+            },
+            {
+                name: '【迷い道】',
+                bgColor: '#d2b48c',
+                messages: ['迷った...人に聞こう。'],
+                hazards: [],
+                characters: [
+                    { dist: 150, x: 240, type: 'foreigner' }
+                ]
+            },
+            {
+                name: '【神社前】',
+                bgColor: '#daa520',
+                messages: ['神社だ。落とし物は交番へ。'],
+                hazards: [],
+                characters: []
+            },
+            {
+                name: '【犬の家】',
+                bgColor: '#90ee90',
+                messages: ['野良犬がいた。目を合わせずに。'],
+                hazards: [
+                    { startDist: 100, x: 140, speed: 1.4, type: 'dog' }
+                ],
+                characters: []
+            },
+            {
+                name: '【夜道】',
+                bgColor: '#2f4f4f',
+                messages: ['暗くなった。明るい道へ。'],
+                hazards: [
+                    { startDist: 80, x: 80, speed: 1.3, type: 'person' },
+                    { startDist: 200, x: 220, speed: 1.3, type: 'person' }
+                ],
+                characters: [
+                    { dist: 150, x: 260, type: 'stranger' }
+                ]
+            },
+            {
+                name: '【パン屋】',
+                bgColor: '#f4a460',
+                messages: ['パン屋だ。商品を交換しよう。'],
+                hazards: [],
+                characters: []
+            },
+            {
+                name: '【自宅前】',
+                bgColor: '#87ceeb',
+                messages: ['おうちだ！お母さんが待ってる！'],
+                hazards: [],
+                characters: [
+                    { dist: 200, x: 220, type: 'mom' }
+                ]
+            },
+            {
+                name: '【廊下】',
+                bgColor: '#d3d3d3',
+                messages: ['廊下だ。左右に移動して部屋を選ぼう。左=寝室、中央=子供部屋、右=LDK'],
+                hazards: [],
+                characters: [],
+                isHallway: true
+            },
+            {
+                name: '【寝室】',
+                bgColor: '#fff8dc',
+                messages: ['寝室だ。休もう。'],
+                hazards: [],
+                characters: []
+            },
+            {
+                name: '【子供部屋】',
+                bgColor: '#e6e6fa',
+                messages: ['子供部屋だ。おもちゃがある。'],
+                hazards: [],
+                characters: []
+            },
+            {
+                name: '【LDK】',
+                bgColor: '#f0e68c',
+                messages: ['LDKだ。お母さんがいる。'],
+                hazards: [],
+                characters: [
+                    { dist: 200, x: 220, type: 'mom' }
+                ]
+            }
+        ];
+
+        // 背景描画
+        function drawBackground(stage) {
+            ctx.fillStyle = stage.bgColor;
+            ctx.fillRect(0, 0, 320, 240);
+
+            // 地面
+            ctx.fillStyle = '#8b7355';
+            ctx.fillRect(0, 180, 320, 60);
+
+            // ステージ別の背景
+            if (gameState.currentStage === 0) {
+                // 学校
+                ctx.fillStyle = '#d32f2f';
+                ctx.fillRect(200, 40, 100, 80);
+                ctx.fillStyle = '#ffeb3b';
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 2; j++) {
+                        ctx.fillRect(210 + i * 25, 50 + j * 25, 12, 12);
+                    }
+                }
+            } else if (gameState.currentStage === 1) {
+                // 商店街
+                ctx.fillStyle = '#654321';
+                ctx.fillRect(200, 60, 90, 90);
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(220, 45, 50, 15);
+            } else if (gameState.currentStage === 2) {
+                // 公園
+                ctx.fillStyle = '#228b22';
+                ctx.beginPath();
+                ctx.arc(250, 80, 30, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#8b4513';
+                ctx.fillRect(245, 110, 10, 30);
+            } else if (gameState.currentStage === 5) {
+                // 迷い道
+                ctx.fillStyle = '#d2b48c';
+                ctx.fillRect(250, 60, 40, 80);
+                ctx.fillStyle = '#000';
+                ctx.font = '20px Arial';
+                ctx.fillText('?', 257, 110);
+            } else if (gameState.currentStage === 6) {
+                // 神社
+                ctx.strokeStyle = '#ff6b6b';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(200, 100);
+                ctx.lineTo(200, 140);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(180, 100);
+                ctx.lineTo(220, 100);
+                ctx.stroke();
+                ctx.fillStyle = '#8b0000';
+                ctx.fillRect(210, 110, 60, 40);
+            } else if (gameState.currentStage === 7) {
+                // 犬小屋
+                ctx.fillStyle = '#8b4513';
+                ctx.fillRect(200, 110, 50, 40);
+                ctx.fillStyle = '#d2b48c';
+                ctx.beginPath();
+                ctx.arc(225, 140, 12, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (gameState.currentStage === 8) {
+                // 夜道
+                ctx.fillStyle = '#ffff99';
+                ctx.beginPath();
+                ctx.arc(280, 40, 25, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#ffff00';
+                for (let i = 0; i < 8; i++) {
+                    ctx.fillRect(Math.random() * 320, Math.random() * 80, 2, 2);
+                }
+            } else if (gameState.currentStage === 9) {
+                // パン屋
+                ctx.fillStyle = '#d4a574';
+                ctx.fillRect(180, 80, 100, 80);
+                ctx.fillStyle = '#ffeb3b';
+                ctx.fillRect(200, 100, 30, 30);
+                ctx.fillRect(240, 100, 30, 30);
+            } else if (gameState.currentStage === 10) {
+                // 家
+                ctx.fillStyle = '#ff6b6b';
+                ctx.fillRect(180, 80, 100, 80);
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.moveTo(180, 80);
+                ctx.lineTo(230, 40);
+                ctx.lineTo(280, 80);
+                ctx.fill();
+                ctx.fillStyle = '#8b4513';
+                ctx.fillRect(215, 130, 30, 50);
+                ctx.fillStyle = '#ffeb3b';
+                ctx.fillRect(190, 95, 20, 20);
+                ctx.fillRect(260, 95, 20, 20);
+            } else if (gameState.currentStage === 11) {
+                // 廊下
+                ctx.fillStyle = '#696969';
+                ctx.fillRect(0, 160, 320, 80);
+                // ドア
+                ctx.fillStyle = '#8b4513';
+                ctx.fillRect(40, 140, 40, 80);  // 左：寝室
+                ctx.fillRect(140, 140, 40, 80); // 中央：子供部屋
+                ctx.fillRect(240, 140, 40, 80); // 右：LDK
+                ctx.fillStyle = '#ffd700';
+                ctx.beginPath();
+                ctx.arc(75, 180, 5, 0, Math.PI * 2);  // ドアノブ
+                ctx.arc(175, 180, 5, 0, Math.PI * 2);
+                ctx.arc(275, 180, 5, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (gameState.currentStage === 12) {
+                // 寝室
+                // ベッド
+                ctx.fillStyle = '#8b4513';
+                ctx.fillRect(200, 100, 80, 60);
+                ctx.fillStyle = '#ff69b4';
+                ctx.fillRect(205, 105, 70, 50);
+                // 窓
+                ctx.fillStyle = '#87ceeb';
+                ctx.fillRect(50, 60, 60, 50);
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(80, 60, 2, 50);
+                ctx.fillRect(50, 85, 60, 2);
+            } else if (gameState.currentStage === 13) {
+                // 子供部屋
+                // おもちゃ箱
+                ctx.fillStyle = '#ff6347';
+                ctx.fillRect(180, 120, 50, 40);
+                ctx.fillStyle = '#ffd700';
+                ctx.fillRect(185, 125, 40, 30);
+                // テーブル
+                ctx.fillStyle = '#8b4513';
+                ctx.fillRect(80, 130, 60, 5);
+                ctx.fillRect(100, 135, 20, 30);
+                // 窓
+                ctx.fillStyle = '#87ceeb';
+                ctx.fillRect(220, 60, 60, 50);
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(250, 60, 2, 50);
+                ctx.fillRect(220, 85, 60, 2);
+            } else if (gameState.currentStage === 14) {
+                // LDK
+                // テーブル
+                ctx.fillStyle = '#8b4513';
+                ctx.fillRect(100, 120, 120, 8);
+                ctx.fillRect(145, 128, 30, 50);
+                // ソファ
+                ctx.fillStyle = '#654321';
+                ctx.fillRect(50, 140, 40, 30);
+                ctx.fillRect(230, 140, 40, 30);
+                // テレビ
+                ctx.fillStyle = '#333';
+                ctx.fillRect(150, 50, 60, 40);
+                ctx.fillStyle = '#00ff00';
+                ctx.fillRect(155, 55, 50, 30);
+            }
+        }
+
+        // プレイヤー描画
+        function drawPlayer() {
+            ctx.fillStyle = '#ffff00';
+            ctx.fillRect(gameState.playerX, gameState.playerY, 16, 16);
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(gameState.playerX + 4, gameState.playerY + 2, 4, 4);
+            ctx.fillRect(gameState.playerX + 10, gameState.playerY + 2, 4, 4);
+            ctx.fillStyle = '#000';
+            ctx.fillRect(gameState.playerX + 5, gameState.playerY + 3, 2, 2);
+            ctx.fillRect(gameState.playerX + 11, gameState.playerY + 3, 2, 2);
+        }
+
+        // キャラクター描画
+        function drawCharacter(char) {
+            const charY = 130;
+
+            if (char.type === 'neighbor') {
+                // 近所のおばさん
+                ctx.fillStyle = '#ffdbac';
+                ctx.fillRect(char.x, charY - 5, 14, 5);
+                ctx.fillStyle = '#ff69b4';
+                ctx.fillRect(char.x + 2, charY, 10, 12);
+            } else if (char.type === 'foreigner') {
+                // 外国人
+                ctx.fillStyle = '#ffdbac';
+                ctx.fillRect(char.x, charY - 5, 12, 5);
+                ctx.fillStyle = '#4169e1';
+                ctx.fillRect(char.x + 2, charY, 8, 12);
+            } else if (char.type === 'stranger') {
+                // 知らないおじさん
+                ctx.fillStyle = '#d2691e';
+                ctx.fillRect(char.x, charY - 5, 12, 5);
+                ctx.fillStyle = '#333';
+                ctx.fillRect(char.x + 2, charY, 8, 12);
+            } else if (char.type === 'mom') {
+                // お母さん
+                ctx.fillStyle = '#ffdbac';
+                ctx.fillRect(char.x, charY - 6, 14, 6);
+                ctx.fillStyle = '#ff69b4';
+                ctx.fillRect(char.x + 2, charY, 10, 14);
+                // 激おこ
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(char.x + 5, charY - 2, 2, 2);
+                ctx.fillRect(char.x + 9, charY - 2, 2, 2);
+            }
+        }
+
+        // ハザード描画
+        function drawHazard(h) {
+            if (h.type === 'car') {
+                ctx.fillStyle = '#ff4444';
+                ctx.fillRect(h.x, h.y, 24, 12);
+                ctx.fillStyle = '#000';
+                ctx.fillRect(h.x + 3, h.y + 2, 6, 6);
+                ctx.fillRect(h.x + 15, h.y + 2, 6, 6);
+            } else if (h.type === 'person') {
+                ctx.fillStyle = '#333';
+                ctx.fillRect(h.x, h.y, 12, 16);
+                ctx.fillStyle = '#ffdbac';
+                ctx.beginPath();
+                ctx.arc(h.x + 6, h.y - 2, 5, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (h.type === 'dog') {
+                ctx.fillStyle = '#8b4513';
+                ctx.fillRect(h.x, h.y, 16, 12);
+                ctx.fillStyle = '#ffdbac';
+                ctx.beginPath();
+                ctx.arc(h.x + 3, h.y - 2, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // ゲームループ
+        function gameLoop() {
+            if (!gameState.titleShown && gameState.gameRunning) {
+                const stage = stages[gameState.currentStage];
+                drawBackground(stage);
+
+                // ハザード更新
+                gameState.hazards.forEach((h, idx) => {
+                    h.y += h.speed;
+
+                    // 衝突判定
+                    if (gameState.playerX < h.x + 24 &&
+                        gameState.playerX + 16 > h.x &&
+                        gameState.playerY < h.y + 16 &&
+                        gameState.playerY + 16 > h.y) {
+                        gameState.hp = Math.max(0, gameState.hp - 1);
+                        gameState.courage += 3;
+                    }
+
+                    if (h.y > 240) {
+                        gameState.hazards.splice(idx, 1);
+                    }
+
+                    drawHazard(h);
+                });
+
+                // キャラクター描画
+                gameState.characters.forEach(char => {
+                    if (gameState.stageDistance >= char.dist - 50) {
+                        drawCharacter(char);
+                    }
+                });
+
+                // プレイヤー描画
+                drawPlayer();
+
+                // ゲームオーバー判定
+                if (gameState.hp <= 0) {
+                    gameState.gameRunning = false;
+                    gameState.gameOver = true;
+                }
+
+                // ステージ終了判定
+                if (gameState.stageDistance >= gameState.maxStageDistance) {
+                    gameState.gameRunning = false;
+                    setTimeout(() => {
+                        const currentStageData = stages[gameState.currentStage];
+                        
+                        // 廊下ステージの場合、プレイヤーの位置に応じて部屋を選択
+                        if (currentStageData.isHallway) {
+                            let nextStageIdx;
+                            if (gameState.playerX < 107) {
+                                // 左側 → 寝室（インデックス12）
+                                nextStageIdx = 12;
+                            } else if (gameState.playerX < 214) {
+                                // 中央 → 子供部屋（インデックス13）
+                                nextStageIdx = 13;
+                            } else {
+                                // 右側 → LDK（インデックス14）
+                                nextStageIdx = 14;
+                            }
+                            startStage(nextStageIdx);
+                        } else if (gameState.currentStage >= 12 && gameState.currentStage <= 14) {
+                            // 部屋のステージ（寝室、子供部屋、LDK）が終了したらエンディングへ
+                            showEnding();
+                        } else if (gameState.currentStage < stages.length - 1) {
+                            // 通常のステージは次のステージへ
+                            startStage(gameState.currentStage + 1);
+                        } else {
+                            showEnding();
+                        }
+                    }, 500);
+                }
+            }
+
+            updateUI();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // UI更新
+        function updateUI() {
+            document.getElementById('hp-text').textContent = Math.max(0, gameState.hp);
+            document.getElementById('courage-text').textContent = Math.floor(gameState.courage);
+            document.getElementById('stage-text').textContent = gameState.currentStage + 1;
+        }
+
+        // メッセージ表示
+        function showMessage(text) {
+            const stage = stages[gameState.currentStage];
+            document.getElementById('message-text').innerHTML = 
+                `<div class="stage-name">${stage.name}</div><div>${text}</div>`;
+        }
+
+        // ステージ開始
+        function startStage(idx) {
+            if (idx >= stages.length) {
+                showEnding();
+                return;
+            }
+
+            gameState.currentStage = idx;
+            gameState.gameRunning = true;
+            gameState.gameOver = false;
+            gameState.stageDistance = 0;
+            gameState.playerX = 152;
+            gameState.playerY = 150;
+            gameState.hazards = [];
+            gameState.characters = [];
+
+            const stage = stages[idx];
+
+            // ハザード生成
+            stage.hazards.forEach(h => {
+                gameState.hazards.push({
+                    x: h.x,
+                    y: -50,
+                    speed: h.speed,
+                    type: h.type,
+                    startDist: h.startDist,
+                    active: false
+                });
+            });
+
+            // キャラクター配置
+            stage.characters.forEach(char => {
+                gameState.characters.push(char);
+            });
+
+            showMessage(stage.messages[0]);
+            updateUI();
+        }
+
+        // エンディング表示
+        function showEnding() {
+            gameState.gameRunning = false;
+            const momText = gameState.courage > 50 ? 'よくがんばったね！' : '大丈夫だったか？';
+            document.getElementById('mom-text').textContent = 'おかえり。' + momText;
+            document.getElementById('ending-overlay').style.display = 'flex';
+            document.getElementById('final-courage').textContent = Math.floor(gameState.courage);
+            document.getElementById('message-text').innerHTML = 
+                `<div class="stage-name">【END】ぼうけん おしまい。</div><div>安全に帰ってこられました！</div>`;
+        }
+
+        // キー入力
+        const keys = {};
+        document.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+
+            if (gameState.titleShown) {
+                if (e.code === 'Space') {
+                    document.getElementById('title-overlay').style.display = 'none';
+                    gameState.titleShown = false;
+                    gameState.hp = gameState.maxHp;
+                    gameState.courage = 0;
+                    startStage(0);
+                    e.preventDefault();
+                }
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+
+        // メインループ内で連続入力を処理
+        function handleInput() {
+            if (gameState.gameRunning && !gameState.gameOver && !gameState.titleShown) {
+                if (keys['ArrowLeft']) {
+                    gameState.playerX = Math.max(0, gameState.playerX - 8);
+                }
+                if (keys['ArrowRight']) {
+                    gameState.playerX = Math.min(304, gameState.playerX + 8);
+                }
+                if (keys['ArrowDown']) {
+                    gameState.stageDistance = Math.min(gameState.maxStageDistance, gameState.stageDistance + 3);
+                    gameState.courage += 0.5;
+
+                    // ハザード出現
+                    gameState.hazards.forEach(h => {
+                        if (!h.active && gameState.stageDistance >= h.startDist) {
+                            h.active = true;
+                            h.y = -30;
+                        }
+                    });
+                }
+            }
+        }
+
+        // クリック開始
+        document.getElementById('game-container').addEventListener('click', () => {
+            if (gameState.titleShown) {
+                document.getElementById('title-overlay').style.display = 'none';
+                gameState.titleShown = false;
+                gameState.hp = gameState.maxHp;
+                gameState.courage = 0;
+                startStage(0);
+            }
+        });
+
+        // フレームごと入力処理
+        setInterval(handleInput, 50);
+
+        gameLoop();
+    </script>
+</body>
+</html>

@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>バンパイアサバイバー - レベルアップ実装版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1a1a1a;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background-color: #0a0a0a;
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            cursor: crosshair;
+        }
+
+        /* HUDエリア */
+        .hud-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            pointer-events: none; /* ゲーム操作を邪魔しない */
+            z-index: 10;
+        }
+
+        /* 経験値バー */
+        .exp-container {
+            width: 100%;
+            height: 20px;
+            background-color: #333;
+            border: 2px solid #fff;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .exp-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #00bfff, #1e90ff);
+            transition: width 0.2s;
+        }
+
+        .level-badge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+            font-size: 14px;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            gap: 15px;
+        }
+
+        .info-item {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            font-weight: bold;
+            font-size: 14px;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .label { display: block; font-size: 12px; opacity: 0.8; }
+        .value { display: block; font-size: 18px; color: #00ff00; }
+
+        /* オーバーレイ画面（ゲームオーバー・レベルアップ共通） */
+        .overlay-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+
+        .hidden { display: none !important; }
+
+        /* ゲームオーバーコンテンツ */
+        .game-over-content {
+            text-align: center;
+            color: #fff;
+            background: linear-gradient(145deg, #2d2d2d, #1a1a1a);
+            padding: 40px;
+            border-radius: 20px;
+            border: 4px solid #ff4444;
+            box-shadow: 0 0 30px rgba(255, 68, 68, 0.3);
+        }
+
+        .game-over-content h1 {
+            color: #ff4444;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+
+        /* レベルアップコンテンツ */
+        .level-up-content {
+            text-align: center;
+            width: 90%;
+            max-width: 800px;
+        }
+
+        .level-up-title {
+            color: #ffd700;
+            font-size: 3em;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+
+        .card-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .skill-card {
+            background: linear-gradient(to bottom, #4a4a4a, #2a2a2a);
+            border: 3px solid #ffd700;
+            border-radius: 15px;
+            padding: 20px;
+            width: 220px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: auto;
+        }
+
+        .skill-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(255, 215, 0, 0.3);
+            background: linear-gradient(to bottom, #5a5a5a, #3a3a3a);
+        }
+
+        .skill-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .skill-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .skill-desc {
+            font-size: 0.9em;
+            color: #ccc;
+            line-height: 1.4;
+        }
+
+        /* ボタン */
+        .restart-btn {
+            margin-top: 20px;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            background: linear-gradient(to bottom, #00ff00, #008000);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 255, 0, 0.3);
+            transition: transform 0.2s;
+            pointer-events: auto;
+        }
+
+        .restart-btn:hover { transform: scale(1.05); }
+
+        /* スマホ対応 */
+        @media (max-width: 768px) {
+            .card-container { flex-direction: column; align-items: center; }
+            .skill-card { width: 100%; max-width: 300px; flex-direction: row; text-align: left; padding: 15px; }
+            .skill-icon { margin-bottom: 0; margin-right: 15px; font-size: 2.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div class="hud-layer">
+            <div class="exp-container">
+                <div id="expBar" class="exp-bar"></div>
+                <span id="levelDisplay" class="level-badge">Lv. 1</span>
+            </div>
+            
+            <div class="game-info">
+                <div class="info-item">
+                    <span class="label">スコア</span>
+                    <span id="score" class="value">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">タイム</span>
+                    <span id="time" class="value">0:00</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">HP</span>
+                    <span id="hp" class="value">100</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="levelUpScreen" class="overlay-screen hidden">
+            <div class="level-up-content">
+                <h2 class="level-up-title">LEVEL UP!</h2>
+                <div id="skillCards" class="card-container">
+                    </div>
+            </div>
+        </div>
+
+        <div id="gameOverScreen" class="overlay-screen hidden">
+            <div class="game-over-content">
+                <h1>GAME OVER</h1>
+                <p id="finalScore">スコア: 0</p>
+                <p id="finalTime">生存時間: 0秒</p>
+                <p id="finalLevel">到達レベル: 1</p>
+                <button id="restartBtn" class="restart-btn">もう一度挑戦</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 基本設定
+        // ==========================================
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // ==========================================
+        // ゲームデータ定義
+        // ==========================================
+        
+        // 習得可能なスキル一覧
+        const SKILL_POOL = [
+            {
+                id: 'attack_speed',
+                name: '連射速度アップ',
+                icon: '⚡',
+                desc: '弾を撃つ間隔が短くなります',
+                apply: (p) => { p.shootInterval = Math.max(5, p.shootInterval - 5); }
+            },
+            {
+                id: 'damage_up',
+                name: '攻撃力アップ',
+                icon: '⚔️',
+                desc: '弾のダメージが1上がります',
+                apply: (p) => { p.damage += 1; }
+            },
+            {
+                id: 'speed_up',
+                name: '移動速度アップ',
+                icon: '👟',
+                desc: 'プレイヤーの足が速くなります',
+                apply: (p) => { p.speed += 1; }
+            },
+            {
+                id: 'multi_shot',
+                name: '弾数増加',
+                icon: '🏹',
+                desc: '一度に発射する弾の数が増えます',
+                apply: (p) => { p.bulletCount += 1; }
+            },
+            {
+                id: 'bullet_size',
+                name: '弾サイズアップ',
+                icon: '💣',
+                desc: '弾が大きくなり当てやすくなります',
+                apply: (p) => { p.bulletRadius += 2; }
+            },
+            {
+                id: 'magnet',
+                name: '磁石範囲アップ',
+                icon: '🧲',
+                desc: '遠くの経験値を回収できるようになります',
+                apply: (p) => { p.magnetRadius += 30; }
+            },
+            {
+                id: 'heal',
+                name: '体力回復',
+                icon: '❤️',
+                desc: 'HPを30回復します',
+                apply: (p) => { gameState.hp = Math.min(100, gameState.hp + 30); }
+            }
+        ];
+
+        let gameState = {
+            isRunning: true,
+            isPaused: false, // レベルアップ時などに止める用
+            score: 0,
+            time: 0,
+            hp: 100,
+            level: 1,
+            exp: 0,
+            nextLevelExp: 10,
+            startTime: Date.now()
+        };
+
+        let player = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 15,
+            // 強化可能なステータス
+            speed: 4,
+            damage: 1,
+            shootInterval: 40, // フレーム数
+            bulletCount: 1,
+            bulletRadius: 5,
+            magnetRadius: 100,
+            // 内部カウンター
+            shootCooldown: 0
+        };
+
+        let enemies = [];
+        let bullets = [];
+        let gems = []; // 経験値アイテム
+        let damageTexts = []; // ダメージポップアップ
+
+        let mouseX = canvas.width / 2;
+        let mouseY = canvas.height / 2;
+
+        // ==========================================
+        // 入力処理
+        // ==========================================
+        document.addEventListener('mousemove', (e) => {
+            if (!gameState.isPaused) {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            }
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0 && !gameState.isPaused) {
+                mouseX = e.touches[0].clientX;
+                mouseY = e.touches[0].clientY;
+            }
+            e.preventDefault();
+        }, { passive: false });
+
+        // ==========================================
+        // ゲームロジック
+        // ==========================================
+
+        function createEnemy() {
+            const side = Math.floor(Math.random() * 4);
+            let x, y;
+            // 画面外からスポーン
+            const margin = 50;
+            switch (side) {
+                case 0: x = Math.random() * canvas.width; y = -margin; break;
+                case 1: x = canvas.width + margin; y = Math.random() * canvas.height; break;
+                case 2: x = Math.random() * canvas.width; y = canvas.height + margin; break;
+                case 3: x = -margin; y = Math.random() * canvas.height; break;
+            }
+
+            const hpMultiplier = 1 + (gameState.time / 60); // 1分ごとに強化
+            
+            enemies.push({
+                x: x,
+                y: y,
+                radius: 12,
+                speed: 1.5 + (gameState.time / 120),
+                hp: Math.floor(3 * hpMultiplier),
+                maxHp: Math.floor(3 * hpMultiplier),
+                expValue: 10, // 落とす経験値
+                color: `hsl(${Math.random() * 60}, 70%, 50%)`
+            });
+        }
+
+        function createGem(x, y, value) {
+            gems.push({
+                x: x,
+                y: y,
+                value: value,
+                radius: 4,
+                color: '#00bfff',
+                vx: 0,
+                vy: 0
+            });
+        }
+
+        function createDamageText(x, y, damage) {
+            damageTexts.push({
+                x: x,
+                y: y,
+                text: damage,
+                life: 30,
+                vy: -1
+            });
+        }
+
+        function shootBullet() {
+            if (enemies.length === 0) return;
+
+            // 一番近い敵を探す
+            let closest = null;
+            let minDst = Infinity;
+            enemies.forEach(e => {
+                const d = Math.hypot(e.x - player.x, e.y - player.y);
+                if (d < minDst) { minDst = d; closest = e; }
+            });
+
+            if (closest) {
+                const baseAngle = Math.atan2(closest.y - player.y, closest.x - player.x);
+                
+                // マルチショット（扇状に発射）
+                const count = player.bulletCount;
+                const spread = 0.2; // 拡散角度（ラジアン）
+                
+                for (let i = 0; i < count; i++) {
+                    // 中心を基準に角度をずらす
+                    let angle = baseAngle;
+                    if (count > 1) {
+                        angle = baseAngle - (spread * (count - 1)) / 2 + spread * i;
+                    }
+
+                    bullets.push({
+                        x: player.x,
+                        y: player.y,
+                        vx: Math.cos(angle) * 8,
+                        vy: Math.sin(angle) * 8,
+                        radius: player.bulletRadius,
+                        damage: player.damage,
+                        life: 100 // 弾の消滅時間
+                    });
+                }
+            }
+        }
+
+        // 経験値獲得とレベルアップチェック
+        function gainExp(amount) {
+            gameState.exp += amount;
+            
+            // レベルアップ判定
+            if (gameState.exp >= gameState.nextLevelExp) {
+                gameState.exp -= gameState.nextLevelExp;
+                gameState.level++;
+                gameState.nextLevelExp = Math.floor(gameState.nextLevelExp * 1.5);
+                
+                // レベルアップ画面表示
+                showLevelUp();
+            }
+            
+            updateHud();
+        }
+
+        function showLevelUp() {
+            gameState.isPaused = true;
+            const screen = document.getElementById('levelUpScreen');
+            const container = document.getElementById('skillCards');
+            container.innerHTML = '';
+
+            // ランダムに3つのスキルを選ぶ
+            const shuffled = [...SKILL_POOL].sort(() => 0.5 - Math.random());
+            const choices = shuffled.slice(0, 3);
+
+            choices.forEach(skill => {
+                const card = document.createElement('div');
+                card.className = 'skill-card';
+                card.innerHTML = `
+                    <div class="skill-icon">${skill.icon}</div>
+                    <div class="skill-name">${skill.name}</div>
+                    <div class="skill-desc">${skill.desc}</div>
+                `;
+                
+                // スマホでのタップ対応
+                const selectSkill = (e) => {
+                    e.stopPropagation(); // バブリング防止
+                    skill.apply(player);
+                    screen.classList.add('hidden');
+                    gameState.isPaused = false;
+                    
+                    // 回復以外ならテキスト表示
+                    if(skill.id !== 'heal') {
+                        createDamageText(player.x, player.y - 30, "UPGRADE!");
+                    }
+                };
+
+                card.addEventListener('click', selectSkill);
+                card.addEventListener('touchstart', selectSkill, {passive: false});
+                
+                container.appendChild(card);
+            });
+
+            screen.classList.remove('hidden');
+        }
+
+        function updateHud() {
+            // EXPバー更新
+            const percentage = (gameState.exp / gameState.nextLevelExp) * 100;
+            document.getElementById('expBar').style.width = `${percentage}%`;
+            document.getElementById('levelDisplay').textContent = `Lv. ${gameState.level}`;
+            
+            // テキスト情報
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('hp').textContent = Math.floor(gameState.hp);
+            
+            const minutes = Math.floor(gameState.time / 60);
+            const seconds = Math.floor(gameState.time % 60).toString().padStart(2, '0');
+            document.getElementById('time').textContent = `${minutes}:${seconds}`;
+        }
+
+        // ==========================================
+        // 更新ループ
+        // ==========================================
+        function update() {
+            if (!gameState.isRunning || gameState.isPaused) return;
+
+            // 時間管理
+            gameState.time = (Date.now() - gameState.startTime) / 1000;
+
+            // プレイヤー移動
+            const dx = mouseX - player.x;
+            const dy = mouseY - player.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist > 5) {
+                player.x += (dx / dist) * player.speed;
+                player.y += (dy / dist) * player.speed;
+                // 画面端制限
+                player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+                player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+            }
+
+            // 射撃
+            player.shootCooldown--;
+            if (player.shootCooldown <= 0) {
+                shootBullet();
+                player.shootCooldown = player.shootInterval;
+            }
+
+            // 弾の更新
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                let b = bullets[i];
+                b.x += b.vx;
+                b.y += b.vy;
+                b.life--;
+
+                // 画面外または寿命で削除
+                if (b.life <= 0 || b.x < -50 || b.x > canvas.width + 50 || b.y < -50 || b.y > canvas.height + 50) {
+                    bullets.splice(i, 1);
+                    continue;
+                }
+
+                // 敵との判定
+                for (let j = enemies.length - 1; j >= 0; j--) {
+                    let e = enemies[j];
+                    if (Math.hypot(b.x - e.x, b.y - e.y) < b.radius + e.radius) {
+                        e.hp -= b.damage;
+                        createDamageText(e.x, e.y, b.damage);
+                        
+                        // 貫通しないなら弾を消す
+                        bullets.splice(i, 1);
+                        
+                        if (e.hp <= 0) {
+                            // 敵死亡処理
+                            gameState.score += 10;
+                            createGem(e.x, e.y, e.expValue); // ジェムドロップ
+                            enemies.splice(j, 1);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // 敵の更新
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                let e = enemies[i];
+                const angle = Math.atan2(player.y - e.y, player.x - e.x);
+                e.x += Math.cos(angle) * e.speed;
+                e.y += Math.sin(angle) * e.speed;
+
+                // プレイヤー接触
+                if (Math.hypot(player.x - e.x, player.y - e.y) < player.radius + e.radius) {
+                    gameState.hp -= 0.5; // 接触ダメージ
+                    if (gameState.hp <= 0) gameOver();
+                }
+            }
+
+            // ジェム（経験値）の更新
+            for (let i = gems.length - 1; i >= 0; i--) {
+                let g = gems[i];
+                const d = Math.hypot(player.x - g.x, player.y - g.y);
+
+                // 磁石範囲内なら吸い寄せる
+                if (d < player.magnetRadius) {
+                    const angle = Math.atan2(player.y - g.y, player.x - g.x);
+                    g.vx += Math.cos(angle) * 0.5; // 加速
+                    g.vy += Math.sin(angle) * 0.5;
+                    g.x += g.vx;
+                    g.y += g.vy;
+                }
+
+                // 獲得判定
+                if (d < player.radius + 10) {
+                    gainExp(g.value);
+                    gems.splice(i, 1);
+                }
+            }
+
+            // ダメージテキスト更新
+            for (let i = damageTexts.length - 1; i >= 0; i--) {
+                let t = damageTexts[i];
+                t.y += t.vy;
+                t.life--;
+                if (t.life <= 0) damageTexts.splice(i, 1);
+            }
+
+            // 敵スポーン管理
+            if (Math.random() < 0.02 + (gameState.time / 3000)) {
+                createEnemy();
+            }
+
+            updateHud();
+        }
+
+        // ==========================================
+        // 描画ループ
+        // ==========================================
+        function draw() {
+            // 背景（トレイル効果なしでクリア）
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // グリッド線（見た目の装飾）
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            const gridSize = 50;
+            const offsetX = -player.x % gridSize;
+            const offsetY = -player.y % gridSize;
+            
+            // 相対移動しているように見せるため少し工夫（簡易版）
+            for(let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for(let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+
+            // ジェム
+            gems.forEach(g => {
+                ctx.save();
+                ctx.translate(g.x, g.y);
+                ctx.rotate(Date.now() / 200);
+                ctx.fillStyle = g.color;
+                ctx.beginPath();
+                // ひし形を描画
+                ctx.moveTo(0, -g.radius*1.5);
+                ctx.lineTo(g.radius, 0);
+                ctx.lineTo(0, g.radius*1.5);
+                ctx.lineTo(-g.radius, 0);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // 敵
+            enemies.forEach(e => {
+                ctx.fillStyle = e.color;
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            });
+
+            // 弾
+            ctx.fillStyle = '#ffff00';
+            bullets.forEach(b => {
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // プレイヤー
+            ctx.fillStyle = '#00ff00';
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#004400';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // 磁石範囲（デバッグ用：コメントアウト解除で見える）
+            // ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            // ctx.beginPath(); ctx.arc(player.x, player.y, player.magnetRadius, 0, Math.PI*2); ctx.stroke();
+
+            // ダメージテキスト
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            damageTexts.forEach(t => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${t.life / 30})`;
+                ctx.fillText(t.text, t.x, t.y);
+            });
+        }
+
+        // ==========================================
+        // ゲーム管理
+        // ==========================================
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver() {
+            gameState.isRunning = false;
+            document.getElementById('gameOverScreen').classList.remove('hidden');
+            document.getElementById('finalScore').textContent = `最終スコア: ${gameState.score}`;
+            document.getElementById('finalTime').textContent = `生存時間: ${Math.floor(gameState.time)}秒`;
+            document.getElementById('finalLevel').textContent = `到達レベル: ${gameState.level}`;
+        }
+
+        function resetGame() {
+            gameState = {
+                isRunning: true,
+                isPaused: false,
+                score: 0,
+                time: 0,
+                hp: 100,
+                level: 1,
+                exp: 0,
+                nextLevelExp: 10,
+                startTime: Date.now()
+            };
+
+            player.x = canvas.width / 2;
+            player.y = canvas.height / 2;
+            player.speed = 4;
+            player.damage = 1;
+            player.shootInterval = 40;
+            player.bulletCount = 1;
+            player.bulletRadius = 5;
+            player.magnetRadius = 100;
+            player.shootCooldown = 0;
+
+            enemies = [];
+            bullets = [];
+            gems = [];
+            damageTexts = [];
+
+            document.getElementById('gameOverScreen').classList.add('hidden');
+        }
+
+        document.getElementById('restartBtn').addEventListener('click', resetGame);
+
+        // スタート
+        gameLoop();
+
+    </script>
+</body>
+</html>

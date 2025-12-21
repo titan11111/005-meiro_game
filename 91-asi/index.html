@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>関節構築シミュレーター（角度調整テスト）</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>🔧 関節構築シミュレーター（角度調整テスト）</h1>
+  <p>クリックで棒を作成。角度調整モードでは関節をクリックして角度を変えられます。</p>
+
+  <div id="toolbar">
+    <button id="resetBtn">リセット</button>
+    <button id="jointModeBtn">関節モード切替</button>
+    <button id="angleModeBtn">角度調整モード</button>
+  </div>
+
+  <canvas id="canvas" width="800" height="500"></canvas>
+
+  <!-- 角度調整UI（最初は非表示） -->
+  <div id="angleControl" style="display:none;">
+    <h3>角度調整</h3>
+    <input type="range" id="angleSlider" min="-180" max="180" value="0">
+    <span id="angleValue">0°</span><br>
+    <button id="closeAngleBtn">閉じる</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

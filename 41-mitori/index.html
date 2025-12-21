@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>家の見取り図 3D — 一人称探索ホラー（統合・モバイル簡易対応）</title>
+<style>
+:root{
+  --bg:#0d0f12;--fg:#e6e6e6;--muted:#bbbbbb;--accent:#c0392b;--panel:#12151a;--line:#2a2f36;--hint:#92a3ff;
+}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Noto Sans JP",sans-serif;overflow:hidden;}
+/* Loading */
+.loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:1;transition:opacity .5s}
+.loading-screen.hidden{opacity:0;pointer-events:none}
+.loading-content{text-align:center;max-width:420px}
+.loading-bar{width:100%;height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:14px 0}
+.loading-progress{height:100%;background:linear-gradient(90deg,var(--accent),var(--hint));width:0%;animation:lp 2.2s ease-out forwards}
+@keyframes lp{0%{width:0}100%{width:100%}}
+/* Layout */
+.wrap{display:grid;grid-template-columns:1.6fr .6fr;gap:18px;width:100vw;height:100vh;padding:16px;box-sizing:border-box;display:none}
+header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:linear-gradient(180deg,#0f1318,#0b0e12);border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+header h1{font-size:17px;margin:0;font-weight:600;color:#e8e8e8;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+header .status{font-size:13px;opacity:.9;color:#d0d0d0;font-weight:500;display:flex;gap:16px;align-items:center}
+header .status span{color:#fff;font-weight:600;padding:2px 6px;background:rgba(255,255,255,.1);border-radius:4px}
+header .status #desync{color:var(--accent);animation:desyncPulse 2s ease-in-out infinite}
+@keyframes desyncPulse{0%,100%{opacity:1}50%{opacity:.7}}
+.goal-panel{position:absolute;top:70px;right:16px;background:rgba(12,17,22,.95);border:2px solid var(--line);border-radius:12px;padding:14px 18px;max-width:320px;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.6);backdrop-filter:blur(8px);opacity:0;transform:translateY(-10px);transition:all .3s}
+.goal-panel.visible{opacity:1;transform:translateY(0)}
+.goal-panel h3{font-size:15px;margin:0 0 10px 0;color:#e0e0e0;font-weight:600;display:flex;align-items:center;gap:8px}
+.goal-panel h3::before{content:"🎯";font-size:18px}
+.goal-panel ul{margin:0;padding-left:20px;font-size:13px;line-height:1.8;color:#b8b8b8}
+.goal-panel li{margin:4px 0}
+.goal-panel li.completed{color:#92a3ff;text-decoration:line-through;opacity:.6}
+.goal-panel .progress-bar{width:100%;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;margin-top:10px}
+.goal-panel .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--hint));transition:width .3s;border-radius:3px}
+/* 3D */
+.main-3d{position:relative;width:100%;height:100%;min-height:0;background:linear-gradient(180deg,#0e1319,#0a0d11);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.03) inset}
+#game3d{width:100%!important;height:100%!important;display:block;background:#000}
+.controls-overlay{position:absolute;inset:0;pointer-events:none;z-index:10}
+.crosshair{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.95);font-size:24px;font-weight:700;text-shadow:0 0 8px rgba(0,0,0,.9),0 0 4px rgba(255,255,255,.3);transition:all .2s;z-index:15}
+.crosshair.has-target{color:var(--hint);font-size:28px;text-shadow:0 0 12px rgba(146,163,255,.8),0 0 6px rgba(255,255,255,.5);animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:translate(-50%,-50%) scale(1)}50%{opacity:.8;transform:translate(-50%,-50%) scale(1.1)}}
+.movement-hint{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);padding:10px 18px;border-radius:10px;border:1px solid var(--line);box-shadow:0 4px 12px rgba(0,0,0,.5);transition:opacity .3s}
+.movement-hint.hidden{opacity:0;pointer-events:none}
+.hint-text{font-size:13px;color:#d0d0d0;text-align:center;font-weight:500}
+.run-indicator{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(192,57,43,.8);padding:6px 12px;border-radius:6px;font-size:11px;color:#fff;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none;z-index:25}
+.run-indicator.visible{opacity:1}
+.lock-hint{position:absolute;top:16px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);padding:8px 14px;border-radius:10px;border:1px solid var(--line);font-size:13px;color:#d0d0d0;box-shadow:0 2px 8px rgba(0,0,0,.4);font-weight:500}
+/* Interact prompt */
+.interaction-prompt{position:absolute;top:50%;left:50%;transform:translate(-50%,-120px);background:rgba(0,0,0,.92);padding:14px 24px;border-radius:10px;border:2px solid var(--accent);font-size:15px;font-weight:700;color:#fff;text-align:center;opacity:0;transition:all .25s;z-index:20;pointer-events:none;box-shadow:0 4px 20px rgba(192,57,43,.4),0 0 0 1px rgba(255,255,255,.1) inset;backdrop-filter:blur(4px)}
+.interaction-prompt.visible{opacity:1;transform:translate(-50%,-130px);animation:promptPulse 2s ease-in-out infinite}
+@keyframes promptPulse{0%,100%{box-shadow:0 4px 20px rgba(192,57,43,.4),0 0 0 1px rgba(255,255,255,.1) inset}50%{box-shadow:0 4px 30px rgba(192,57,43,.6),0 0 0 2px rgba(255,255,255,.2) inset}}
+.distance-indicator{position:absolute;top:50%;left:50%;transform:translate(-50%,-80px);font-size:11px;color:var(--muted);opacity:0;transition:opacity .2s;z-index:19;pointer-events:none;text-align:center}
+.distance-indicator.visible{opacity:.7}
+/* Map */
+.map{padding:14px;display:grid;grid-template-rows:auto 1fr auto auto;background:linear-gradient(180deg,#0e1319,#0a0d11);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.03) inset}
+.map h2{font-size:16px;margin:0 0 12px 0;color:#e0e0e0;font-weight:600;display:flex;align-items:center;gap:8px}
+.map h2::before{content:"🗺️";font-size:18px}
+#blueprint{width:100%;height:280px;background:#0a0d11;border-radius:12px;border:2px solid #2a3f4f;box-shadow:inset 0 2px 8px rgba(0,0,0,.4);transition:border-color .3s}
+#blueprint:hover{border-color:#3a5f6f}
+.legend{display:flex;gap:10px;flex-wrap:wrap;padding-top:10px;font-size:12px;color:#c0c0c0}
+.legend span{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid rgba(255,255,255,.05);transition:all .2s;cursor:help}
+.legend span:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);transform:translateY(-1px)}
+.chip{width:12px;height:12px;border-radius:3px;display:inline-block;border:1px solid rgba(255,255,255,.2);box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .2s}
+.legend span:hover .chip{transform:scale(1.2)}
+.inventory{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;font-size:13px;color:#c0c0c0;background:rgba(255,255,255,.02);border-radius:8px;border:1px solid rgba(255,255,255,.05);margin-top:8px;transition:all .3s}
+.inventory:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1)}
+.inventory span{color:#d0d0d0;font-weight:500}
+.room-info{background:rgba(18,21,26,.85);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:10px;box-shadow:0 2px 8px rgba(0,0,0,.3);transition:all .3s;position:relative;overflow:hidden}
+.room-info::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.05),transparent);transition:left .5s}
+.room-info:hover::before{left:100%}
+.room-info:hover{border-color:rgba(146,163,255,.3);box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.room-info h3{font-size:17px;margin:0 0 10px 0;color:#e0e0e0;font-weight:600;display:flex;align-items:center;gap:8px}
+.room-info h3::before{content:"🚪";font-size:20px}
+.room-info p{font-size:13px;line-height:1.7;margin:0;color:#b8b8b8}
+/* Screen FX + Toast */
+.crt{position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0,rgba(255,255,255,.02) 1px,rgba(0,0,0,0) 2px),radial-gradient(ellipse at center,rgba(255,255,255,.04),transparent 70%);mix-blend-mode:soft-light;opacity:.4;animation:flicker 6s linear infinite;z-index:5}
+@keyframes flicker{0%{opacity:.35}50%{opacity:.45}100%{opacity:.35}}
+.toast{position:fixed;left:50%;top:80px;transform:translateX(-50%);background:rgba(12,17,22,.96);border:1px solid var(--line);color:#fff;padding:14px 20px;border-radius:12px;font-size:15px;font-weight:600;opacity:0;transition:opacity .3s,transform .3s;z-index:200;box-shadow:0 6px 24px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.05) inset;backdrop-filter:blur(8px);max-width:90%;text-align:center;animation:toastSlideIn .4s ease-out}
+@keyframes toastSlideIn{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(10px)}}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(10px)}
+/* Help menu */
+.help-menu{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.help-menu.visible{display:flex}
+.help-content{background:linear-gradient(180deg,#0f1318,#0b0e12);border:2px solid var(--line);border-radius:16px;padding:24px;max-width:500px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.6)}
+.help-content h2{font-size:20px;margin:0 0 16px 0;color:#e0e0e0;font-weight:600}
+.help-content h3{font-size:16px;margin:16px 0 8px 0;color:#d0d0d0;font-weight:600}
+.help-content p,.help-content li{font-size:14px;line-height:1.6;color:#b8b8b8;margin:4px 0}
+.help-content ul{margin:8px 0;padding-left:20px}
+.help-content kbd{background:rgba(255,255,255,.1);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:12px;border:1px solid rgba(255,255,255,.2)}
+.close-help{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.1);border:1px solid var(--line);color:var(--fg);padding:8px 12px;border-radius:8px;cursor:pointer;font-size:14px;transition:all .2s}
+.close-help:hover{background:rgba(255,255,255,.15)}
+/* Mobile controls (十字キー形式) */
+.mobile-controls{position:absolute;inset:auto 0 12px 0;display:none;flex-direction:column;align-items:center;gap:12px;padding:0 16px;pointer-events:auto;z-index:30}
+.dpad-wrapper{display:flex;flex-direction:column;align-items:center;gap:4px}
+.dpad-row{display:flex;gap:4px;justify-content:center}
+.dpad{display:grid;grid-template-columns:repeat(3,60px);grid-template-rows:repeat(3,60px);gap:4px;background:rgba(0,0,0,.4);padding:4px;border-radius:50px;border:2px solid rgba(255,255,255,.2);backdrop-filter:blur(8px);box-shadow:0 4px 16px rgba(0,0,0,.5)}
+.dpad button{background:rgba(255,255,255,.2);color:#fff;border:2px solid rgba(255,255,255,.3);border-radius:50%;font-size:24px;font-weight:700;transition:all .12s;box-shadow:0 2px 8px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.1);backdrop-filter:blur(4px);touch-action:manipulation;display:flex;align-items:center;justify-content:center}
+.dpad button:active{background:rgba(255,255,255,.35);transform:scale(.92);box-shadow:0 1px 4px rgba(0,0,0,.5),inset 0 2px 4px rgba(0,0,0,.2)}
+.dpad .sp{visibility:hidden;pointer-events:none}
+.dpad button[data-dir="up"]{grid-column:2;grid-row:1}
+.dpad button[data-dir="left"]{grid-column:1;grid-row:2}
+.dpad button[data-dir="down"]{grid-column:2;grid-row:3}
+.dpad button[data-dir="right"]{grid-column:3;grid-row:2}
+#touchInteract{background:linear-gradient(135deg,#c0392b,#a93226);color:#fff;border:2px solid rgba(255,255,255,.3);border-radius:12px;padding:16px 28px;font-size:16px;font-weight:700;transition:all .15s;box-shadow:0 4px 16px rgba(192,57,43,.5),inset 0 1px 0 rgba(255,255,255,.2);backdrop-filter:blur(6px);touch-action:manipulation;min-width:140px}
+#touchInteract:active{transform:scale(.95);box-shadow:0 2px 8px rgba(192,57,43,.6),inset 0 2px 4px rgba(0,0,0,.3);background:linear-gradient(135deg,#a93226,#922b21)}
+@media (max-width:960px){
+  .wrap{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
+  #blueprint{height:220px}
+}
+@media (max-width:600px){
+  .wrap{padding:8px;gap:12px}
+  .movement-hint{bottom:10px;padding:6px 12px}
+  #blueprint{height:160px}
+  header h1{font-size:14px}
+  header .status{font-size:11px}
+}
+</style>
+</head>
+<body>
+  <!-- Loading -->
+  <div id="loading" class="loading-screen">
+    <div class="loading-content">
+      <h2>家の見取り図 3D</h2>
+      <div class="loading-bar"><div class="loading-progress"></div></div>
+      <p>3D世界を構築中…</p>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="wrap" id="gameWrap">
+    <header>
+      <h1>家の見取り図 3D <span style="font-weight:400;opacity:.65">— 図面は更新されます</span></h1>
+      <div class="status">章: <span id="chapter">1</span> / 不一致度: <span id="desync">0%</span></div>
+    </header>
+
+    <section class="main-3d">
+      <canvas id="game3d"></canvas>
+
+      <div class="controls-overlay">
+        <div class="lock-hint" id="lockHint">クリックで視点ロック（解除: Esc）</div>
+        <div class="crosshair">+</div>
+        <div class="movement-hint" id="movementHint"><div class="hint-text">WASD: 移動 / Shift: 走る / マウス: 視点 / E: 調べる<br>PageUp/Down: マウス感度調整</div></div>
+        <div class="run-indicator" id="runIndicator">🏃 走る</div>
+      </div>
+
+      <!-- Interact prompt -->
+      <div id="interaction" class="interaction-prompt"><span id="interactionText">Eキーで調べる</span></div>
+      <div id="distanceIndicator" class="distance-indicator"></div>
+
+      <!-- Mobile controls (十字キー形式) -->
+      <div id="mobileControls" class="mobile-controls" aria-hidden="true">
+        <div class="dpad-wrapper">
+          <div class="dpad">
+            <div class="sp"></div>
+            <button data-dir="up" aria-label="北へ">↑</button>
+            <div class="sp"></div>
+            <button data-dir="left" aria-label="西へ">←</button>
+            <div class="sp"></div>
+            <button data-dir="right" aria-label="東へ">→</button>
+            <div class="sp"></div>
+            <button data-dir="down" aria-label="南へ">↓</button>
+            <div class="sp"></div>
+          </div>
+        </div>
+        <button id="touchInteract" aria-label="調べる">🔍 調べる</button>
+      </div>
+    </section>
+
+    <aside class="map">
+      <h2>家の見取り図</h2>
+      <canvas id="blueprint" width="500" height="360" aria-label="見取り図"></canvas>
+      <div class="legend">
+        <span><i class="chip" style="background:#14202b"></i> 既知の部屋</span>
+        <span><i class="chip" style="background:#243447"></i> 不一致の疑い</span>
+        <span><i class="chip" style="background:#5b1a16"></i> 赤い部屋</span>
+        <span><i class="chip" style="background:#1e2f22"></i> あなた</span>
+      </div>
+      <div class="inventory">
+        <div>所持：<span id="inventory">古い見取り図</span></div>
+        <div id="clock">00:00</div>
+      </div>
+      <div class="room-info">
+        <h3 id="roomTitle">玄関</h3>
+        <p id="roomDescription">湿った靴の匂い。傘立てには折れた骨のような傘。</p>
+      </div>
+    </aside>
+  </div>
+
+  <div class="crt"></div>
+  <div id="toast" class="toast" role="status" aria-live="assertive"></div>
+  
+  <!-- Goal Panel -->
+  <div id="goalPanel" class="goal-panel">
+    <h3>目標</h3>
+    <ul id="goalList">
+      <li id="goal1">家を探索して不一致を発見する</li>
+      <li id="goal2">「正しい見取り図」を手に入れる</li>
+      <li id="goal3">玄関に戻って脱出する</li>
+    </ul>
+    <div class="progress-bar">
+      <div id="goalProgress" class="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+  
+  <!-- Help Menu -->
+  <div id="helpMenu" class="help-menu">
+    <div class="help-content">
+      <button class="close-help" onclick="document.getElementById('helpMenu').classList.remove('visible')">× 閉じる</button>
+      <h2>操作方法</h2>
+      <h3>PC操作</h3>
+      <ul>
+        <li><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd>: 移動</li>
+        <li><kbd>Shift</kbd>: 走る（移動速度が上がります）</li>
+        <li>マウス: 視点操作（画面クリックでロック）</li>
+        <li><kbd>PageUp</kbd>/<kbd>PageDown</kbd>: マウス感度調整</li>
+        <li><kbd>E</kbd>: 調べる（インタラクション範囲: 4.5m）</li>
+        <li><kbd>Esc</kbd>: 視点ロック解除</li>
+        <li><kbd>H</kbd>: このヘルプを表示/非表示</li>
+      </ul>
+      <h3>モバイル操作</h3>
+      <ul>
+        <li>矢印ボタン: 移動</li>
+        <li>「調べる」ボタン: 近くのオブジェクトを調べる</li>
+      </ul>
+      <h3>ゲームについて</h3>
+      <p>家の中を探索し、見取り図と実際の構造の不一致を発見してください。不一致度が上がると、世界が歪み始めます。</p>
+      <h3>目標</h3>
+      <ul>
+        <li>家を探索して3つ以上の部屋を発見する</li>
+        <li>不一致度60%以上で冷蔵庫から「正しい見取り図」を手に入れる</li>
+        <li>玄関に戻って脱出する（脱出エンド）</li>
+        <li>または、探索を続けて不一致度を上げると別の結末が…</li>
+      </ul>
+      <h3>部屋の接続図</h3>
+      <div style="font-family:monospace;font-size:12px;line-height:1.6;background:rgba(0,0,0,.3);padding:12px;border-radius:8px;overflow-x:auto">
+        <div style="margin-bottom:8px"><strong>1階:</strong></div>
+        <div>玄関 → 廊下 → 居間 → 台所 → 物置</div>
+        <div style="margin-left:40px">↓</div>
+        <div style="margin-left:40px">階段</div>
+        <div style="margin-top:8px;margin-bottom:8px"><strong>2階:</strong></div>
+        <div style="margin-left:40px">二階廊下 → 寝室 / 子ども部屋</div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.1)">
+          <strong>重要:</strong><br>
+          • 台所の冷蔵庫（不一致度60%以上）→ 正しい見取り図<br>
+          • 居間のテレビ → 赤い部屋出現<br>
+          • 玄関に戻る → 脱出成功
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+  (()=>{"use strict";
+
+  /* ======== State ======== */
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || matchMedia("(pointer: coarse)").matches;
+  const state = {
+    chapter:1, steps:0, desync:0,
+    currentRoom:'玄関',
+    visited:new Set(['玄関']),
+    inventory:['古い見取り図'],
+    clock:23*60+40,
+    gameEnded:false,
+    yaw:0, pitch:0, locked:false,
+    isRunning:false,
+    mouseSensitivity:0.003,
+    cameraBobOffset:0,
+    cameraBobTime:0
+  };
+
+  /* ======== Rooms (+ more furniture) ======== */
+  const rooms = {
+    '玄関':{
+      position3D:{x:0,y:0,z:0},
+      exits:{東:'廊下'},
+      description:'湿った靴の匂い。傘立てには折れた骨のような傘。壁のフックに見取り図が掛かっている。',
+      color:0x2a3f54,
+      furniture:[
+        {name:'フックの見取り図',kind:'prop',pos:[-2.6,0,-3.2],size:[0.9,0.6,0.05],action:'mapHook'},
+        {name:'下駄箱',kind:'box',pos:[2.4,0,-2.4],size:[2.2,1.0,0.6],action:'shoeBox'},
+        {name:'姿見の鏡',kind:'prop',pos:[0,0,3.7],size:[0.8,2.0,0.05],action:'mirror'},
+        {name:'古い電話',kind:'box',pos:[-2.0,0,0.8],size:[0.5,0.3,0.5],action:'oldPhone'}
+      ]
+    },
+    '廊下':{
+      position3D:{x:10,y:0,z:0},
+      exits:{西:'玄関',東:'居間',南:'階段'},
+      description:'細い廊下。壁紙がところどころ浮いている。天井から低い音。',
+      color:0x1a2f3f,
+      furniture:[
+        {name:'額縁',kind:'prop',pos:[0,0,-3.8],size:[0.7,0.5,0.05],action:'frame'},
+        {name:'傘立て',kind:'box',pos:[-3.4,0,2.6],size:[0.6,0.8,0.6],action:'umbrella'},
+        {name:'掛け時計',kind:'prop',pos:[3.6,1.4,0],size:[0.4,0.4,0.05],action:'clock'}
+      ]
+    },
+    '居間':{
+      position3D:{x:20,y:0,z:0},
+      exits:{西:'廊下',南:'台所'},
+      description:'薄暗い居間。テレビは砂嵐。テーブルにコップの輪染み。',
+      color:0x3f2a1a,
+      furniture:[
+        {name:'テレビ',kind:'box',pos:[0,0,-3.1],size:[1.2,0.9,0.4],action:'tv'},
+        {name:'テーブル',kind:'box',pos:[0,0,0],size:[1.8,0.5,1.4],action:'table'},
+        {name:'ソファ',kind:'box',pos:[-2.2,0,2.0],size:[2.6,1.0,1.2],action:'sofa'},
+        {name:'本棚',kind:'box',pos:[2.6,0,2.2],size:[1.4,2.0,0.6],action:'bookshelf'}
+      ]
+    },
+    '台所':{
+      position3D:{x:20,y:0,z:10},
+      exits:{北:'居間',西:'物置'},
+      description:'流しに水が残っている。冷蔵庫が間欠的に唸る。',
+      color:0x2f3f2a,
+      furniture:[
+        {name:'冷蔵庫',kind:'box',pos:[2.6,0,-2.2],size:[1.2,2.0,1.0],action:'fridge'},
+        {name:'流し',kind:'box',pos:[-2.6,0,-2.2],size:[2.0,0.9,1.0],action:'sink'},
+        {name:'包丁立て',kind:'prop',pos:[-2.1,0,-1.6],size:[0.3,0.5,0.3],action:'knifeStand'},
+        {name:'食器棚',kind:'box',pos:[0,0,2.6],size:[2.2,1.8,0.6],action:'cupboard'}
+      ]
+    },
+    '物置':{
+      position3D:{x:10,y:0,z:10},
+      exits:{東:'台所'},
+      description:'段ボールが積まれている。見取り図の予備が散乱。',
+      color:0x3f3f2a,
+      furniture:[
+        {name:'段ボール',kind:'box',pos:[0,0,0.8],size:[2.2,1.4,1.8],action:'boxes'},
+        {name:'古いラジオ',kind:'box',pos:[-1.8,0,-1.2],size:[0.8,0.5,0.5],action:'radio'},
+        {name:'棚',kind:'box',pos:[2.4,0,2.0],size:[1.6,2.0,0.6],action:'shelf'}
+      ]
+    },
+    '階段':{
+      position3D:{x:10,y:0,z:15},
+      exits:{北:'廊下'},
+      description:'踏むたびに鳴る。二段目だけ音がしない。',
+      color:0x4a3a2a,
+      furniture:[
+        {name:'階段（上る）',kind:'box',pos:[0,0,1.6],size:[1.8,1.2,2.8],action:'stairsUp'},
+        {name:'手すり',kind:'prop',pos:[-3.6,0,0],size:[0.2,2.2,3.6],action:'railing'}
+      ]
+    },
+    '二階廊下':{
+      position3D:{x:10,y:5,z:15},
+      exits:{東:'寝室',西:'子ども部屋'},
+      description:'二階の廊下は異様に長い。窓の外は月明かり。',
+      color:0x2a2a4a,
+      furniture:[
+        {name:'階段（下りる）',kind:'box',pos:[0,0,1.6],size:[1.8,1.2,2.8],action:'stairsDown'},
+        {name:'花瓶',kind:'box',pos:[1.8,0,0.8],size:[0.4,0.8,0.4],action:'vase'},
+        {name:'窓',kind:'prop',pos:[0,1.2,-3.8],size:[2.0,1.2,0.05],action:'window'}
+      ]
+    },
+    '寝室':{
+      position3D:{x:20,y:5,z:15},
+      exits:{西:'二階廊下'},
+      description:'ベッドが一つ。掛け布団は人の形で膨らんでいる。',
+      color:0x4a2a3a,
+      furniture:[
+        {name:'ベッド',kind:'box',pos:[0,0,0.2],size:[2.6,0.8,2.0],action:'bed'},
+        {name:'クローゼット',kind:'box',pos:[-2.8,0,2.4],size:[1.6,2.2,0.8],action:'closet'},
+        {name:'ランプ',kind:'box',pos:[1.6,0,-0.2],size:[0.4,0.9,0.4],action:'lamp'}
+      ]
+    },
+    '子ども部屋':{
+      position3D:{x:0,y:5,z:15},
+      exits:{東:'二階廊下'},
+      description:'壁に落書き。背の高い影と、赤い四角。',
+      color:0x3a2a4a,
+      furniture:[
+        {name:'おもちゃ箱',kind:'box',pos:[-1.6,0,0.6],size:[1.2,0.8,1.0],action:'toybox'},
+        {name:'机',kind:'box',pos:[1.6,0,0.2],size:[1.6,0.8,0.9],action:'desk'},
+        {name:'落書きの壁',kind:'prop',pos:[0,0,-3.8],size:[2.2,1.2,0.05],action:'graffiti'}
+      ]
+    }
+  };
+
+  /* ======== Elements ======== */
+  const el = {
+    loading:document.getElementById('loading'),
+    gameWrap:document.getElementById('gameWrap'),
+    game3d:document.getElementById('game3d'),
+    roomTitle:document.getElementById('roomTitle'),
+    roomDescription:document.getElementById('roomDescription'),
+    blueprint:document.getElementById('blueprint'),
+    chapter:document.getElementById('chapter'),
+    desync:document.getElementById('desync'),
+    inventory:document.getElementById('inventory'),
+    clock:document.getElementById('clock'),
+    toast:document.getElementById('toast'),
+    interaction:document.getElementById('interaction'),
+    interactionText:document.getElementById('interactionText'),
+    distanceIndicator:document.getElementById('distanceIndicator'),
+    lockHint:document.getElementById('lockHint'),
+    movementHint:document.getElementById('movementHint'),
+    runIndicator:document.getElementById('runIndicator'),
+    mobileControls:document.getElementById('mobileControls'),
+    touchInteract:document.getElementById('touchInteract'),
+    helpMenu:document.getElementById('helpMenu'),
+    crosshair:document.querySelector('.crosshair'),
+    goalPanel:document.getElementById('goalPanel'),
+    goalList:document.getElementById('goalList'),
+    goalProgress:document.getElementById('goalProgress')
+  };
+
+  /* ======== Three.js ======== */
+  let scene,camera,renderer;
+  const roomGroups = {};
+  const interactables = {};
+  const raycaster = new THREE.Raycaster();
+  const tmpV3 = new THREE.Vector3();
+  let keys = Object.create(null);
+  let lastBlueprintGlitchAt = 0;
+  // 3D改善用変数
+  const dynamicLights = [];
+  const particleSystems = [];
+  let hoveredObject = null;
+
+  /* ======== Audio (system-like) ======== */
+  let audioCtx = null;
+  function ensureAudio(){
+    try{
+      if(!audioCtx){
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new Ctx();
+      }
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+    }catch(e){ /* 無音でも動作可能 */ }
+  }
+  function beep(type='notify', dur=0.25, vol=0.18){
+    if(!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.connect(g).connect(audioCtx.destination);
+    const t = audioCtx.currentTime;
+    let f = 660;
+    let wave = 'sine';
+    if(type==='chime'){ f=880; wave='triangle'; }
+    if(type==='buzz'){ f=120; wave='square'; vol=0.12; }
+    osc.type = wave;
+    osc.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    osc.start(t); osc.stop(t+dur);
+  }
+
+  /* ======== Utils ======== */
+  const wait = (ms)=>new Promise(r=>setTimeout(r,ms));
+  const showMessage=(m)=>{el.toast.textContent=m;el.toast.classList.remove('show');setTimeout(()=>{el.toast.classList.add('show');},10);setTimeout(()=>el.toast.classList.remove('show'),2000);};
+  const showInteraction=(t)=>{el.interactionText.textContent=t;el.interaction.classList.add('visible');};
+  const hideInteraction=()=>el.interaction.classList.remove('visible');
+
+  /* ======== 3D init ======== */
+  function init3D(){
+    scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x000000, 10, 50);
+
+    // キャンバスの実際のサイズを取得（表示後に再計算）
+    const updateCanvasSize = ()=>{
+      const rect = el.game3d.getBoundingClientRect();
+      const width = rect.width || el.game3d.clientWidth || window.innerWidth;
+      const height = rect.height || el.game3d.clientHeight || window.innerHeight;
+      return {width, height};
+    };
+    
+    const {width, height} = updateCanvasSize();
+    const aspect = width / height || 16/9;
+
+    // バイオハザード風の視野角設定（70度でより自然な視野）
+    // バイオハザード風の視野角設定（70度でより自然な視野）
+    camera = new THREE.PerspectiveCamera(70, aspect, 0.1, 200);
+    // バイオハザード風のキャラクター視点（立っている高さ: 1.6m）
+    camera.position.set(0,1.6,0);
+
+    renderer = new THREE.WebGLRenderer({canvas:el.game3d, antialias:true});
+    renderer.setSize(width, height);
+    renderer.setClearColor(0x000000);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.8;
+
+    // 改善1: 動的ライティングシステム（薄暗いレベルに調整）
+    const amb = new THREE.AmbientLight(0x404040, .55); 
+    amb.name = 'ambient'; scene.add(amb);
+    
+    const spot = new THREE.SpotLight(0xffffff, 1.4, 24, Math.PI/6, 0.5);
+    spot.position.set(0,0,0); spot.castShadow = true; 
+    spot.name = 'playerLight'; camera.add(spot); scene.add(camera);
+    
+    // 部屋ごとのポイントライトを追加（明るさを上げる）
+    Object.entries(rooms).forEach(([name,d])=>{
+      const roomLight = new THREE.PointLight(d.color, 0.5, 12);
+      roomLight.position.set(d.position3D.x, 2.5, d.position3D.z);
+      roomLight.name = `roomLight_${name}`;
+      scene.add(roomLight);
+      dynamicLights.push({light:roomLight, room:name, baseIntensity:0.5, baseColor:d.color});
+    });
+
+    createRooms();
+    initParticleSystem();
+    movePlayerToRoom('玄関','東',true);
+    updateLighting();
+  }
+
+  function createRooms(){
+    Object.entries(rooms).forEach(([name,d])=>{
+      const g = new THREE.Group();
+      // 改善2: MeshStandardMaterialでよりリアルなマテリアル（薄暗いレベルに調整）
+      // Floor
+      const floorMat = new THREE.MeshStandardMaterial({
+        color:d.color,
+        transparent:true,
+        opacity:.9,
+        roughness:0.8,
+        metalness:0.1,
+        emissive:new THREE.Color(d.color).multiplyScalar(0.08)
+      });
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(8,8), floorMat);
+      floor.rotation.x = -Math.PI/2; floor.receiveShadow=true; g.add(floor);
+      
+      // Walls
+      const wallGeo = new THREE.PlaneGeometry(8,3);
+      const wallMat = new THREE.MeshStandardMaterial({
+        color:d.color,
+        transparent:true,
+        opacity:.75,
+        roughness:0.7,
+        metalness:0.05,
+        emissive:new THREE.Color(d.color).multiplyScalar(0.06)
+      });
+      const walls = [
+        [0,1.5,-4,0], [0,1.5,4,Math.PI], [4,1.5,0,-Math.PI/2], [-4,1.5,0,Math.PI/2]
+      ];
+      for(const [x,y,z,ry] of walls){ const w = new THREE.Mesh(wallGeo,wallMat); w.position.set(x,y,z); w.rotation.y=ry; g.add(w); }
+
+      // Furniture / props - 改善2: より詳細なマテリアル設定
+      const list=[];
+      (d.furniture||[]).forEach(f=>{
+        const geo = new THREE.BoxGeometry(f.size[0], f.size[1], f.size[2]);
+        const baseColor = f.kind==='prop' ? 0x555566 : 0x444444;
+        const mat = new THREE.MeshStandardMaterial({
+          color:baseColor,
+          roughness: f.kind==='prop' ? 0.6 : 0.8,
+          metalness: f.kind==='prop' ? 0.3 : 0.1,
+          emissive:new THREE.Color(baseColor).multiplyScalar(0.12),
+          emissiveIntensity:0.7
+        });
+        const m = new THREE.Mesh(geo, mat);
+        m.position.set(f.pos[0], Math.max(0.25, f.pos[1] + f.size[1]/2 - 0.4), f.pos[2]);
+        m.userData = {type:'interact', room:name, item:f, originalEmissive:mat.emissive.clone()};
+        m.castShadow = (f.kind!=='prop'); m.receiveShadow = (f.kind!=='prop');
+        g.add(m); list.push(m);
+      });
+
+      g.position.set(d.position3D.x,d.position3D.y,d.position3D.z);
+      scene.add(g);
+      roomGroups[name]=g;
+      interactables[name]=list;
+    });
+  }
+  
+  // 改善4: パーティクルシステム（ほこり、光の粒子）
+  function initParticleSystem(){
+    const particleCount = 200;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const velocities = new Float32Array(particleCount * 3);
+    
+    for(let i=0; i<particleCount*3; i+=3){
+      positions[i] = (Math.random()-0.5)*100;
+      positions[i+1] = Math.random()*5;
+      positions[i+2] = (Math.random()-0.5)*100;
+      velocities[i] = (Math.random()-0.5)*0.01;
+      velocities[i+1] = Math.random()*0.005;
+      velocities[i+2] = (Math.random()-0.5)*0.01;
+    }
+    
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const material = new THREE.PointsMaterial({
+      color:0xaaaaaa,
+      size:0.05,
+      transparent:true,
+      opacity:0.4,
+      blending:THREE.AdditiveBlending
+    });
+    
+    const particles = new THREE.Points(geometry, material);
+    particles.userData.velocities = velocities;
+    scene.add(particles);
+    particleSystems.push(particles);
+    
+    // 光の粒子（不一致度が高い時に出現）
+    const lightParticleCount = 50;
+    const lightGeo = new THREE.BufferGeometry();
+    const lightPos = new Float32Array(lightParticleCount * 3);
+    for(let i=0; i<lightParticleCount*3; i+=3){
+      lightPos[i] = (Math.random()-0.5)*100;
+      lightPos[i+1] = Math.random()*5;
+      lightPos[i+2] = (Math.random()-0.5)*100;
+    }
+    lightGeo.setAttribute('position', new THREE.BufferAttribute(lightPos, 3));
+    const lightMat = new THREE.PointsMaterial({
+      color:0xff4444,
+      size:0.1,
+      transparent:true,
+      opacity:0,
+      blending:THREE.AdditiveBlending
+    });
+    const lightParticles = new THREE.Points(lightGeo, lightMat);
+    lightParticles.userData.active = false;
+    scene.add(lightParticles);
+    particleSystems.push(lightParticles);
+  }
+  
+  // 改善1: 動的ライティング更新（不一致度に応じて）
+  function updateLighting(){
+    const desyncFactor = state.desync / 100;
+    const ambientLight = scene.getObjectByName('ambient');
+    const playerLight = scene.getObjectByName('playerLight');
+    
+    if(ambientLight){
+      const baseIntensity = 0.55;
+      const desyncColor = new THREE.Color().lerpColors(
+        new THREE.Color(0x404040),
+        new THREE.Color(0xff2222),
+        desyncFactor * 0.3
+      );
+      ambientLight.color.copy(desyncColor);
+      ambientLight.intensity = baseIntensity * (1 - desyncFactor * 0.15);
+    }
+    
+    if(playerLight){
+      const baseIntensity = 1.4;
+      const flicker = state.desync > 50 ? (Math.random() * 0.3 + 0.7) : 1.0;
+      playerLight.intensity = baseIntensity * flicker;
+      if(state.desync > 70){
+        const colorShift = new THREE.Color().lerpColors(
+          new THREE.Color(0xffffff),
+          new THREE.Color(0xff6666),
+          (state.desync - 70) / 30 * 0.4
+        );
+        playerLight.color.copy(colorShift);
+      }
+    }
+    
+    // 部屋のライトも更新
+    dynamicLights.forEach(({light, baseIntensity, baseColor})=>{
+      if(light.parent){
+        const roomDesync = state.currentRoom === light.userData.room ? desyncFactor : desyncFactor * 0.5;
+        light.intensity = baseIntensity * (1 + roomDesync * 0.5);
+        const newColor = new THREE.Color(baseColor).lerp(
+          new THREE.Color(0xff0000),
+          roomDesync * 0.2
+        );
+        light.color.copy(newColor);
+      }
+    });
+  }
+
+  /* ======== UI & Map ======== */
+  function updateUI(){
+    el.roomTitle.textContent = state.currentRoom;
+    el.roomDescription.textContent = rooms[state.currentRoom]?.description || '';
+    el.chapter.textContent = state.chapter;
+    el.desync.textContent = state.desync + '%';
+    el.inventory.textContent = state.inventory.join('、');
+    updateGoalPanel();
+  }
+  
+  function updateGoalPanel(){
+    // 目標1: 探索（3部屋以上訪問）
+    const goal1El = document.getElementById('goal1');
+    const exploredCount = state.visited.size;
+    if(exploredCount >= 3){
+      goal1El.classList.add('completed');
+    }
+    
+    // 目標2: 正しい見取り図を取得
+    const goal2El = document.getElementById('goal2');
+    if(state.inventory.includes('正しい見取り図')){
+      goal2El.classList.add('completed');
+    }
+    
+    // 目標3: 玄関で脱出
+    const goal3El = document.getElementById('goal3');
+    if(state.currentRoom === '玄関' && state.inventory.includes('正しい見取り図') && state.chapter >= 2){
+      goal3El.classList.add('completed');
+    }
+    
+    // プログレス計算
+    let progress = 0;
+    if(exploredCount >= 3) progress += 33;
+    if(state.inventory.includes('正しい見取り図')) progress += 33;
+    if(state.currentRoom === '玄関' && state.inventory.includes('正しい見取り図') && state.chapter >= 2) progress += 34;
+    
+    el.goalProgress.style.width = progress + '%';
+    
+    // パネルを表示（最初の訪問時）
+    if(!el.goalPanel.classList.contains('visible') && state.steps > 0){
+      el.goalPanel.classList.add('visible');
+      setTimeout(()=>{
+        if(state.steps < 5) el.goalPanel.classList.remove('visible');
+      }, 5000);
+    }
+  }
+  function advanceTime(min=1){
+    state.clock = (state.clock + min) % (24*60);
+    const h = String(Math.floor(state.clock/60)).padStart(2,'0');
+    const m = String(state.clock%60).padStart(2,'0');
+    el.clock.textContent = `${h}:${m}`;
+  }
+  function updateBlueprint(){
+    const ctx = el.blueprint.getContext('2d');
+    const w = el.blueprint.width, h = el.blueprint.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle='#0b0f14'; ctx.fillRect(0,0,w,h);
+    
+    // グリッドのアニメーション効果
+    const time = performance.now() * 0.001;
+    ctx.strokeStyle='#1a2f3f'; ctx.lineWidth=1.5;
+    for(let x=0;x<=10;x++){
+      const alpha = state.desync > 50 ? 0.3 + Math.sin(time + x) * 0.1 : 0.5;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath(); ctx.moveTo(40+x*40,20); ctx.lineTo(40+x*40,h-20); ctx.stroke();
+    }
+    for(let y=0;y<=8;y++){
+      const alpha = state.desync > 50 ? 0.3 + Math.cos(time + y) * 0.1 : 0.5;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath(); ctx.moveTo(40,20+y*40); ctx.lineTo(w-40,20+y*40); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    
+    if(state.chapter>=4){
+      ctx.fillStyle='#050709'; ctx.fillRect(0,0,w,h);
+      ctx.fillStyle='#c0d6ff'; ctx.font='bold 13px ui-sans-serif'; ctx.fillText('叩く音がする',24,30); return;
+    }
+    const now = performance.now();
+    const glitch = (state.desync>=55 && now - lastBlueprintGlitchAt > 6000);
+    const fakeNames = ['6/12','10/03','母の部屋','A-12','メ','影','003'];
+    
+    // 部屋間の接続線を描画
+    Object.entries(rooms).forEach(([name,d])=>{
+      if(!state.visited.has(name)) return;
+      if(d.exits){
+        Object.entries(d.exits).forEach(([dir,nextRoom])=>{
+          if(state.visited.has(nextRoom) && rooms[nextRoom]){
+            const x1 = 40 + (d.position3D.x/5)*40 + 18;
+            const y1 = 20 + (d.position3D.z/5)*40 + 18;
+            const x2 = 40 + (rooms[nextRoom].position3D.x/5)*40 + 18;
+            const y2 = 20 + (rooms[nextRoom].position3D.z/5)*40 + 18;
+            ctx.strokeStyle='rgba(146,163,255,.3)'; ctx.lineWidth=1;
+            ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+          }
+        });
+      }
+    });
+    
+    Object.entries(rooms).forEach(([name,d])=>{
+      if(!state.visited.has(name)) return;
+      const x = 40 + (d.position3D.x/5)*40;
+      const y = 20 + (d.position3D.z/5)*40;
+      const size = 36;
+      let color = '#1a2f3f';
+      let strokeColor = '#2a4f5f';
+      let glow = false;
+      if(name==='赤い部屋'){ color='#6b1a16'; strokeColor='#8b2a26'; glow=true; }
+      if(name===state.currentRoom){ color='#2e4f32'; strokeColor='#3e6f42'; glow=true; }
+      if(state.desync>=60 && Math.random()<0.03){ color='#2a3447'; strokeColor='#3a4457'; }
+      
+      // グロー効果
+      if(glow){
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = strokeColor;
+      }
+      
+      ctx.fillStyle=color; ctx.strokeStyle=strokeColor; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.rect(x,y,size,size); ctx.fill(); ctx.stroke();
+      ctx.shadowBlur = 0;
+      
+      let label = name;
+      if(glitch && state.chapter>=3 && Math.random()<0.25) label = fakeNames[(Math.random()*fakeNames.length)|0];
+      ctx.fillStyle='#b0c0d1'; ctx.font='bold 11px ui-sans-serif'; ctx.fillText(label, x+4, y+14);
+      
+      // 未訪問の部屋へのヒント（薄い点線）
+      if(d.exits){
+        Object.entries(d.exits).forEach(([dir,nextRoom])=>{
+          if(!state.visited.has(nextRoom)){
+            const dirMap = {'北':[0,-1],'南':[0,1],'東':[1,0],'西':[-1,0]};
+            const [dx,dy] = dirMap[dir] || [0,0];
+            const hintX = x + 18 + dx * 20;
+            const hintY = y + 18 + dy * 20;
+            ctx.strokeStyle='rgba(146,163,255,.2)'; ctx.lineWidth=1;
+            ctx.setLineDash([2,2]);
+            ctx.beginPath(); ctx.moveTo(x+18,y+18); ctx.lineTo(hintX,hintY); ctx.stroke();
+            ctx.setLineDash([]);
+          }
+        });
+      }
+    });
+    if(glitch) lastBlueprintGlitchAt = performance.now();
+  }
+
+  function increaseDesync(n){
+    const prev=state.desync;
+    state.desync = Math.min(100, state.desync + n);
+    if(prev<50 && state.desync>=50){ scene.fog.far = 30; }
+    if(prev<75 && state.desync>=75){ scene.fog.far = 20; }
+    updateUI();
+    updateLighting(); // 改善1: ライティング更新
+    updateParticles(); // 改善4: パーティクル更新
+  }
+  
+  // 改善4: パーティクルアニメーション
+  function updateParticles(){
+    particleSystems.forEach((particles, idx)=>{
+      if(!particles.parent) return;
+      const positions = particles.geometry.attributes.position.array;
+      const velocities = particles.userData.velocities;
+      
+      if(idx === 0){ // ほこりパーティクル
+        for(let i=0; i<positions.length; i+=3){
+          positions[i] += velocities[i];
+          positions[i+1] += velocities[i+1];
+          positions[i+2] += velocities[i+2];
+          
+          // リセット
+          if(positions[i+1] > 5 || positions[i+1] < 0){
+            positions[i] = (Math.random()-0.5)*100;
+            positions[i+1] = 0;
+            positions[i+2] = (Math.random()-0.5)*100;
+          }
+        }
+        particles.geometry.attributes.position.needsUpdate = true;
+      }else if(idx === 1){ // 光の粒子
+        const shouldShow = state.desync > 60;
+        particles.userData.active = shouldShow;
+        particles.material.opacity = shouldShow ? Math.min(0.6, (state.desync - 60) / 40 * 0.6) : 0;
+        
+        if(shouldShow){
+          const pos = positions;
+          for(let i=0; i<pos.length; i+=3){
+            pos[i] += (Math.random()-0.5)*0.02;
+            pos[i+1] += Math.sin(Date.now()*0.001 + i)*0.01;
+            pos[i+2] += (Math.random()-0.5)*0.02;
+          }
+          particles.geometry.attributes.position.needsUpdate = true;
+        }
+      }
+    });
+  }
+
+  /* ======== Input ======== */
+  function setupInput(){
+    document.addEventListener('keydown',(e)=>{
+      ensureAudio();
+      keys[e.code]=true;
+      if(e.code==='KeyE') tryInteract();
+      if(e.code==='KeyH' || e.code==='Escape'){
+        if(e.code==='KeyH'){
+          el.helpMenu.classList.toggle('visible');
+        }else if(e.code==='Escape'){
+          if(el.helpMenu.classList.contains('visible')){
+            el.helpMenu.classList.remove('visible');
+          }else if(document.pointerLockElement===el.game3d){
+            document.exitPointerLock();
+          }
+        }
+      }
+    });
+    document.addEventListener('keyup',(e)=>{ keys[e.code]=false; });
+
+    if(!isMobile){
+      el.game3d.addEventListener('mousedown',()=>{
+        if(document.pointerLockElement!==el.game3d){
+          el.game3d.requestPointerLock();
+        }
+      });
+      document.addEventListener('pointerlockchange',()=>{
+        state.locked = (document.pointerLockElement===el.game3d);
+        el.lockHint.style.display = state.locked ? 'none' : 'block';
+      });
+      document.addEventListener('mousemove',(e)=>{
+        if(!state.locked || state.gameEnded) return;
+        // 調整可能なマウス感度
+        state.yaw   -= e.movementX * state.mouseSensitivity;
+        state.pitch -= e.movementY * state.mouseSensitivity;
+        const lim = Math.PI/2-0.05;
+        state.pitch = Math.max(-lim, Math.min(lim, state.pitch));
+      });
+      
+      // マウス感度調整（PageUp/PageDown）
+      document.addEventListener('keydown',(e)=>{
+        if(e.code==='PageUp' && state.mouseSensitivity < 0.01){
+          state.mouseSensitivity += 0.0005;
+          showMessage(`マウス感度: ${(state.mouseSensitivity*1000).toFixed(1)}`);
+        }
+        if(e.code==='PageDown' && state.mouseSensitivity > 0.001){
+          state.mouseSensitivity -= 0.0005;
+          showMessage(`マウス感度: ${(state.mouseSensitivity*1000).toFixed(1)}`);
+        }
+      });
+    }else{
+      // mobile fixed view
+      state.yaw = 0; state.pitch = 0;
+      el.lockHint.style.display = 'none';
+      el.mobileControls.style.display = 'flex';
+      el.mobileControls.setAttribute('aria-hidden','false');
+      // DPAD presses (discrete exits)
+      const press = (dir)=>{
+        if(state.gameEnded) return;
+        ensureAudio();
+        const room = rooms[state.currentRoom]; if(!room) return;
+        const table = {up:'北',down:'南',left:'西',right:'東'};
+        const toward = table[dir];
+        const next = room.exits && room.exits[toward];
+        if(next){
+          movePlayerToRoom(next, oppositeDir(toward));
+        }else{
+          showMessage('行けない');
+        }
+      };
+      el.mobileControls.querySelectorAll('[data-dir]').forEach(btn=>{
+        const dir = btn.getAttribute('data-dir');
+        const handler = ()=>press(dir);
+        btn.addEventListener('touchstart',handler,{passive:true});
+        btn.addEventListener('click',handler);
+      });
+      el.touchInteract.addEventListener('touchstart',()=>{ensureAudio(); tryInteract();},{passive:true});
+      el.touchInteract.addEventListener('click',()=>{ensureAudio(); tryInteract();});
+      // resume audio on first gesture
+      window.addEventListener('touchstart',ensureAudio,{passive:true, once:true});
+    }
+
+    window.addEventListener('resize', ()=>{
+      setTimeout(onResize, 10);
+    });
+    // ロード完了時にもリサイズ
+    window.addEventListener('load', ()=>{
+      setTimeout(onResize, 100);
+    });
+    // resume audio on first click/keydown as well
+    window.addEventListener('click',ensureAudio,{once:true});
+  }
+  function oppositeDir(d){ return ({'北':'南','南':'北','東':'西','西':'東'})[d] || '西'; }
+  function onResize(){
+    const rect = el.game3d.getBoundingClientRect();
+    const width = rect.width || el.game3d.clientWidth || window.innerWidth;
+    const height = rect.height || el.game3d.clientHeight || window.innerHeight;
+    const aspect = width / height || 16/9;
+    
+    if(camera){
+      camera.aspect = aspect;
+      camera.updateProjectionMatrix();
+    }
+    if(renderer){
+      renderer.setSize(width, height);
+    }
+  }
+
+  /* ======== Movement (desktop only continuous) ======== */
+  function updateMovement(dt){
+    if(isMobile) { // fixed view, no continuous movement
+      camera.rotation.set(0,0,0,'YXZ'); // keep stable
+      return;
+    }
+    
+    // 走る機能（Shiftキー）
+    state.isRunning = keys['ShiftLeft'] || keys['ShiftRight'];
+    const walkSpeed = 3.0;
+    const runSpeed = 5.5;
+    const speed = state.isRunning ? runSpeed : walkSpeed;
+    
+    const mv = {x:0,z:0};
+    if(keys['KeyW']) mv.z -= 1;
+    if(keys['KeyS']) mv.z += 1;
+    if(keys['KeyA']) mv.x -= 1;
+    if(keys['KeyD']) mv.x += 1;
+    const len = Math.hypot(mv.x,mv.z);
+    if(len>0){ mv.x/=len; mv.z/=len; }
+    
+    const cos = Math.cos(state.yaw), sin = Math.sin(state.yaw);
+    const fX = -sin, fZ = -cos;
+    const rX =  cos, rZ = -sin;
+    camera.position.x += (fX*mv.z + rX*mv.x)*speed*dt;
+    camera.position.z += (fZ*mv.z + rZ*mv.x)*speed*dt;
+    
+    // バイオハザード風のカメラボブ（歩行時の微細な揺れ）
+    if(len > 0){
+      state.cameraBobTime += dt * (state.isRunning ? 12 : 8);
+      const bobAmount = state.isRunning ? 0.08 : 0.05;
+      state.cameraBobOffset = Math.sin(state.cameraBobTime) * bobAmount;
+    }else{
+      // 停止時のスムーズな復帰
+      state.cameraBobOffset *= 0.9;
+      state.cameraBobTime = 0;
+    }
+    
+    // カメラの位置にボブを適用
+    const baseHeight = 1.6;
+    camera.position.y = baseHeight + state.cameraBobOffset;
+    
+    // バイオハザード風の微細な横揺れ（走る時のみ）
+    let rollOffset = 0;
+    if(state.isRunning && len > 0){
+      rollOffset = Math.sin(state.cameraBobTime * 0.5) * 0.02;
+    }
+    
+    camera.rotation.set(state.pitch, state.yaw, rollOffset, 'YXZ');
+    enforceBoundsAndTransitions();
+  }
+
+  function enforceBoundsAndTransitions(){
+    const name = state.currentRoom, d = rooms[name]; if(!d) return;
+    const center = d.position3D;
+    const lx = camera.position.x - center.x;
+    const lz = camera.position.z - center.z;
+    const half=3.8, m=0.2;
+    // 北
+    if(lz < -half){ if(d.exits && d.exits['北']){ movePlayerToRoom(d.exits['北'],'南'); return; } else { camera.position.z = center.z - half + m; } }
+    // 南
+    if(lz >  half){ if(d.exits && d.exits['南']){ movePlayerToRoom(d.exits['南'],'北'); return; } else { camera.position.z = center.z + half - m; } }
+    // 東
+    if(lx >  half){ if(d.exits && d.exits['東']){ movePlayerToRoom(d.exits['東'],'西'); return; } else { camera.position.x = center.x + half - m; } }
+    // 西
+    if(lx < -half){ if(d.exits && d.exits['西']){ movePlayerToRoom(d.exits['西'],'東'); return; } else { camera.position.x = center.x - half + m; } }
+  }
+
+  /* ======== Interaction ======== */
+  function nearestInteractable(){
+    const list = interactables[state.currentRoom]||[];
+    let currentHovered = null;
+    let distance = Infinity;
+    
+    if(isMobile){
+      // fixed view: pick nearest within 2.5m
+      let best=null,bd=Infinity;
+      for(const o of list){
+        const p = o.getWorldPosition(tmpV3);
+        const d = p.distanceTo(camera.position);
+        if(d<bd){ bd=d; best=o; }
+      }
+      // モバイルでもインタラクション範囲を拡大（2.5m → 3.5m）
+      const mobileRange = 3.5;
+      if(best && bd<mobileRange){ 
+        currentHovered = best;
+        distance = bd;
+        const distancePercent = Math.max(0, Math.min(100, (1 - bd/mobileRange) * 100));
+        showInteraction(`タップ/ E で「${best.userData.item.name}」`); 
+        el.distanceIndicator.textContent = `${(bd*10).toFixed(0)}cm`;
+        el.distanceIndicator.classList.add('visible');
+        el.interaction.style.opacity = (distancePercent / 100 * 0.9 + 0.1).toString();
+      }else{
+        hideInteraction();
+        el.distanceIndicator.classList.remove('visible');
+      }
+    }else{
+      raycaster.setFromCamera({x:0,y:0}, camera);
+      const hits = raycaster.intersectObjects(list,false);
+      // インタラクション範囲を拡大（3m → 4.5m）
+      const interactionRange = 4.5;
+      if(hits.length>0 && hits[0].distance<interactionRange){
+        const obj = hits[0].object;
+        currentHovered = obj;
+        distance = hits[0].distance;
+        const distancePercent = Math.max(0, Math.min(100, (1 - distance/interactionRange) * 100));
+        showInteraction(`Eキーで「${obj.userData.item.name}」を調べる`);
+        el.distanceIndicator.textContent = `${(distance*10).toFixed(0)}cm`;
+        el.distanceIndicator.classList.add('visible');
+        // 距離に応じてインタラクションプロンプトの透明度を調整
+        el.interaction.style.opacity = (distancePercent / 100 * 0.9 + 0.1).toString();
+      }else{
+        hideInteraction();
+        el.distanceIndicator.classList.remove('visible');
+      }
+    }
+    
+    // クロスヘアの視覚的フィードバック
+    if(el.crosshair){
+      if(currentHovered){
+        el.crosshair.classList.add('has-target');
+      }else{
+        el.crosshair.classList.remove('has-target');
+      }
+    }
+    
+    // 改善5: ホバー効果のアニメーション
+    if(currentHovered !== hoveredObject){
+      // 前のオブジェクトのエミッシブをリセット
+      if(hoveredObject && hoveredObject.userData.originalEmissive){
+        const mat = hoveredObject.material;
+        if(mat && mat.emissive){
+          mat.emissive.copy(hoveredObject.userData.originalEmissive);
+          mat.emissiveIntensity = 0.5;
+        }
+      }
+      
+      // 新しいオブジェクトにホバー効果
+      if(currentHovered && currentHovered.userData.originalEmissive){
+        const mat = currentHovered.material;
+        if(mat && mat.emissive){
+          const hoverColor = currentHovered.userData.originalEmissive.clone().multiplyScalar(2.5);
+          mat.emissive.copy(hoverColor);
+          mat.emissiveIntensity = 1.2;
+        }
+      }
+      
+      hoveredObject = currentHovered;
+    }
+    
+    return currentHovered;
+  }
+  function tryInteract(){
+    if(state.gameEnded) return;
+    const obj = nearestInteractable();
+    if(!obj) return;
+    
+    // 改善5: インタラクション時のアニメーション
+    if(obj.material && obj.userData.originalEmissive){
+      const mat = obj.material;
+      const flashColor = new THREE.Color(0xffffff);
+      mat.emissive.copy(flashColor);
+      mat.emissiveIntensity = 2.0;
+      setTimeout(()=>{
+        if(mat && obj.userData.originalEmissive){
+          mat.emissive.copy(obj.userData.originalEmissive);
+          mat.emissiveIntensity = 0.5;
+        }
+      }, 200);
+      
+      // 軽いスケールアニメーション
+      const originalScale = obj.scale.clone();
+      obj.scale.multiplyScalar(1.1);
+      setTimeout(()=>{
+        if(obj.scale) obj.scale.copy(originalScale);
+      }, 150);
+    }
+    
+    doAction(obj.userData.item.action);
+    checkEnding();
+  }
+
+  /* ======== Actions & Chapters ======== */
+  function doAction(action){
+    const act = {
+      mapHook: ()=>{ showMessage('図面が少し重くなった'); increaseDesync(5); },
+      shoeBox: ()=>{ showMessage('靴跡が増えている…'); increaseDesync(2); },
+      mirror: ()=>{ showMessage('鏡に背の高い影が映る'); increaseDesync(3); },
+      oldPhone: ()=>{ showMessage('鳴らないはずの発信音が一瞬'); increaseDesync(4); beep('notify'); },
+
+      frame: ()=>{ showMessage('額縁の写真が裏返っている'); increaseDesync(3); },
+      umbrella: ()=>{ showMessage('濡れていないのに滴る音'); increaseDesync(2); },
+      clock: ()=>{ showMessage('秒針が止まっている'); increaseDesync(2); },
+
+      tv: ()=>{ showMessage('砂嵐が一瞬だけ止まった'); if(state.chapter<=2){ addRedRoom(); changeChapter(2); showMessage('赤い部屋が、図面の端に現れた'); beep('chime'); } else { increaseDesync(4); } },
+      table: ()=>{ showMessage('輪染みの跡に、合わないコップの影'); increaseDesync(2); },
+      sofa: ()=>{ showMessage('座っていないのに沈む'); increaseDesync(3); },
+      bookshelf: ()=>{ showMessage('背表紙が数字に置き換わる'); increaseDesync(3); },
+
+      fridge: ()=>{ showMessage('冷蔵庫から低い唸り声…'); if(state.desync>=60 && !state.inventory.includes('正しい見取り図')){ state.inventory.push('正しい見取り図'); showMessage('✨ 「正しい見取り図」を手に入れた！玄関に戻って脱出できる'); updateUI(); beep('chime',0.4,0.2); el.goalPanel.classList.add('visible'); setTimeout(()=>el.goalPanel.classList.remove('visible'),6000); } else { increaseDesync(2); } },
+      sink: ()=>{ showMessage('水面が揺れている。風は無いのに'); increaseDesync(2); },
+      knifeStand: ()=>{ showMessage('刃が一本足りない'); increaseDesync(3); },
+      cupboard: ()=>{ showMessage('食器が勝手に鳴った'); increaseDesync(3); },
+
+      boxes: ()=>{ showMessage('箱の中に別の見取り図…'); reorganize(); changeChapter(3); },
+      radio: ()=>{ showMessage('知らない電波が混ざる'); increaseDesync(3); beep('buzz',0.28); },
+      shelf: ()=>{ showMessage('棚の裏から冷たい風'); increaseDesync(2); },
+
+      stairsUp: ()=>{ movePlayerToRoom('二階廊下','南'); },
+      stairsDown: ()=>{ movePlayerToRoom('階段','北'); },
+      railing: ()=>{ showMessage('手に粉が付いた'); increaseDesync(1); },
+
+      vase: ()=>{ showMessage('花は枯れているのに湿っている'); increaseDesync(2); },
+      window: ()=>{ showMessage('外の月が赤い四角に見える'); increaseDesync(3); },
+
+      bed: ()=>{ showMessage('布団の盛り上がりは、ただの空気だった'); increaseDesync(3); },
+      closet: ()=>{ showMessage('扉の向こうに別の廊下'); increaseDesync(4); },
+      lamp: ()=>{ showMessage('点いていないのに熱い'); increaseDesync(2); },
+
+      toybox: ()=>{ showMessage('おもちゃが勝手に転がった'); increaseDesync(4); },
+      desk: ()=>{ showMessage('宿題のノートに赤い四角'); increaseDesync(3); },
+      graffiti: ()=>{ showMessage('四角が地図記号みたいに見える'); if(!rooms['赤い部屋']) addRedRoom(); increaseDesync(3); },
+
+      grid: ()=>{ showMessage('方眼がうねっている'); increaseDesync(5); }
+    };
+    (act[action]||(()=>{}))();
+  }
+
+  function changeChapter(n){
+    if(state.chapter>=n) return;
+    state.chapter=n;
+    increaseDesync(12);
+    updateUI();
+  }
+  function checkChapterProgress(){
+    if(state.chapter===1 && state.steps>=3) changeChapter(2);
+    if(state.chapter===2 && state.steps>=7) changeChapter(3);
+  }
+
+  /* ======== Red room & Reorganize ======== */
+  function addRedRoom(){
+    if(rooms['赤い部屋']) return;
+    rooms['赤い部屋'] = {
+      position3D:{x:30,y:0,z:0},
+      exits:{西:'居間'},
+      description:'紙にしか存在しないはずの赤い部屋。床は図面用の方眼。',
+      color:0x8b0000,
+      furniture:[{name:'方眼の床',kind:'prop',pos:[0,-0.2,0],size:[2.8,0.2,2.8],action:'grid'}]
+    };
+    // 3D add
+    const d = rooms['赤い部屋'];
+    const g = new THREE.Group();
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(8,8), new THREE.MeshLambertMaterial({color:0x8b0000,transparent:true,opacity:.9}));
+    floor.rotation.x=-Math.PI/2; g.add(floor);
+    const red = new THREE.PointLight(0xff0000,1.0,12); red.position.set(0,2,0); g.add(red);
+    const geo = new THREE.BoxGeometry(2.8,0.2,2.8);
+    const mat = new THREE.MeshLambertMaterial({color:0xaa0000,emissive:0x330000});
+    const mesh = new THREE.Mesh(geo,mat); mesh.position.set(0,0.1,0);
+    mesh.userData={type:'interact',room:'赤い部屋',item:{name:'方眼の床',action:'grid'}};
+    g.add(mesh);
+    g.position.set(d.position3D.x,d.position3D.y,d.position3D.z);
+    scene.add(g);
+    roomGroups['赤い部屋']=g;
+    interactables['赤い部屋']=[mesh];
+    showMessage('赤い部屋が出現した'); updateBlueprint();
+  }
+  function reorganize(){
+    const np = {'廊下':{x:15,y:0,z:5}, '階段':{x:5,y:0,z:20}, '物置':{x:25,y:0,z:15}};
+    Object.entries(np).forEach(([n,p])=>{
+      if(rooms[n]&&roomGroups[n]){
+        rooms[n].position3D = p;
+        roomGroups[n].position.set(p.x,p.y,p.z);
+      }
+    });
+    showMessage('家の構造が変わった…'); updateBlueprint();
+  }
+
+  /* ======== Movement helpers ======== */
+  function movePlayerToRoom(name, entryDir='東', teleport=false){
+    const d = rooms[name]; if(!d) return;
+    const wasNewRoom = !state.visited.has(name);
+    state.currentRoom = name; state.visited.add(name); state.steps++;
+    const off=2.2;
+    const pos={x:d.position3D.x,y:d.position3D.y+1.6,z:d.position3D.z};
+    switch(entryDir){ case'北':pos.z-=off;break; case'南':pos.z+=off;break; case'東':pos.x+=off;break; case'西':pos.x-=off;break; }
+    // バイオハザード風：スムーズな移動（テレポート時以外）
+    if(teleport){
+      camera.position.set(pos.x,pos.y,pos.z);
+    }else{
+      // スムーズな移動アニメーション
+      const startPos = camera.position.clone();
+      const endPos = new THREE.Vector3(pos.x,pos.y,pos.z);
+      const duration = 0.3;
+      let elapsed = 0;
+      const animateMove = ()=>{
+        elapsed += 0.016;
+        const t = Math.min(1, elapsed / duration);
+        const easeT = 1 - Math.pow(1 - t, 3); // ease-out cubic
+        camera.position.lerpVectors(startPos, endPos, easeT);
+        if(t < 1){
+          requestAnimationFrame(animateMove);
+        }
+      };
+      animateMove();
+    }
+    checkChapterProgress();
+    updateUI(); updateBlueprint(); advanceTime(3);
+    if(!teleport){
+      if(wasNewRoom){
+        showMessage(`✨ ${name}を発見した`);
+        beep('chime',0.2,0.15);
+      }else{
+        showMessage(`${name}に入った`);
+      }
+    }
+    // 目標パネルを一時表示
+    if(wasNewRoom || state.steps % 3 === 0){
+      el.goalPanel.classList.add('visible');
+      setTimeout(()=>{
+        if(state.steps < 10) el.goalPanel.classList.remove('visible');
+      }, 4000);
+    }
+  }
+
+  /* ======== Ending ======== */
+  function checkEnding(){
+    if(state.chapter<=3 && state.steps>12){
+      showMessage('図面の中心から音がする…');
+      setTimeout(()=>{ changeChapter(4); endGame(false); }, 1800);
+    }
+    if(state.currentRoom==='玄関' && state.inventory.includes('正しい見取り図') && state.chapter>=2){
+      showMessage('正しい見取り図に従って扉を開けた');
+      setTimeout(()=>endGame(true), 1200);
+    }
+  }
+  async function endGame(escape){
+    state.gameEnded=true;
+    scene.fog.color.setHex(0x000000); scene.fog.far=5;
+    el.goalPanel.classList.add('visible');
+    await wait(800);
+    if(escape){ 
+      showMessage('✨ 外の冷たい空気。— 脱出成功！'); 
+      beep('chime',0.5,0.25);
+      // エンディング表示
+      const endingEl = document.createElement('div');
+      endingEl.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:400;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-size:24px;text-align:center;backdrop-filter:blur(8px)';
+      endingEl.innerHTML = '<h2 style="font-size:32px;margin-bottom:20px">🎉 脱出成功！</h2><p style="font-size:18px;opacity:.8">正しい見取り図を見つけて、無事に脱出できました。</p>';
+      document.body.appendChild(endingEl);
+    }
+    else{
+      showMessage('視界が固定されました'); await wait(1100);
+      showMessage('図面の中に閉じ込められた…'); updateBlueprint(); beep('buzz',0.4,0.14);
+    }
+  }
+
+  /* ======== Ambient events (desync-driven) ======== */
+  function startAmbient(){
+    setInterval(()=>{
+      if(state.gameEnded) return;
+      advanceTime(1);
+      if(state.desync>=50 && Math.random()<0.20) beep('notify',0.18,0.15);
+      if(state.desync>=70 && Math.random()<0.15) beep('chime',0.22,0.16);
+      if(state.desync>=88 && Math.random()<0.10) beep('buzz',0.30,0.12);
+      // subtle fog flicker
+      if(state.desync>=55 && Math.random()<0.18){
+        const base = (state.desync>75)?20:30;
+        scene.fog.far = 12 + Math.random()*8;
+        setTimeout(()=>{ scene.fog.far = base; }, 220);
+      }
+      updateBlueprint();
+      updateLighting(); // 改善1: ライティングも定期的に更新
+    }, 1200);
+  }
+
+  /* ======== Main loop ======== */
+  let last = performance.now();
+  let hintHideTime = 0;
+  function animate(){
+    if(state.gameEnded) return;
+    requestAnimationFrame(animate);
+    const now = performance.now(); const dt = Math.min(0.033,(now-last)/1000); last=now;
+    const obj = nearestInteractable(); void obj;
+    updateMovement(dt);
+    updateParticles(); // 改善4: パーティクル更新
+    
+    // 走る表示の更新
+    if(!isMobile){
+      if(state.isRunning && (keys['KeyW'] || keys['KeyS'] || keys['KeyA'] || keys['KeyD'])){
+        el.runIndicator.classList.add('visible');
+      }else{
+        el.runIndicator.classList.remove('visible');
+      }
+      
+      // ヒントを3秒後に非表示
+      if(state.locked && state.steps > 0){
+        hintHideTime += dt;
+        if(hintHideTime > 3 && !el.movementHint.classList.contains('hidden')){
+          el.movementHint.classList.add('hidden');
+        }
+      }
+    }
+    
+    renderer.render(scene,camera);
+    
+    // 改善3: ポストプロセス効果（CSSフィルターとオーバーレイで実装）
+    applyPostProcess();
+  }
+  
+  // 改善3: ポストプロセス効果（CSSフィルターとオーバーレイ）
+  let postProcessOverlay = null;
+  function applyPostProcess(){
+    const desyncFactor = state.desync / 100;
+    
+    if(!postProcessOverlay){
+      postProcessOverlay = document.createElement('div');
+      postProcessOverlay.style.cssText = `
+        position:absolute; inset:0; pointer-events:none; z-index:15;
+        background:radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0) 70%, rgba(0,0,0,0.3) 100%);
+        mix-blend-mode:multiply;
+        transition:opacity 0.3s;
+      `;
+      const main3d = document.querySelector('.main-3d');
+      if(main3d) main3d.appendChild(postProcessOverlay);
+    }
+    
+    // ビネット効果の強度
+    const vignetteOpacity = Math.min(0.4, desyncFactor * 0.4);
+    if(postProcessOverlay) postProcessOverlay.style.opacity = vignetteOpacity;
+    
+    // CSSフィルターで色調補正
+    const brightness = 1 - desyncFactor * 0.15;
+    const contrast = 1 + desyncFactor * 0.1;
+    const saturation = 1 - desyncFactor * 0.2;
+    
+    let filterStr = `brightness(${brightness}) contrast(${contrast}) saturate(${saturation})`;
+    
+    // 不一致度が高いと赤みがかる
+    if(desyncFactor > 0.6){
+      const redShift = (desyncFactor - 0.6) * 0.4;
+      filterStr += ` sepia(${redShift * 20}%) hue-rotate(${-redShift * 15}deg)`;
+    }
+    
+    // グリッチ効果（ランダムに適用）
+    if(desyncFactor > 0.5 && Math.random() < 0.05){
+      const glitchX = (Math.random() - 0.5) * 8;
+      el.game3d.style.transform = `translateX(${glitchX}px)`;
+      setTimeout(()=>{ if(el.game3d) el.game3d.style.transform = ''; }, 100);
+    }
+    
+    el.game3d.style.filter = filterStr;
+  }
+
+  /* ======== Initialize ======== */
+  async function initialize(){
+    await wait(900);
+    el.loading.classList.add('hidden'); el.gameWrap.style.display='grid';
+    // 表示後に少し待ってから初期化（サイズ取得のため）
+    await wait(50);
+    init3D(); setupInput();
+    // 初期化後にリサイズを実行してサイズを確実に設定
+    setTimeout(()=>{
+      onResize();
+    }, 100);
+    updateUI(); updateBlueprint(); advanceTime(0);
+    startAmbient(); animate();
+    showMessage(isMobile?'十字キーで移動、[調べる]で探索':'WASDで移動、Eで調べる、Hでヘルプ');
+    // 初期目標表示
+    setTimeout(()=>{
+      el.goalPanel.classList.add('visible');
+      setTimeout(()=>el.goalPanel.classList.remove('visible'), 5000);
+    }, 1500);
+    // ensure audio on any first user gesture
+    window.addEventListener('keydown',ensureAudio,{once:true});
+    window.addEventListener('mousedown',ensureAudio,{once:true});
+    window.addEventListener('touchstart',ensureAudio,{passive:true, once:true});
+  }
+  initialize();
+
+  })();
+  </script>
+</body>
+</html>

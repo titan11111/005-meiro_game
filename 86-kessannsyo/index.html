@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>決算書アドベンチャー</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- ゲームクリア画面 -->
+        <div id="completeScreen" class="complete-screen hidden">
+            <div class="complete-card">
+                <div class="trophy">🏆</div>
+                <h1>🎉 完全制覇！おめでとう！ 🎉</h1>
+                <div class="final-rank-display">
+                    <div class="rank-badge-large" id="finalRankBadge">🥇</div>
+                    <p class="rank-title" id="finalRankTitle">ダイヤモンドマスター</p>
+                </div>
+                <p class="final-score">スコア: <span id="finalScore">0</span>点</p>
+                <p class="final-combo">最高連続正解: <span id="finalCombo">0</span>問</p>
+                <p class="complete-message">全35問完全制覇！あなたは決算書マスターです！</p>
+                <button onclick="resetGame()" class="btn-restart">もう一度挑戦する 🚀</button>
+            </div>
+        </div>
+
+        <!-- ゲーム画面 -->
+        <div id="gameScreen">
+            <!-- ヘッダー -->
+            <div class="header">
+                <div class="header-left">
+                    <h1>💼 決算書アドベンチャー</h1>
+                    <p class="level-text">問題 <span id="currentLevel">1</span> / 35</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="rank-display">
+                        <div class="rank-badge" id="rankBadge">🥉</div>
+                        <p class="rank-name" id="rankName">ブロンズ</p>
+                    </div>
+                    <p class="score-label">スコア</p>
+                    <p class="score-value" id="score">0</p>
+                    <div class="combo-display" id="comboDisplay">
+                        <span class="combo-icon">🔥</span>
+                        <span class="combo-text"><span id="comboCount">0</span>連続正解！</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 問題表示 -->
+            <div class="question-card">
+                <h2>📝 問題</h2>
+                <p class="question-text" id="questionText"></p>
+                <p class="hint-text">👆 変化する項目をタップしてね！</p>
+            </div>
+
+            <!-- 決算書エリア（BS | PL） -->
+            <div class="statements-wrapper">
+                <!-- 貸借対照表（左） -->
+                <div class="statement-section bs-section">
+                    <h3 class="statement-title">📊 貸借対照表（BS）</h3>
+                    <div class="bs-layout">
+                        <!-- 資産（左） -->
+                        <div class="bs-left">
+                            <div class="bs-header asset-header">資産</div>
+                            <div class="bs-item" data-id="cash" onclick="selectBox('cash')">
+                                <span class="item-label">現金</span>
+                                <span class="item-value"><span id="val-cash">0</span></span>
+                            </div>
+                            <div class="bs-item" data-id="receivables" onclick="selectBox('receivables')">
+                                <span class="item-label">売掛金</span>
+                                <span class="item-value"><span id="val-receivables">0</span></span>
+                            </div>
+                            <div class="bs-item" data-id="inventory" onclick="selectBox('inventory')">
+                                <span class="item-label">商品</span>
+                                <span class="item-value"><span id="val-inventory">0</span></span>
+                            </div>
+                            <div class="bs-item" data-id="insurance" onclick="selectBox('insurance')">
+                                <span class="item-label">積立保険料</span>
+                                <span class="item-value"><span id="val-insurance">0</span></span>
+                            </div>
+                            <div class="bs-item" data-id="building" onclick="selectBox('building')">
+                                <span class="item-label">建物</span>
+                                <span class="item-value"><span id="val-building">0</span></span>
+                            </div>
+                            <div class="bs-total asset-total">
+                                <span class="total-label">資産合計</span>
+                                <span class="total-value" id="total-assets">0</span>
+                            </div>
+                        </div>
+
+                        <!-- 負債・純資産（右） -->
+                        <div class="bs-right">
+                            <div class="bs-header liability-header">負債・純資産</div>
+                            <div class="bs-item" data-id="payables" onclick="selectBox('payables')">
+                                <span class="item-label">買掛金</span>
+                                <span class="item-value"><span id="val-payables">0</span></span>
+                            </div>
+                            <div class="bs-item" data-id="loans" onclick="selectBox('loans')">
+                                <span class="item-label">借入金</span>
+                                <span class="item-value"><span id="val-loans">0</span></span>
+                            </div>
+                            <div class="bs-item" data-id="capital" onclick="selectBox('capital')">
+                                <span class="item-label">資本金</span>
+                                <span class="item-value"><span id="val-capital">0</span></span>
+                            </div>
+                            <div class="bs-item profit-item">
+                                <span class="item-label">利益剰余金</span>
+                                <span class="item-value" id="retained-earnings">0</span>
+                            </div>
+                            <div class="bs-total liability-total">
+                                <span class="total-label">負債・純資産合計</span>
+                                <span class="total-value" id="total-liabilities">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 損益計算書（右） -->
+                <div class="statement-section pl-section">
+                    <h3 class="statement-title">📈 損益計算書（PL）</h3>
+                    <div class="pl-layout">
+                        <div class="pl-item revenue-item" data-id="sales" onclick="selectBox('sales')">
+                            <span class="item-label">売上高</span>
+                            <span class="item-value"><span id="val-sales">0</span></span>
+                        </div>
+                        <div class="pl-item expense-item" data-id="cogs" onclick="selectBox('cogs')">
+                            <span class="item-label">売上原価</span>
+                            <span class="item-value"><span id="val-cogs">0</span></span>
+                        </div>
+                        <div class="pl-subtotal">
+                            <span class="subtotal-label">売上総利益</span>
+                            <span class="subtotal-value" id="gross-profit">0</span>
+                        </div>
+                        
+                        <!-- 販売管理費セクション -->
+                        <div class="pl-section-header">販売管理費</div>
+                        <div class="pl-item expense-item" data-id="executive-salary" onclick="selectBox('executive-salary')">
+                            <span class="item-label">　役員報酬</span>
+                            <span class="item-value"><span id="val-executive-salary">0</span></span>
+                        </div>
+                        <div class="pl-item expense-item" data-id="salary" onclick="selectBox('salary')">
+                            <span class="item-label">　給与</span>
+                            <span class="item-value"><span id="val-salary">0</span></span>
+                        </div>
+                        <div class="pl-item expense-item" data-id="insurance-expense" onclick="selectBox('insurance-expense')">
+                            <span class="item-label">　保険料</span>
+                            <span class="item-value"><span id="val-insurance-expense">0</span></span>
+                        </div>
+                        <div class="pl-subtotal">
+                            <span class="subtotal-label">販売管理費合計</span>
+                            <span class="subtotal-value" id="total-expenses">0</span>
+                        </div>
+                        
+                        <!-- 営業外損益 -->
+                        <div class="pl-section-header">営業外損益</div>
+                        <div class="pl-item special-item" data-id="other-income" onclick="selectBox('other-income')">
+                            <span class="item-label">　雑収入</span>
+                            <span class="item-value"><span id="val-other-income">0</span></span>
+                        </div>
+                        <div class="pl-item special-item" data-id="other-expense" onclick="selectBox('other-expense')">
+                            <span class="item-label">　雑損失</span>
+                            <span class="item-value"><span id="val-other-expense">0</span></span>
+                        </div>
+                        
+                        <div class="pl-total">
+                            <span class="total-label">当期純利益</span>
+                            <span class="total-value" id="val-profit">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 結果表示エリア -->
+            <div id="resultArea" class="result-area hidden"></div>
+
+            <!-- ボタンエリア -->
+            <div class="button-area">
+                <button id="answerBtn" onclick="checkAnswer()" class="btn-answer">回答する ✨</button>
+                <button id="nextBtn" onclick="nextLevel()" class="btn-next hidden">次の問題へ 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- キラキラエフェクト用 -->
+    <div id="sparkles" class="sparkles-container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -2,70 +2,66 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>おさんぽ日和</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>散歩中の事件簿 - 8bit Detective</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="game-container">
+    <div class="scanline"></div>
+    <div id="screen-flash" class="screen-flash"></div>
+
+    <div class="game-container" id="game-container">
         <div class="header">
-            <h1>🌸 おさんぽ日和 🌸</h1>
+            <h1>■ サンポチュウ ノ ジケンボ ■</h1>
             <div class="stats-container">
-                <div class="heart-points">
-                    <span>こころポイント: </span>
+                <div class="stat-box">
+                    <span>IQ:</span>
                     <span id="heart-points">0</span>
-                    <span>💖</span>
                 </div>
-                <div class="treasure-count">
-                    <span>宝物: </span>
+                <div class="stat-box">
+                    <span>ITEM:</span>
                     <span id="treasure-count">0</span>
-                    <span>🎁</span>
                 </div>
+            </div>
+            <div class="audio-control">
+                <button id="bgm-toggle">SOUND: OFF</button>
             </div>
         </div>
         
-        <div class="game-screen">
-            <div class="location-icon" id="location-icon">🏠</div>
-            <div class="location-name" id="location-name">おうち</div>
-            <div class="story-text" id="story-text">
-                今日はとても良い天気！<br>
-                街を一周して、いろんな出会いを楽しみましょう。<br>
-                散歩中に素敵な宝物も見つかるかも！<br>
-                さあ、散歩に出発です！
+        <div class="main-display">
+            <div class="scene-view">
+                <div class="location-icon" id="location-icon">🚶</div>
             </div>
-            <div class="choices" id="choices">
-                <button class="choice-btn" onclick="startWalk()">散歩を始める</button>
+            
+            <div class="message-window" id="message-window">
+                <div class="location-label" id="location-name">タイキチュウ...</div>
+                <div class="story-text" id="story-text">
+                    ロード カンリョウ。<br>
+                    GAME START ヲ オシテ クダサイ。
+                </div>
             </div>
+        </div>
+
+        <div class="choices-container" id="choices">
+            <button class="choice-btn" id="start-btn">GAME START</button>
         </div>
         
         <div class="progress-bar">
             <div class="progress-fill" id="progress-fill"></div>
         </div>
         
-        <!-- 宝物発見時の演出 -->
         <div class="treasure-popup" id="treasure-popup">
-            <div class="treasure-popup-content">
-                <div class="treasure-icon" id="treasure-icon">🎁</div>
-                <div class="treasure-text" id="treasure-text">宝物を発見しました！</div>
+            <div class="popup-border">
+                <div class="treasure-icon" id="treasure-icon">🔍</div>
+                <div class="treasure-text" id="treasure-text">GET!</div>
             </div>
-        </div>
-        
-        <div class="diary-screen" id="diary-screen" style="display: none;">
-            <h2>📖 今日の散歩日記</h2>
-            <div class="diary-content" id="diary-content"></div>
-            <button class="choice-btn" onclick="showTreasureCollection()">宝物コレクション</button>
-            <button class="choice-btn" onclick="restartGame()">また散歩する</button>
-        </div>
-        
-        <!-- 宝物コレクション画面 -->
-        <div class="treasure-collection" id="treasure-collection" style="display: none;">
-            <h2>🎁 宝物コレクション</h2>
-            <div class="collection-grid" id="collection-grid"></div>
-            <button class="choice-btn" onclick="backToDiary()">日記に戻る</button>
         </div>
     </div>
 
-    <!-- 外部JSファイルを読み込む -->
+    <audio id="bgm-audio" src="tantei.mp3" preload="auto" loop playsinline></audio>
     <script src="script.js"></script>
 </body>
 </html>

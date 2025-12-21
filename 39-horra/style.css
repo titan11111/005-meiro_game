@@ -1,0 +1,1674 @@
+/* 基本設定 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+
+/* iOS対応 */
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* タッチ操作の改善 */
+button, .work-btn {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* イベント絵文字表示エリア */
+#eventEmojiArea {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* 絵文字が浮かび上がるアニメーション */
+@keyframes emojiFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(50px) scale(0.5);
+    filter: blur(10px);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(0) scale(1.2);
+    filter: blur(0);
+  }
+  50% {
+    transform: translateY(-30px) scale(1.3);
+    filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8));
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(-50px) scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-100px) scale(0.8);
+    filter: blur(5px);
+  }
+}
+
+.event-emoji {
+  animation: emojiFloat 3s ease-out forwards;
+  text-shadow: 0 0 30px rgba(255, 255, 255, 0.9), 0 0 60px rgba(255, 255, 255, 0.5);
+  will-change: transform, opacity;
+}
+
+#startScreen p {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  line-height: 1.8;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+#startScreen .objective {
+  font-size: 1.3rem;
+  margin-bottom: 3rem;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid #4a90e2;
+  border-radius: 10px;
+  text-shadow: 0 0 15px rgba(74, 144, 226, 0.8);
+  color: #4a90e2;
+  font-weight: bold;
+}
+
+@keyframes glow {
+  from { 
+    text-shadow: 0 0 20px #4a90e2, 0 0 40px #4a90e2; 
+  }
+  to { 
+    text-shadow: 0 0 25px #4a90e2, 0 0 40px #4a90e2; 
+  }
+}
+
+/* ボタン共通 */
+button {
+  background: linear-gradient(45deg, #4a90e2, #357abd);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  font-size: 1.2rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+  position: relative;
+  overflow: hidden;
+  min-height: 44px; /* iOS推奨タッチターゲットサイズ */
+  min-width: 44px;
+  font-weight: bold;
+}
+
+button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+button:hover {
+  background: linear-gradient(45deg, #357abd, #2968a3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+}
+
+button:hover::before {
+  left: 100%;
+}
+
+button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(74, 144, 226, 0.3);
+}
+
+/* ゲーム画面 */
+#gameScreen {
+  justify-content: flex-start;
+  padding: 0;
+  background: transparent;
+}
+
+/* ヘッダー */
+#gameHeader {
+  width: 100%;
+  height: 80px;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 20px;
+  border-bottom: 2px solid #4a90e2;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+#timeDisplay {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #4a90e2;
+  text-shadow: 0 0 10px #4a90e2;
+  font-family: 'Courier New', monospace;
+  transition: all 0.3s ease;
+}
+
+/* ミッションパネル */
+.mission-panel {
+  position: fixed;
+  top: 90px;
+  right: 20px;
+  width: 300px;
+  max-height: calc(100vh - 120px);
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #4a90e2;
+  border-radius: 10px;
+  z-index: 100;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+}
+
+#missionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background: rgba(74, 144, 226, 0.2);
+  border-bottom: 1px solid #4a90e2;
+  cursor: pointer;
+  user-select: none;
+}
+
+#missionHeader span {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #4a90e2;
+  text-shadow: 0 0 5px #4a90e2;
+}
+
+#missionToggle {
+  background: transparent;
+  border: none;
+  color: #4a90e2;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+#missionToggle:hover {
+  transform: scale(1.2);
+}
+
+.mission-list {
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.mission-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(74, 144, 226, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  transition: all 0.3s ease;
+}
+
+.mission-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #4a90e2;
+}
+
+.mission-item.completed {
+  opacity: 0.6;
+  border-color: #00ff00;
+}
+
+.mission-title {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #4a90e2;
+  margin-bottom: 5px;
+}
+
+.mission-description {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.mission-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4a90e2, #357abd);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 5px rgba(74, 144, 226, 0.5);
+}
+
+.progress-text {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+}
+
+.mission-reward {
+  font-size: 0.75rem;
+  color: #00ff00;
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mission-summary {
+  text-align: center;
+  padding: 10px;
+  background: rgba(74, 144, 226, 0.1);
+  border-radius: 5px;
+  color: #4a90e2;
+  font-size: 0.9rem;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+/* ステータスバー */
+.bar {
+  width: 150px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-left: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.bar-fill {
+  height: 100%;
+  transition: width 0.5s ease;
+  border-radius: 10px;
+}
+
+#healthFill {
+  background: linear-gradient(90deg, #ff4757, #ff6b7a);
+  width: 100%;
+  box-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+}
+
+#sanityFill {
+  background: linear-gradient(90deg, #5f27cd, #8854d0);
+  width: 100%;
+  box-shadow: 0 0 10px rgba(95, 39, 205, 0.5);
+}
+
+/* メインエリア */
+#mainArea {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+#storeView {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.2);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* 客エリア */
+#customerArea {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  pointer-events: none;
+}
+
+#customer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 15px;
+  pointer-events: none;
+}
+
+.customer-sprite {
+  font-size: 4rem;
+  animation: float 3s ease-in-out infinite;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+  display: block;
+  line-height: 1;
+  margin: 0;
+  pointer-events: none;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-15px) scale(1.05); }
+}
+
+.speech-bubble {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(240, 240, 240, 0.95));
+  color: #333;
+  padding: 15px 20px;
+  border-radius: 20px;
+  position: relative;
+  max-width: 300px;
+  text-align: center;
+  margin: 0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(5px);
+  display: block;
+  order: 2;
+}
+
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 12px solid transparent;
+  border-bottom-color: rgba(255, 255, 255, 0.95);
+}
+
+/* レジエリア */
+#registerArea {
+  position: absolute;
+  bottom: 25%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 9;
+  pointer-events: none;
+}
+
+.register {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
+}
+
+#registerScreen {
+  background: rgba(0, 0, 0, 0.9);
+  color: #00ff00;
+  padding: 15px 25px;
+  border-radius: 10px;
+  font-family: 'Courier New', monospace;
+  border: 2px solid #00ff00;
+  min-width: 200px;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+/* 作業エリア */
+#workArea {
+  min-height: 120px;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 20px;
+  border-top: 2px solid #4a90e2;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+.work-btn {
+  padding: 18px 24px;
+  font-size: 1.1rem;
+  min-width: 140px;
+  min-height: 50px;
+  background: linear-gradient(45deg, #2c3e50, #34495e);
+  border: 3px solid #4a90e2;
+  transition: all 0.3s ease;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.work-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.work-btn:hover {
+  background: linear-gradient(45deg, #34495e, #2c3e50);
+  box-shadow: 0 0 15px rgba(74, 144, 226, 0.6);
+}
+
+/* イベントメッセージ */
+#eventMessage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.95);
+  border: 3px solid #4a90e2;
+  border-radius: 15px;
+  padding: 30px;
+  text-align: center;
+  max-width: 80%;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+}
+
+#eventText {
+  font-size: 1.3rem;
+  margin-bottom: 20px;
+  line-height: 1.6;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+}
+
+/* 終了画面 */
+#endScreen {
+  background: linear-gradient(135deg, rgba(15, 15, 35, 0.9), rgba(22, 33, 62, 0.9));
+}
+
+#endTitle {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #4a90e2;
+  text-shadow: 0 0 20px #4a90e2;
+}
+
+#endMessage {
+  font-size: 1.3rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  line-height: 1.6;
+  max-width: 80%;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* ホラー演出用のCSS */
+
+/* 血の効果 */
+.blood-effect {
+  background: linear-gradient(135deg, #330000, #660000, #990000) !important;
+  filter: brightness(1.2) contrast(120%);
+}
+
+@keyframes bloodPulse {
+  0%, 100% { 
+    filter: brightness(1) contrast(100%); 
+  }
+  50% { 
+    filter: brightness(1.5) contrast(150%) saturate(200%); 
+  }
+}
+
+/* 時間異常演出 */
+.time-glitch {
+  animation: glitch 0.3s infinite;
+}
+
+.time-distortion {
+  animation: timeWarp 2s infinite;
+  color: #ff0000 !important;
+}
+
+@keyframes glitch {
+  0% { transform: translateX(0) skew(0deg); }
+  20% { transform: translateX(-3px) skew(-2deg); }
+  40% { transform: translateX(3px) skew(2deg); }
+  60% { transform: translateX(-2px) skew(-1deg); }
+  80% { transform: translateX(2px) skew(1deg); }
+  100% { transform: translateX(0) skew(0deg); }
+}
+
+@keyframes timeWarp {
+  0% { 
+    transform: scale(1) rotate(0deg); 
+    filter: hue-rotate(0deg) brightness(1); 
+  }
+  25% { 
+    transform: scale(1.3) rotate(10deg); 
+    filter: hue-rotate(90deg) brightness(1.5); 
+  }
+  50% { 
+    transform: scale(0.7) rotate(-10deg); 
+    filter: hue-rotate(180deg) brightness(0.5); 
+  }
+  75% { 
+    transform: scale(1.2) rotate(5deg); 
+    filter: hue-rotate(270deg) brightness(1.8); 
+  }
+  100% { 
+    transform: scale(1) rotate(0deg); 
+    filter: hue-rotate(360deg) brightness(1); 
+  }
+}
+
+/* 怖い客の演出 */
+.customer-scary {
+  animation: scaryFloat 2s ease-in-out infinite, scaryGlow 1s ease-in-out infinite alternate;
+}
+
+.customer-scary .customer-sprite {
+  font-size: 5rem;
+  filter: drop-shadow(0 0 20px #ff0000);
+}
+
+.customer-scary .speech-bubble {
+  background: linear-gradient(135deg, rgba(255, 100, 100, 0.95), rgba(200, 50, 50, 0.95));
+  color: #ffffff;
+  border-color: #ff0000;
+  box-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+}
+
+@keyframes scaryFloat {
+  0%, 100% { 
+    transform: translateY(0) rotate(0deg) scale(1); 
+  }
+  50% { 
+    transform: translateY(-25px) rotate(3deg) scale(1.1); 
+  }
+}
+
+@keyframes scaryGlow {
+  from { 
+    filter: brightness(1) contrast(1) drop-shadow(0 0 10px #ff0000); 
+  }
+  to { 
+    filter: brightness(1.5) contrast(150%) drop-shadow(0 0 30px #ff0000); 
+  }
+}
+
+/* ヤマダ効果 */
+.yamada-effect {
+  animation: yamadaDistort 3s infinite;
+  filter: hue-rotate(180deg) contrast(200%);
+}
+
+@keyframes yamadaDistort {
+  0% { 
+    transform: scale(1) rotate(0deg); 
+    filter: hue-rotate(180deg) contrast(200%); 
+  }
+  25% { 
+    transform: scale(1.2) rotate(2deg); 
+    filter: hue-rotate(270deg) contrast(250%); 
+  }
+  50% { 
+    transform: scale(0.8) rotate(-2deg); 
+    filter: hue-rotate(360deg) contrast(150%); 
+  }
+  75% { 
+    transform: scale(1.1) rotate(1deg); 
+    filter: hue-rotate(450deg) contrast(300%); 
+  }
+  100% { 
+    transform: scale(1) rotate(0deg); 
+    filter: hue-rotate(180deg) contrast(200%); 
+  }
+}
+
+/* 最終段階の背景 */
+.final-phase {
+  background: linear-gradient(135deg, #000000, #1a0000, #330000, #000000) !important;
+  background-size: 400% 400% !important;
+  animation: finalBackground 5s ease infinite;
+  filter: brightness(0.9) contrast(130%);
+}
+
+@keyframes finalBackground {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes finalPulse {
+  0%, 100% { 
+    filter: brightness(0.8) contrast(120%); 
+  }
+  50% { 
+    filter: brightness(1.5) contrast(200%) saturate(0%) invert(0.2); 
+  }
+}
+
+/* 鏡効果 */
+.mirror-effect {
+  animation: mirrorDistort 2s ease-in-out;
+}
+
+@keyframes mirrorDistort {
+  0% { 
+    transform: scaleX(1) rotateY(0deg); 
+    filter: brightness(1); 
+  }
+  25% { 
+    transform: scaleX(-1) rotateY(180deg); 
+    filter: brightness(1.5) invert(0.3); 
+  }
+  50% { 
+    transform: scaleX(1) rotateY(360deg); 
+    filter: brightness(0.5) contrast(200%); 
+  }
+  75% { 
+    transform: scaleX(-1) rotateY(540deg); 
+    filter: brightness(2) hue-rotate(180deg); 
+  }
+  100% { 
+    transform: scaleX(1) rotateY(720deg); 
+    filter: brightness(1); 
+  }
+}
+
+/* 静電気効果 */
+.static-effect {
+  animation: staticNoise 0.1s infinite;
+}
+
+@keyframes staticNoise {
+  0% { 
+    filter: contrast(150%) brightness(1.2) saturate(0%) hue-rotate(0deg); 
+    transform: translateX(0) translateY(0); 
+  }
+  25% { 
+    filter: contrast(200%) brightness(0.8) saturate(50%) hue-rotate(90deg); 
+    transform: translateX(2px) translateY(-1px); 
+  }
+  50% { 
+    filter: contrast(100%) brightness(1.5) saturate(0%) hue-rotate(180deg); 
+    transform: translateX(-1px) translateY(2px); 
+  }
+  75% { 
+    filter: contrast(180%) brightness(0.6) saturate(30%) hue-rotate(270deg); 
+    transform: translateX(-2px) translateY(-2px); 
+  }
+  100% { 
+    filter: contrast(150%) brightness(1.2) saturate(0%) hue-rotate(360deg); 
+    transform: translateX(1px) translateY(1px); 
+  }
+}
+
+/* SAN値低下時のUI変化 */
+.low-sanity {
+  animation: insanityShake 0.5s infinite;
+}
+
+@keyframes insanityShake {
+  0%, 100% { 
+    transform: translateX(0) translateY(0) rotate(0deg); 
+  }
+  10% { 
+    transform: translateX(-2px) translateY(-2px) rotate(-0.5deg); 
+  }
+  20% { 
+    transform: translateX(2px) translateY(2px) rotate(0.5deg); 
+  }
+  30% { 
+    transform: translateX(-2px) translateY(2px) rotate(-0.3deg); 
+  }
+  40% { 
+    transform: translateX(2px) translateY(-2px) rotate(0.3deg); 
+  }
+  50% { 
+    transform: translateX(-3px) translateY(0) rotate(-0.8deg); 
+  }
+  60% { 
+    transform: translateX(3px) translateY(0) rotate(0.8deg); 
+  }
+  70% { 
+    transform: translateX(0) translateY(-3px) rotate(-0.2deg); 
+  }
+  80% { 
+    transform: translateX(0) translateY(3px) rotate(0.2deg); 
+  }
+  90% { 
+    transform: translateX(-1px) translateY(-1px) rotate(-0.1deg); 
+  }
+}
+
+/* 体力危険時の警告 */
+.critical-health {
+  background: linear-gradient(90deg, #ff3742, #ff5722);
+  box-shadow: 0 0 15px rgba(255, 71, 87, 0.7);
+}
+
+@keyframes criticalFlash {
+  0%, 100% { 
+    background: linear-gradient(90deg, #ff3742, #ff5722); 
+    box-shadow: 0 0 10px rgba(255, 71, 87, 0.5); 
+  }
+  50% { 
+    background: linear-gradient(90deg, #ffffff, #ff9999); 
+    box-shadow: 0 0 20px rgba(255, 0, 0, 1); 
+  }
+}
+
+/* イベントメッセージの怖い演出 */
+#eventMessage.horror {
+  border-color: #ff0000 !important;
+  background: rgba(20, 0, 0, 0.98) !important;
+  box-shadow: 0 0 40px #ff0000, inset 0 0 30px rgba(255, 0, 0, 0.5);
+}
+
+#eventMessage.horror #eventText {
+  color: #ff6666;
+  text-shadow: 0 0 10px #ff0000;
+}
+
+@keyframes horrorMessagePulse {
+  0%, 100% { 
+    transform: scale(1) rotate(0deg); 
+    filter: brightness(1) contrast(100%); 
+  }
+  50% { 
+    transform: scale(1.03) rotate(0.5deg); 
+    filter: brightness(1.3) contrast(150%); 
+  }
+}
+
+/* 究極ホラー演出 */
+.ultimate-horror-effect {
+  animation: ultimateHorror 3s infinite;
+}
+
+@keyframes ultimateHorror {
+  0% { 
+    filter: invert(0) contrast(100%) hue-rotate(0deg); 
+    transform: scale(1) rotate(0deg); 
+  }
+  10% { 
+    filter: invert(1) contrast(300%) hue-rotate(90deg); 
+    transform: scale(1.1) rotate(2deg); 
+  }
+  20% { 
+    filter: invert(0) contrast(50%) hue-rotate(180deg); 
+    transform: scale(0.9) rotate(-2deg); 
+  }
+  30% { 
+    filter: invert(1) contrast(500%) hue-rotate(270deg); 
+    transform: scale(1.2) rotate(3deg); 
+  }
+  40% { 
+    filter: invert(0) contrast(200%) hue-rotate(360deg); 
+    transform: scale(0.8) rotate(-3deg); 
+  }
+  50% { 
+    filter: invert(1) contrast(1000%) hue-rotate(450deg) saturate(300%); 
+    transform: scale(1.3) rotate(5deg); 
+  }
+  60% { 
+    filter: invert(0) contrast(10%) hue-rotate(540deg); 
+    transform: scale(0.7) rotate(-5deg); 
+  }
+  70% { 
+    filter: invert(1) contrast(800%) hue-rotate(630deg); 
+    transform: scale(1.15) rotate(4deg); 
+  }
+  80% { 
+    filter: invert(0) contrast(300%) hue-rotate(720deg); 
+    transform: scale(0.85) rotate(-4deg); 
+  }
+  90% { 
+    filter: invert(1) contrast(2000%) hue-rotate(810deg); 
+    transform: scale(1.25) rotate(6deg); 
+  }
+  100% { 
+    filter: invert(0) contrast(100%) hue-rotate(0deg); 
+    transform: scale(1) rotate(0deg); 
+  }
+}
+
+/* 血の滴り効果 */
+@keyframes bloodDrip {
+  0% {
+    opacity: 0;
+    transform: translateY(-100vh);
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100vh);
+  }
+}
+
+.blood-drip {
+  animation: bloodDrip 2s ease-out forwards;
+}
+
+/* 影の動き効果 */
+@keyframes shadowMove {
+  0% {
+    opacity: 0;
+    transform: translateX(-100px) translateY(-100px) scale(0.5);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateX(0) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(100px) translateY(100px) scale(0.5);
+  }
+}
+
+.horror-shadow {
+  animation: shadowMove 3s ease-out forwards;
+}
+
+/* グリッチ効果 */
+.glitch-effect {
+  animation: glitchDistort 0.5s infinite;
+}
+
+@keyframes glitchDistort {
+  0% {
+    transform: translateX(0);
+    filter: hue-rotate(0deg);
+  }
+  10% {
+    transform: translateX(-2px) skew(2deg);
+    filter: hue-rotate(90deg) contrast(150%);
+  }
+  20% {
+    transform: translateX(2px) skew(-2deg);
+    filter: hue-rotate(180deg) contrast(200%);
+  }
+  30% {
+    transform: translateX(-1px) skew(1deg);
+    filter: hue-rotate(270deg) contrast(100%);
+  }
+  40% {
+    transform: translateX(1px) skew(-1deg);
+    filter: hue-rotate(360deg) contrast(250%);
+  }
+  50% {
+    transform: translateX(-3px) skew(3deg);
+    filter: hue-rotate(450deg) contrast(300%);
+  }
+  60% {
+    transform: translateX(3px) skew(-3deg);
+    filter: hue-rotate(540deg) contrast(150%);
+  }
+  70% {
+    transform: translateX(-2px) skew(2deg);
+    filter: hue-rotate(630deg) contrast(200%);
+  }
+  80% {
+    transform: translateX(2px) skew(-2deg);
+    filter: hue-rotate(720deg) contrast(100%);
+  }
+  90% {
+    transform: translateX(-1px) skew(1deg);
+    filter: hue-rotate(810deg) contrast(250%);
+  }
+  100% {
+    transform: translateX(0);
+    filter: hue-rotate(0deg);
+  }
+}
+
+/* 体力が極端に低い時の視覚効果 */
+.critical-health-visual {
+  position: relative;
+}
+
+.critical-health-visual::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, rgba(255, 0, 0, 0.2) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 997;
+}
+
+@keyframes criticalPulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* 極度の狂気状態 */
+.extreme-insanity {
+  animation: extremeInsanity 2s infinite;
+  position: relative;
+}
+
+.extreme-insanity::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 0, 0, 0.1) 2px,
+      rgba(255, 0, 0, 0.1) 4px
+    );
+  pointer-events: none;
+  z-index: 996;
+  animation: insanityLines 0.5s linear infinite;
+}
+
+@keyframes extremeInsanity {
+  0%, 100% {
+    filter: hue-rotate(0deg) contrast(100%) brightness(1);
+    transform: rotate(0deg);
+  }
+  25% {
+    filter: hue-rotate(90deg) contrast(150%) brightness(1.2);
+    transform: rotate(0.5deg);
+  }
+  50% {
+    filter: hue-rotate(180deg) contrast(200%) brightness(0.8);
+    transform: rotate(-0.5deg);
+  }
+  75% {
+    filter: hue-rotate(270deg) contrast(150%) brightness(1.1);
+    transform: rotate(0.3deg);
+  }
+}
+
+@keyframes insanityLines {
+  0% {
+    transform: translateY(0);
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(10px);
+    opacity: 0.1;
+  }
+}
+
+/* 恐怖レベルに応じた画面の暗さ */
+#gameScreen {
+  transition: filter 2s ease;
+}
+
+/* 恐怖レベルに応じた追加効果 */
+.horror-level-1 {
+  position: relative;
+}
+
+.horror-level-1::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(0, 0, 0, 0.1) 100%);
+  pointer-events: none;
+  z-index: 994;
+  animation: subtleDarkness 3s ease-in-out infinite;
+}
+
+@keyframes subtleDarkness {
+  0%, 100% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+.horror-level-2 {
+  position: relative;
+}
+
+.horror-level-2::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(100, 0, 0, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(0, 0, 0, 0.2) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 994;
+  animation: level2Darkness 2s ease-in-out infinite;
+}
+
+@keyframes level2Darkness {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.05);
+  }
+}
+
+.horror-level-3 {
+  position: relative;
+}
+
+.horror-level-3::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 30% 20%, rgba(150, 0, 0, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 70% 80%, rgba(0, 0, 0, 0.25) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(100, 0, 50, 0.1) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 994;
+  animation: level3Darkness 1.5s ease-in-out infinite;
+}
+
+.horror-level-3::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255, 0, 0, 0.02) 10px,
+    rgba(255, 0, 0, 0.02) 20px
+  );
+  pointer-events: none;
+  z-index: 993;
+  animation: level3Scanlines 2s linear infinite;
+}
+
+@keyframes level3Darkness {
+  0%, 100% {
+    opacity: 0.25;
+    transform: scale(1) rotate(0deg);
+  }
+  33% {
+    opacity: 0.35;
+    transform: scale(1.1) rotate(1deg);
+  }
+  66% {
+    opacity: 0.3;
+    transform: scale(0.95) rotate(-1deg);
+  }
+}
+
+@keyframes level3Scanlines {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(20px);
+  }
+}
+
+.horror-level-4 {
+  position: relative;
+}
+
+.horror-level-4::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 25% 25%, rgba(200, 0, 0, 0.2) 0%, transparent 35%),
+    radial-gradient(circle at 75% 75%, rgba(0, 0, 0, 0.3) 0%, transparent 35%),
+    radial-gradient(circle at 50% 50%, rgba(150, 0, 50, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 10% 90%, rgba(100, 0, 0, 0.1) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 994;
+  animation: level4Darkness 1s ease-in-out infinite;
+}
+
+.horror-level-4::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 5px,
+      rgba(255, 0, 0, 0.03) 5px,
+      rgba(255, 0, 0, 0.03) 10px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 5px,
+      rgba(0, 0, 0, 0.05) 5px,
+      rgba(0, 0, 0, 0.05) 10px
+    );
+  pointer-events: none;
+  z-index: 993;
+  animation: level4Scanlines 1s linear infinite;
+  mix-blend-mode: overlay;
+}
+
+@keyframes level4Darkness {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1) rotate(0deg);
+    filter: hue-rotate(0deg);
+  }
+  25% {
+    opacity: 0.4;
+    transform: scale(1.15) rotate(2deg);
+    filter: hue-rotate(10deg);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.9) rotate(-2deg);
+    filter: hue-rotate(-10deg);
+  }
+  75% {
+    opacity: 0.45;
+    transform: scale(1.1) rotate(1deg);
+    filter: hue-rotate(5deg);
+  }
+}
+
+@keyframes level4Scanlines {
+  0% {
+    transform: translateY(0) translateX(0);
+  }
+  50% {
+    transform: translateY(15px) translateX(5px);
+  }
+  100% {
+    transform: translateY(30px) translateX(0);
+  }
+}
+
+@keyframes level4Flicker {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* 追加の恐怖ビジュアル効果 */
+.horror-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 995;
+  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), transparent 0%, rgba(0, 0, 0, 0.3) 100%);
+  mix-blend-mode: multiply;
+}
+
+/* スマホ対応 */
+/* タブレット対応 */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .mission-panel {
+    width: 280px;
+    right: 15px;
+  }
+  
+  .work-btn {
+    min-width: 120px;
+    font-size: 1rem;
+    padding: 15px 20px;
+  }
+}
+
+/* スマートフォン対応 */
+@media (max-width: 768px) {
+  /* スタート画面 */
+  #startScreen h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.3;
+  }
+  
+  #startScreen p {
+    font-size: 1.3rem;
+    padding: 0 20px;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+  
+  #startBtn {
+    font-size: 1.4rem;
+    padding: 20px 40px;
+    min-height: 60px;
+  }
+  
+  /* ヘッダー */
+  #timeDisplay {
+    font-size: 1.8rem;
+  }
+  
+  .bar {
+    width: 90px;
+    height: 18px;
+  }
+  
+  #gameHeader {
+    height: auto;
+    min-height: 80px;
+    flex-wrap: wrap;
+    padding: 12px 10px;
+    gap: 8px;
+    justify-content: center;
+  }
+  
+  #healthBar, #sanityBar {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  #healthBar span, #sanityBar span {
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+  
+  /* 客エリア - 重ならないように調整 */
+  #customerArea {
+    top: 10%;
+    z-index: 5;
+  }
+  
+  .customer-sprite {
+    font-size: 3.5rem;
+  }
+  
+  .speech-bubble {
+    max-width: 85%;
+    font-size: 1rem;
+    padding: 12px 16px;
+    line-height: 1.5;
+  }
+  
+  /* レジエリア - 重ならないように調整 */
+  #registerArea {
+    bottom: 35%;
+    z-index: 4;
+  }
+  
+  .register {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
+  
+  #registerScreen {
+    min-width: 200px;
+    padding: 12px 18px;
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+  
+  /* 作業エリア - 大きく見やすく */
+  #workArea {
+    height: auto;
+    min-height: 140px;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px 15px;
+    background: rgba(0, 0, 0, 0.95);
+  }
+  
+  .work-btn {
+    width: 100%;
+    max-width: 100%;
+    min-width: auto;
+    min-height: 56px;
+    font-size: 1.2rem;
+    padding: 16px 20px;
+    border-width: 3px;
+  }
+  
+  /* イベントメッセージ */
+  #eventMessage {
+    max-width: 95%;
+    padding: 25px 20px;
+    border-width: 4px;
+  }
+  
+  #eventText {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    margin-bottom: 25px;
+  }
+  
+  #eventOk {
+    font-size: 1.3rem;
+    padding: 18px 35px;
+    min-height: 56px;
+  }
+  
+  /* 終了画面 */
+  #endTitle {
+    font-size: 2.2rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  #endMessage {
+    font-size: 1.2rem;
+    max-width: 90%;
+    line-height: 1.7;
+    margin-bottom: 2rem;
+  }
+  
+  #restartBtn {
+    font-size: 1.3rem;
+    padding: 20px 40px;
+    min-height: 60px;
+  }
+  
+  /* モバイル向けホラー演出の調整 */
+  .customer-scary .customer-sprite {
+    font-size: 4rem;
+  }
+  
+  @keyframes scaryFloat {
+    0%, 100% { 
+      transform: translateY(0) rotate(0deg) scale(1); 
+    }
+    50% { 
+      transform: translateY(-15px) rotate(2deg) scale(1.05); 
+    }
+  }
+
+  /* モバイル向けミッションパネル */
+  .mission-panel {
+    width: calc(100% - 20px);
+    right: 10px;
+    left: 10px;
+    top: 90px;
+    max-height: calc(100vh - 200px);
+    font-size: 0.95rem;
+  }
+  
+  #missionHeader {
+    padding: 12px 15px;
+  }
+  
+  #missionHeader span {
+    font-size: 1.1rem;
+  }
+  
+  #missionToggle {
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
+  }
+
+  .mission-item {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .mission-title {
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+
+  .mission-description {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  
+  .progress-bar {
+    height: 10px;
+  }
+
+  .progress-text {
+    font-size: 0.85rem;
+  }
+  
+  .mission-reward {
+    font-size: 0.8rem;
+  }
+  
+  /* 絵文字エリアの調整 */
+  .event-emoji {
+    font-size: 4rem !important;
+  }
+}
+
+/* 小さなスマートフォン対応 */
+@media (max-width: 480px) {
+  #startScreen h1 {
+    font-size: 2rem;
+  }
+  
+  #startScreen p {
+    font-size: 1.1rem;
+  }
+  
+  #timeDisplay {
+    font-size: 1.5rem;
+  }
+  
+  .bar {
+    width: 70px;
+    height: 16px;
+  }
+  
+  #customerArea {
+    top: 8%;
+  }
+  
+  .customer-sprite {
+    font-size: 3rem;
+  }
+  
+  .speech-bubble {
+    max-width: 90%;
+    font-size: 0.95rem;
+    padding: 10px 14px;
+  }
+  
+  #registerArea {
+    bottom: 38%;
+  }
+  
+  .register {
+    font-size: 2rem;
+  }
+  
+  #registerScreen {
+    min-width: 180px;
+    padding: 10px 15px;
+    font-size: 0.95rem;
+  }
+  
+  #workArea {
+    padding: 15px 12px;
+    gap: 10px;
+  }
+  
+  .work-btn {
+    font-size: 1.1rem;
+    padding: 14px 18px;
+    min-height: 52px;
+  }
+  
+  #eventText {
+    font-size: 1.1rem;
+  }
+  
+  #eventOk {
+    font-size: 1.2rem;
+    padding: 16px 30px;
+  }
+  
+  .event-emoji {
+    font-size: 3.5rem !important;
+  }
+}
+
+/* iOS Safari対応 */
+@supports (-webkit-touch-callout: none) {
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  #workArea {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  #gameHeader {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-image: url("images/haikei.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: white;
+  overflow: hidden;
+  user-select: none;
+  transition: background-image 1s ease, filter 0.5s ease;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* 停電時の背景 */
+body.power-outage {
+  background-image: url("images/black haikei.png");
+  filter: brightness(0.7);
+}
+
+/* 背景画像がない場合のフォールバック */
+body:not([style*="background-image"]) {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+}
+
+#gameContainer {
+  width: 100%;
+  height: 100vh;
+  height: calc(var(--vh, 1vh) * 100);
+  position: relative;
+  overflow: hidden;
+  background-image: url("images/haikei.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  touch-action: manipulation;
+}
+
+/* 画面共通設定 */
+.screen {
+  width: 100%;
+  height: 100vh;
+  height: calc(var(--vh, 1vh) * 100);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: opacity 0.5s ease;
+  overflow: hidden;
+  background: transparent;
+  touch-action: manipulation;
+}
+
+.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* スタート画面 */
+#startScreen {
+  background: rgba(15, 15, 35, 0.3);
+  backdrop-filter: blur(2px);
+}
+
+#startScreen h1 {
+  font-size: 3rem;
+  margin-bottom: 2rem;
+  text-shadow: 0 0 25px #4a90e2, 0 0 40px #4a90e2;
+  /* 点滅を無効化 - 固定のグロー効果のみ */
+}

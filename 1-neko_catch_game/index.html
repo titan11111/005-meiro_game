@@ -4,7 +4,618 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>猫キャッチゲーム</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* リセットCSS */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Arial', sans-serif;
+        background: linear-gradient(135deg, #74b9ff, #0984e3);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .game-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        max-width: 600px;
+        width: 100%;
+        min-height: 600px;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .header h1 {
+        color: #2d3436;
+        font-size: 2rem;
+        margin-bottom: 15px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .score-board {
+        display: flex;
+        justify-content: space-around;
+        background: #ddd;
+        padding: 10px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    .score-board div {
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .game-area {
+        position: relative;
+        height: 400px;
+        background: linear-gradient(to bottom, #87ceeb, #98fb98);
+        border: 3px solid #2d3436;
+        border-radius: 15px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        cursor: none;
+    }
+
+    .basket {
+        position: absolute;
+        bottom: 20px;
+        font-size: 50px;
+        z-index: 100;
+        transform: translateX(-50%);
+        transition: all 0.1s ease;
+    }
+
+    .falling-item {
+        position: absolute;
+        width: 50px;
+        height: 50px;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .falling-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .falling-item.cat {
+        font-size: 45px;
+    }
+
+    .falling-item.bomb {
+        font-size: 40px;
+        animation: shake 0.5s infinite;
+    }
+
+    .falling-item.speed {
+        font-size: 35px;
+        animation: sparkle 1s infinite;
+    }
+
+    .falling-item.dog {
+        font-size: 45px;
+    }
+
+    .falling-item.ice {
+        font-size: 40px;
+        animation: iceShine 1s infinite;
+    }
+
+    .falling-item.rain {
+        font-size: 40px;
+        animation: rainSway 1s infinite;
+    }
+
+    .controls {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        background: linear-gradient(135deg, #00b894, #00a085);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+        user-select: none;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 184, 148, 0.4);
+    }
+
+    .btn:active {
+        transform: translateY(0);
+    }
+
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .game-over {
+        text-align: center;
+        background: rgba(255, 107, 107, 0.1);
+        border: 2px solid #ff6b6b;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        animation: fadeIn 0.5s ease;
+    }
+
+    .game-over h2 {
+        color: #ff6b6b;
+        margin-bottom: 10px;
+        font-size: 1.8rem;
+    }
+
+    .game-over p {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+        color: #2d3436;
+    }
+
+    .instructions {
+        background: rgba(116, 185, 255, 0.1);
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+    }
+
+    .instructions h3 {
+        color: #2d3436;
+        margin-bottom: 10px;
+        font-size: 1.3rem;
+    }
+
+    .instructions p {
+        margin: 5px 0;
+        font-size: 0.9rem;
+        color: #636e72;
+    }
+
+    /* 効果エフェクト */
+    .effect {
+        position: absolute;
+        pointer-events: none;
+        z-index: 1000;
+        font-size: 30px;
+        animation: effectPop 1s ease-out forwards;
+    }
+
+    /* アニメーション効果 */
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0) translateX(-50%);
+        }
+        40% {
+            transform: translateY(-10px) translateX(-50%);
+        }
+        60% {
+            transform: translateY(-5px) translateX(-50%);
+        }
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-2px); }
+        75% { transform: translateX(2px); }
+    }
+
+    @keyframes sparkle {
+        0%, 100% { 
+            transform: scale(1) rotate(0deg);
+            opacity: 1;
+        }
+        50% { 
+            transform: scale(1.2) rotate(180deg);
+            opacity: 0.7;
+        }
+    }
+
+    @keyframes iceShine {
+        0%, 100% { 
+            transform: scale(1);
+            filter: brightness(1);
+        }
+        50% { 
+            transform: scale(1.1);
+            filter: brightness(1.3);
+        }
+    }
+
+    @keyframes rainSway {
+        0%, 100% { 
+            transform: translateX(0);
+        }
+        50% { 
+            transform: translateX(3px);
+        }
+    }
+
+    @keyframes effectPop {
+        0% {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(2) translateY(-50px);
+            opacity: 0;
+        }
+    }
+
+    @keyframes fadeIn {
+        0% {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes flash {
+        0% { 
+            background: linear-gradient(to bottom, #87ceeb, #98fb98);
+        }
+        50% { 
+            background: linear-gradient(to bottom, #ffeb3b, #4caf50);
+        }
+        100% { 
+            background: linear-gradient(to bottom, #87ceeb, #98fb98);
+        }
+    }
+
+    @keyframes dogWarn {
+        0% { 
+            background: linear-gradient(to bottom, #87ceeb, #98fb98);
+        }
+        50% { 
+            background: linear-gradient(to bottom, #ffcccc, #ffcccc);
+        }
+        100% { 
+            background: linear-gradient(to bottom, #87ceeb, #98fb98);
+        }
+    }
+
+    @keyframes rainFilter {
+        0%, 100% {
+            opacity: 0.7;
+        }
+        50% {
+            opacity: 0.6;
+        }
+    }
+
+    .basket:hover {
+        animation: bounce 0.6s;
+    }
+
+    .game-area.sound-effect {
+        animation: flash 0.3s;
+    }
+
+    .game-area.dog-catch {
+        animation: dogWarn 0.3s;
+    }
+
+    /* スピードブースト中の視覚効果 */
+    .speed-boost .game-area {
+        box-shadow: 0 0 20px #ffeb3b;
+        border-color: #ffeb3b;
+    }
+
+    .speed-boost .basket {
+        text-shadow: 0 0 10px #ffeb3b;
+    }
+
+    /* スローモーション中の視覚効果 */
+    .slow-motion .game-area {
+        box-shadow: 0 0 20px #87ceeb;
+        border-color: #4169e1;
+    }
+
+    .slow-motion .basket {
+        text-shadow: 0 0 10px #4169e1;
+    }
+
+    /* 雨エフェクト中の視覚効果 */
+    .rain-effect .game-area {
+        opacity: 0.7;
+        background: linear-gradient(to bottom, #a9a9a9, #808080);
+        animation: rainFilter 0.5s infinite;
+    }
+
+    .rain-effect .basket {
+        filter: blur(2px);
+        opacity: 0.8;
+    }
+
+    /* スマホ対応（レスポンシブデザイン） */
+    @media (max-width: 768px) {
+        body {
+            padding: 10px;
+        }
+        
+        .game-container {
+            padding: 15px;
+            min-height: auto;
+            margin: 10px;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .score-board {
+            flex-direction: column;
+            gap: 5px;
+            text-align: center;
+        }
+        
+        .score-board div {
+            font-size: 1rem;
+            padding: 2px 0;
+        }
+        
+        .game-area {
+            height: 300px;
+            cursor: default;
+        }
+        
+        .basket {
+            font-size: 40px;
+            bottom: 15px;
+        }
+        
+        .falling-item {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .falling-item.cat {
+            font-size: 35px;
+        }
+        
+        .falling-item.bomb {
+            font-size: 30px;
+        }
+        
+        .falling-item.speed {
+            font-size: 25px;
+        }
+        
+        .falling-item.dog {
+            font-size: 35px;
+        }
+        
+        .falling-item.ice {
+            font-size: 30px;
+        }
+        
+        .falling-item.rain {
+            font-size: 30px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            min-width: 80px;
+        }
+        
+        .instructions {
+            font-size: 0.8rem;
+        }
+        
+        .instructions p {
+            font-size: 0.8rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .game-container {
+            padding: 10px;
+        }
+        
+        .header h1 {
+            font-size: 1.3rem;
+        }
+        
+        .game-area {
+            height: 250px;
+        }
+        
+        .basket {
+            font-size: 35px;
+            bottom: 10px;
+        }
+        
+        .falling-item {
+            width: 35px;
+            height: 35px;
+        }
+        
+        .falling-item.cat {
+            font-size: 30px;
+        }
+        
+        .falling-item.bomb {
+            font-size: 25px;
+        }
+        
+        .falling-item.speed {
+            font-size: 20px;
+        }
+        
+        .falling-item.dog {
+            font-size: 30px;
+        }
+        
+        .falling-item.ice {
+            font-size: 25px;
+        }
+        
+        .falling-item.rain {
+            font-size: 25px;
+        }
+        
+        .controls {
+            gap: 8px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            min-width: 70px;
+        }
+        
+        .game-over h2 {
+            font-size: 1.5rem;
+        }
+        
+        .game-over p {
+            font-size: 1rem;
+        }
+        
+        .instructions h3 {
+            font-size: 1.1rem;
+        }
+        
+        .instructions p {
+            font-size: 0.75rem;
+        }
+    }
+
+    /* 極小画面用（320px以下） */
+    @media (max-width: 320px) {
+        .game-container {
+            padding: 8px;
+        }
+        
+        .header h1 {
+            font-size: 1.1rem;
+        }
+        
+        .game-area {
+            height: 200px;
+        }
+        
+        .basket {
+            font-size: 30px;
+        }
+        
+        .falling-item {
+            width: 30px;
+            height: 30px;
+        }
+        
+        .falling-item.cat {
+            font-size: 25px;
+        }
+        
+        .falling-item.bomb {
+            font-size: 20px;
+        }
+        
+        .falling-item.speed {
+            font-size: 18px;
+        }
+        
+        .falling-item.dog {
+            font-size: 25px;
+        }
+        
+        .falling-item.ice {
+            font-size: 20px;
+        }
+        
+        .falling-item.rain {
+            font-size: 20px;
+        }
+        
+        .btn {
+            padding: 6px 12px;
+            font-size: 0.7rem;
+            min-width: 60px;
+        }
+    }
+
+    /* タッチデバイス用の追加スタイル */
+    @media (hover: none) and (pointer: coarse) {
+        .btn:hover {
+            transform: none;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+        }
+        
+        .btn:active {
+            transform: scale(0.95);
+        }
+        
+        .basket:hover {
+            animation: none;
+        }
+        
+        .game-area {
+            cursor: default;
+        }
+    }
+
+    /* 減らされたモーション設定 */
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+        
+        .basket:hover {
+            animation: none;
+        }
+        
+        .falling-item.bomb {
+            animation: none;
+        }
+        
+        .falling-item.speed {
+            animation: none;
+        }
+        
+        .falling-item.ice {
+            animation: none;
+        }
+        
+        .falling-item.rain {
+            animation: none;
+        }
+    }
+  </style>
 </head>
 <body>
   <div class="game-container">
@@ -39,23 +650,484 @@
       <p>🏆 金の猫は特別ボーナス！</p>
       <p>⚡ スピードアップアイテムでスピードブースト！</p>
       <p>💣 爆弾は避けよう！</p>
+      <p>🐶 犬は触っちゃダメ！−２０点！</p>
+      <p>🧊 アイスは遅くなる...３秒間！</p>
+      <p>🌧️ 雨は見えなくなる...３秒間！</p>
     </div>
   </div>
 
-  <!-- 音声ファイル -->
+  <!-- 埋め込み音声ファイル -->
   <audio id="catSound1" preload="auto">
-    <source src="./nekoikaku.mp3" type="audio/mpeg" />
+    <source src="neko1.mp3" type="audio/mpeg" />
   </audio>
   <audio id="catSound2" preload="auto">
-    <source src="./neko1.mp3" type="audio/mpeg" />
+    <source src="neko2.mp3" type="audio/mpeg" />
   </audio>
   <audio id="catSound3" preload="auto">
-    <source src="./neko2.mp3" type="audio/mpeg" />
+    <source src="neko3.mp3" type="audio/mpeg" />
   </audio>
   <audio id="catSound4" preload="auto">
-    <source src="./neko3.mp3" type="audio/mpeg" />
+    <source src="nekoikaku.mp3" type="audio/mpeg" />
   </audio>
 
-  <script src="script.js"></script>
+  <script>
+    class CatCatchGame {
+        constructor() {
+            // DOM要素の取得
+            this.gameArea = document.getElementById('gameArea');
+            this.basket = document.getElementById('basket');
+            this.scoreElement = document.getElementById('score');
+            this.livesElement = document.getElementById('lives');
+            this.timeElement = document.getElementById('time');
+            this.startBtn = document.getElementById('startBtn');
+            this.pauseBtn = document.getElementById('pauseBtn');
+            this.resetBtn = document.getElementById('resetBtn');
+            this.gameOverDiv = document.getElementById('gameOver');
+            this.finalScoreElement = document.getElementById('finalScore');
+            this.restartBtn = document.getElementById('restartBtn');
+
+            // 音声要素の取得
+            this.catSounds = [];
+            ['catSound1', 'catSound2', 'catSound3', 'catSound4'].forEach(id => {
+                const sound = document.getElementById(id);
+                if (sound) this.catSounds.push(sound);
+            });
+
+            // ゲームの状態変数
+            this.score = 0;
+            this.lives = 3;
+            this.time = 60;
+            this.gameRunning = false;
+            this.paused = false;
+            this.fallingItems = [];
+            this.basketPosition = 50;
+            this.goldenCatCombo = 0;
+            this.speedBoost = false;
+            this.speedBoostTime = 0;
+            this.slowMotion = false;
+            this.slowMotionTime = 0;
+            this.rainEffect = false;
+            this.rainEffectTime = 0;
+            this.itemCreateCount = 0;
+
+            // インターバルID
+            this.gameInterval = null;
+            this.timeInterval = null;
+            this.itemInterval = null;
+
+            this.init();
+        }
+
+        init() {
+            this.bindEvents();
+            this.updateDisplay();
+            this.updateBasketPosition();
+        }
+
+        bindEvents() {
+            this.startBtn.addEventListener('click', () => {
+                // スマホ用の初回再生許可取得
+                if (this.catSounds.length > 0) {
+                    this.catSounds[0].play().catch(() => {});
+                }
+                this.startGame();
+            });
+            this.pauseBtn.addEventListener('click', () => this.togglePause());
+            this.resetBtn.addEventListener('click', () => this.resetGame());
+            this.restartBtn.addEventListener('click', () => this.resetGame());
+            
+            // マウス操作
+            this.gameArea.addEventListener('mousemove', e => this.moveBasket(e));
+            
+            // タッチ操作
+            this.gameArea.addEventListener('touchmove', e => {
+                e.preventDefault();
+                this.moveBasket(e.touches[0]);
+            }, { passive: false });
+            
+            this.gameArea.addEventListener('touchstart', e => {
+                e.preventDefault();
+            }, { passive: false });
+        }
+
+        startGame() {
+            if (this.gameRunning && !this.paused) return;
+            
+            this.gameRunning = true;
+            this.paused = false;
+            this.startBtn.style.display = 'none';
+            this.pauseBtn.style.display = 'inline-block';
+            this.gameOverDiv.style.display = 'none';
+
+            this.clearIntervals();
+
+            this.gameInterval = setInterval(() => this.gameLoop(), 50);
+            this.timeInterval = setInterval(() => this.updateTime(), 1000);
+            this.itemInterval = setInterval(() => this.createFallingItem(), 1200);
+        }
+
+        pauseGame() {
+            this.paused = true;
+            this.pauseBtn.textContent = '再開';
+            this.clearIntervals();
+        }
+
+        resumeGame() {
+            this.paused = false;
+            this.pauseBtn.textContent = '一時停止';
+            this.gameInterval = setInterval(() => this.gameLoop(), 50);
+            this.timeInterval = setInterval(() => this.updateTime(), 1000);
+            this.itemInterval = setInterval(() => this.createFallingItem(), 1200);
+        }
+
+        togglePause() {
+            if (this.paused) {
+                this.resumeGame();
+            } else {
+                this.pauseGame();
+            }
+        }
+
+        resetGame() {
+            this.clearIntervals();
+            this.gameRunning = false;
+            this.paused = false;
+            this.score = 0;
+            this.lives = 3;
+            this.time = 60;
+            this.basketPosition = 50;
+            this.goldenCatCombo = 0;
+            this.speedBoost = false;
+            this.speedBoostTime = 0;
+            this.slowMotion = false;
+            this.slowMotionTime = 0;
+            this.rainEffect = false;
+            this.rainEffectTime = 0;
+            this.itemCreateCount = 0;
+            this.fallingItems = [];
+
+            const items = this.gameArea.querySelectorAll('.falling-item');
+            items.forEach(item => item.remove());
+
+            const effects = this.gameArea.querySelectorAll('.effect');
+            effects.forEach(effect => effect.remove());
+
+            this.updateDisplay();
+            this.updateBasketPosition();
+            this.startBtn.style.display = 'inline-block';
+            this.pauseBtn.style.display = 'none';
+            this.pauseBtn.textContent = '一時停止';
+            this.gameOverDiv.style.display = 'none';
+            
+            document.body.classList.remove('speed-boost');
+            document.body.classList.remove('slow-motion');
+            document.body.classList.remove('rain-effect');
+        }
+
+        clearIntervals() {
+            if (this.gameInterval) {
+                clearInterval(this.gameInterval);
+                this.gameInterval = null;
+            }
+            if (this.timeInterval) {
+                clearInterval(this.timeInterval);
+                this.timeInterval = null;
+            }
+            if (this.itemInterval) {
+                clearInterval(this.itemInterval);
+                this.itemInterval = null;
+            }
+        }
+
+        createFallingItem() {
+            if (!this.gameRunning || this.paused) return;
+            
+            this.itemCreateCount++;
+            let type = 'cat';
+            
+            if (this.itemCreateCount % 25 === 0) {
+                type = 'ice';
+            } else if (this.itemCreateCount % 22 === 0) {
+                type = 'rain';
+            } else if (this.itemCreateCount % 20 === 0) {
+                type = 'dog';
+            } else if (this.itemCreateCount % 15 === 0) {
+                type = 'golden_cat';
+            } else if (this.itemCreateCount % 8 === 0) {
+                type = 'speed';
+            } else if (this.itemCreateCount % 6 === 0) {
+                type = 'bomb';
+            }
+
+            const item = {
+                type: type,
+                x: Math.random() * 90 + 5,
+                y: -10,
+                speed: this.getItemSpeed(type),
+                element: this.createElement(type)
+            };
+
+            item.element.style.left = `${item.x}%`;
+            item.element.style.top = `${item.y}%`;
+            this.gameArea.appendChild(item.element);
+            this.fallingItems.push(item);
+        }
+
+        getItemSpeed(type) {
+            let baseSpeed = 1;
+            
+            if (this.speedBoost) baseSpeed *= 1.5;
+            if (this.slowMotion) baseSpeed *= 0.5;
+
+            const speeds = {
+                'cat': 2 * baseSpeed,
+                'golden_cat': 1.5 * baseSpeed,
+                'bomb': 2.5 * baseSpeed,
+                'speed': 1.8 * baseSpeed,
+                'dog': 2.2 * baseSpeed,
+                'ice': 1.8 * baseSpeed,
+                'rain': 2 * baseSpeed
+            };
+            return speeds[type] || 2 * baseSpeed;
+        }
+
+        createElement(type) {
+            const element = document.createElement('div');
+            element.className = `falling-item ${type}`;
+            
+            const fallbackEmojis = {
+                'cat': '<img src="images/kina.png" alt="猫" style="width:60px; height:60px; object-fit:contain;">',
+                'golden_cat': '🏆',
+                'bomb': '💣',
+                'speed': '⚡',
+                'dog': '🐶',
+                'ice': '🧊',
+                'rain': '🌧️'
+            };
+
+            element.innerHTML = `<span style="font-size: 40px;">${fallbackEmojis[type]}</span>`;
+
+            if (type === 'golden_cat') {
+                element.style.filter = 'drop-shadow(0 0 10px gold)';
+                element.style.animation = 'goldGlow 1s infinite alternate';
+            }
+
+            return element;
+        }
+
+        gameLoop() {
+            if (!this.gameRunning || this.paused) return;
+
+            if (this.speedBoost) {
+                this.speedBoostTime--;
+                if (this.speedBoostTime <= 0) {
+                    this.speedBoost = false;
+                    document.body.classList.remove('speed-boost');
+                }
+            }
+
+            if (this.slowMotion) {
+                this.slowMotionTime--;
+                if (this.slowMotionTime <= 0) {
+                    this.slowMotion = false;
+                    document.body.classList.remove('slow-motion');
+                }
+            }
+
+            if (this.rainEffect) {
+                this.rainEffectTime--;
+                if (this.rainEffectTime <= 0) {
+                    this.rainEffect = false;
+                    document.body.classList.remove('rain-effect');
+                }
+            }
+
+            for (let i = this.fallingItems.length - 1; i >= 0; i--) {
+                const item = this.fallingItems[i];
+                item.y += item.speed;
+                item.element.style.top = `${item.y}%`;
+
+                if (this.checkCollision(item)) {
+                    this.handleItemCatch(item);
+                    this.removeItem(i);
+                }
+                else if (item.y > 100) {
+                    if (item.type === 'cat' || item.type === 'golden_cat') {
+                        this.lives--;
+                        this.updateDisplay();
+                        this.showEffect('💔', item.x, 90);
+                        
+                        if (this.lives <= 0) {
+                            this.endGame();
+                        }
+                    }
+                    this.removeItem(i);
+                }
+            }
+        }
+
+        checkCollision(item) {
+            const basketRect = this.basket.getBoundingClientRect();
+            const itemRect = item.element.getBoundingClientRect();
+            const gameAreaRect = this.gameArea.getBoundingClientRect();
+
+            const basketX = (basketRect.left + basketRect.width / 2 - gameAreaRect.left) / gameAreaRect.width * 100;
+            const basketY = (basketRect.top - gameAreaRect.top) / gameAreaRect.height * 100;
+            const basketWidth = basketRect.width / gameAreaRect.width * 100;
+            const basketHeight = basketRect.height / gameAreaRect.height * 100;
+
+            const itemWidth = itemRect.width / gameAreaRect.width * 100;
+            const itemHeight = itemRect.height / gameAreaRect.height * 100;
+
+            return (
+                item.x < basketX + basketWidth / 2 &&
+                item.x + itemWidth > basketX - basketWidth / 2 &&
+                item.y < basketY + basketHeight &&
+                item.y + itemHeight > basketY
+            );
+        }
+
+        handleItemCatch(item) {
+            switch (item.type) {
+                case 'cat':
+                    this.score += 10;
+                    this.goldenCatCombo = 0;
+                    this.showEffect('+10', item.x, item.y);
+                    this.playRandomCatSound();
+                    break;
+                    
+                case 'golden_cat':
+                    this.goldenCatCombo++;
+                    const points = 50 * this.goldenCatCombo;
+                    this.score += points;
+                    this.showEffect(`+${points}`, item.x, item.y);
+                    this.playRandomCatSound();
+                    break;
+
+                case 'dog':
+                    this.score -= 20;
+                    if (this.score < 0) this.score = 0;
+                    this.showEffect('-20💔', item.x, item.y);
+                    this.gameArea.classList.add('dog-catch');
+                    setTimeout(() => this.gameArea.classList.remove('dog-catch'), 300);
+                    break;
+
+                case 'ice':
+                    this.slowMotion = true;
+                    this.slowMotionTime = 150;
+                    document.body.classList.add('slow-motion');
+                    this.showEffect('🧊遅い...', item.x, item.y);
+                    break;
+
+                case 'rain':
+                    this.rainEffect = true;
+                    this.rainEffectTime = 150;
+                    document.body.classList.add('rain-effect');
+                    this.showEffect('🌧️見えない...', item.x, item.y);
+                    break;
+                    
+                case 'bomb':
+                    this.lives--;
+                    this.showEffect('💥', item.x, item.y);
+                    this.gameArea.classList.add('sound-effect');
+                    setTimeout(() => this.gameArea.classList.remove('sound-effect'), 300);
+                    
+                    if (this.lives <= 0) {
+                        this.endGame();
+                    }
+                    break;
+                    
+                case 'speed':
+                    this.speedBoost = true;
+                    this.speedBoostTime = 100;
+                    document.body.classList.add('speed-boost');
+                    this.showEffect('⚡速い！', item.x, item.y);
+                    break;
+            }
+            this.updateDisplay();
+        }
+
+        removeItem(index) {
+            const item = this.fallingItems[index];
+            if (item && item.element && item.element.parentNode) {
+                item.element.remove();
+            }
+            this.fallingItems.splice(index, 1);
+        }
+
+        showEffect(text, x, y) {
+            const effect = document.createElement('div');
+            effect.className = 'effect';
+            effect.textContent = text;
+            effect.style.left = `${x}%`;
+            effect.style.top = `${y}%`;
+            this.gameArea.appendChild(effect);
+
+            setTimeout(() => {
+                if (effect.parentNode) {
+                    effect.remove();
+                }
+            }, 1000);
+        }
+
+        moveBasket(event) {
+            if (!this.gameRunning) return;
+
+            const gameAreaRect = this.gameArea.getBoundingClientRect();
+            const x = event.clientX - gameAreaRect.left;
+            const percentage = (x / gameAreaRect.width) * 100;
+            
+            this.basketPosition = Math.max(5, Math.min(95, percentage));
+            this.updateBasketPosition();
+        }
+
+        updateBasketPosition() {
+            this.basket.style.left = `${this.basketPosition}%`;
+        }
+
+        updateTime() {
+            if (!this.gameRunning || this.paused) return;
+            
+            this.time--;
+            this.updateDisplay();
+            
+            if (this.time <= 0) {
+                this.endGame();
+            }
+        }
+
+        updateDisplay() {
+            this.scoreElement.textContent = this.score;
+            this.livesElement.textContent = this.lives;
+            this.timeElement.textContent = this.time;
+        }
+
+        endGame() {
+            this.gameRunning = false;
+            this.clearIntervals();
+            
+            this.finalScoreElement.textContent = this.score;
+            this.gameOverDiv.style.display = 'block';
+            this.startBtn.style.display = 'none';
+            this.pauseBtn.style.display = 'none';
+            
+            document.body.classList.remove('speed-boost');
+            document.body.classList.remove('slow-motion');
+            document.body.classList.remove('rain-effect');
+        }
+
+        playRandomCatSound() {
+            if (this.catSounds.length > 0) {
+                const sound = this.catSounds[Math.floor(Math.random() * this.catSounds.length)];
+                sound.currentTime = 0;
+                sound.play().catch(e => console.warn("音声再生エラー:", e));
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        new CatCatchGame();
+    });
+  </script>
 </body>
 </html>

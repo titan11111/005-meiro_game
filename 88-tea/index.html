@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>☕ 茶柱立て職人</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', 'Hiragino Sans', 'Meiryo', sans-serif;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2e7d32;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            background: #f1f8e9;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .label {
+            display: block;
+            font-size: 0.9rem;
+            color: #558b2f;
+            margin-bottom: 5px;
+        }
+
+        .value {
+            display: block;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+
+        #gameCanvas {
+            width: 100%;
+            max-width: 500px;
+            height: 400px;
+            display: block;
+            margin: 0 auto 20px;
+            border: 3px solid #2e7d32;
+            border-radius: 10px;
+            background: #fff9c4;
+            touch-action: none;
+        }
+
+        .controls {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        #tiltSlider {
+            width: calc(100% - 60px);
+            height: 40px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #dcedc8;
+            border-radius: 10px;
+            outline: none;
+            vertical-align: middle;
+        }
+
+        #tiltSlider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 30px;
+            height: 30px;
+            background: #2e7d32;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        #tiltSlider::-moz-range-thumb {
+            width: 30px;
+            height: 30px;
+            background: #2e7d32;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        #tiltValue {
+            display: inline-block;
+            width: 50px;
+            text-align: center;
+            font-weight: bold;
+            color: #2e7d32;
+            font-size: 1.1rem;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+
+        .btn-main, .btn-sub {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .btn-main {
+            background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(67, 160, 71, 0.3);
+        }
+
+        .btn-main:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(67, 160, 71, 0.4);
+        }
+
+        .btn-main:active {
+            transform: translateY(0);
+        }
+
+        .btn-main:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-sub {
+            background: #ffeb3b;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(255, 235, 59, 0.3);
+        }
+
+        .btn-sub:hover {
+            background: #fdd835;
+            transform: translateY(-2px);
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 20px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .instructions {
+            background: #fff3e0;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #ff9800;
+        }
+
+        .instructions h3 {
+            color: #e65100;
+            margin-bottom: 15px;
+        }
+
+        .instructions ol {
+            padding-left: 25px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        /* スマホ対応 */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            #gameCanvas {
+                height: 300px;
+            }
+
+            .btn-main, .btn-sub {
+                font-size: 1rem;
+                padding: 12px;
+            }
+
+            .value {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>☕ 茶柱立て職人</h1>
+        <p class="description">お茶を注ぐタイミングとコップの傾きで茶柱を立てよう！</p>
+        
+        <div class="score-board">
+            <div class="score-item">
+                <span class="label">成功回数:</span>
+                <span id="successCount" class="value">0</span>
+            </div>
+            <div class="score-item">
+                <span class="label">挑戦回数:</span>
+                <span id="totalCount" class="value">0</span>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="tiltSlider">コップの傾き:</label>
+                <input type="range" id="tiltSlider" min="-30" max="30" value="0" step="1">
+                <span id="tiltValue">0°</span>
+            </div>
+
+            <button id="pourButton" class="btn-main">🫖 お茶を注ぐ</button>
+            <button id="resetButton" class="btn-sub">🔄 リセット</button>
+        </div>
+
+        <div class="status" id="status">コップの傾きを調整してお茶を注ごう！</div>
+
+        <div class="instructions">
+            <h3>📖 遊び方</h3>
+            <ol>
+                <li>スライダーでコップの傾きを調整</li>
+                <li>「お茶を注ぐ」ボタンを押す</li>
+                <li>茶柱が縦に立ったら成功！</li>
+                <li>傾きとタイミングが運命を分ける！</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Canvas設定
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Canvas解像度を高く設定
+        canvas.width = 500;
+        canvas.height = 400;
+
+        // UI要素
+        const tiltSlider = document.getElementById('tiltSlider');
+        const tiltValue = document.getElementById('tiltValue');
+        const pourButton = document.getElementById('pourButton');
+        const resetButton = document.getElementById('resetButton');
+        const status = document.getElementById('status');
+        const successCount = document.getElementById('successCount');
+        const totalCount = document.getElementById('totalCount');
+
+        // ゲーム状態
+        let gameState = 'ready'; // ready, pouring, judging
+        let cupTilt = 0;
+        let teaLevel = 0;
+        let targetTeaLevel = 0;
+        let stats = {
+            success: 0,
+            total: 0
+        };
+
+        // 茶柱オブジェクト
+        let stem = {
+            x: 250,
+            y: 100,
+            width: 8,
+            height: 60,
+            angle: Math.random() * Math.PI * 2,
+            vx: 0,
+            vy: 0,
+            angularVelocity: 0,
+            density: 0.9 // 水より少し軽い
+        };
+
+        // 物理パラメータ
+        const GRAVITY = 0.5;
+        const BUOYANCY = 0.6;
+        const DRAG = 0.98;
+        const ANGULAR_DRAG = 0.95;
+
+        // スライダー変更
+        tiltSlider.addEventListener('input', (e) => {
+            cupTilt = parseInt(e.target.value);
+            tiltValue.textContent = cupTilt + '°';
+            if (gameState === 'ready') {
+                draw();
+            }
+        });
+
+        // お茶を注ぐボタン
+        pourButton.addEventListener('click', () => {
+            if (gameState === 'ready') {
+                startPouring();
+            }
+        });
+
+        // リセットボタン
+        resetButton.addEventListener('click', () => {
+            resetGame();
+        });
+
+        // ゲーム開始
+        function startPouring() {
+            gameState = 'pouring';
+            targetTeaLevel = 300;
+            pourButton.disabled = true;
+            tiltSlider.disabled = true;
+            status.textContent = 'お茶を注いでいます...';
+            
+            // 茶柱の初期位置をランダムに
+            stem.x = 250 + (Math.random() - 0.5) * 100;
+            stem.y = 50;
+            stem.angle = (Math.random() - 0.5) * Math.PI;
+            stem.vx = (Math.random() - 0.5) * 5;
+            stem.vy = 0;
+            stem.angularVelocity = (Math.random() - 0.5) * 0.2;
+            
+            animate();
+        }
+
+        // リセット
+        function resetGame() {
+            gameState = 'ready';
+            teaLevel = 0;
+            targetTeaLevel = 0;
+            cupTilt = 0;
+            tiltSlider.value = 0;
+            tiltValue.textContent = '0°';
+            pourButton.disabled = false;
+            tiltSlider.disabled = false;
+            status.textContent = 'コップの傾きを調整してお茶を注ごう！';
+            status.style.background = '#e3f2fd';
+            status.style.color = '#1976d2';
+            
+            stem.x = 250;
+            stem.y = 100;
+            stem.angle = 0;
+            stem.vx = 0;
+            stem.vy = 0;
+            stem.angularVelocity = 0;
+            
+            draw();
+        }
+
+        // 物理演算
+        function updatePhysics() {
+            if (gameState !== 'pouring' && gameState !== 'judging') return;
+            
+            // お茶のレベルを上げる
+            if (teaLevel < targetTeaLevel) {
+                teaLevel += 3;
+            } else if (gameState === 'pouring') {
+                gameState = 'judging';
+                setTimeout(judgeResult, 2000); // 2秒後に判定
+            }
+            
+            // 傾きによる横方向の力
+            const tiltForce = Math.sin(cupTilt * Math.PI / 180) * 0.3;
+            
+            // 茶柱が水面下にいる場合
+            const waterSurface = 400 - teaLevel;
+            const stemBottom = stem.y + Math.abs(Math.cos(stem.angle)) * stem.height / 2;
+            const stemTop = stem.y - Math.abs(Math.cos(stem.angle)) * stem.height / 2;
+            
+            if (stemBottom > waterSurface) {
+                // 浮力
+                const submergedRatio = Math.min(1, (stemBottom - waterSurface) / stem.height);
+                stem.vy -= BUOYANCY * submergedRatio;
+                
+                // 重力
+                stem.vy += GRAVITY * stem.density;
+                
+                // 横方向の力（傾き）
+                stem.vx += tiltForce;
+                
+                // 抵抗
+                stem.vx *= DRAG;
+                stem.vy *= DRAG;
+                stem.angularVelocity *= ANGULAR_DRAG;
+                
+                // 傾きによる回転トルク
+                stem.angularVelocity += tiltForce * 0.05;
+                
+                // 水流による回転（注ぐ時の乱流）
+                if (teaLevel < targetTeaLevel) {
+                    stem.angularVelocity += (Math.random() - 0.5) * 0.1;
+                }
+            } else {
+                // 水面上では重力のみ
+                stem.vy += GRAVITY;
+            }
+            
+            // 位置更新
+            stem.x += stem.vx;
+            stem.y += stem.vy;
+            stem.angle += stem.angularVelocity;
+            
+            // 壁との衝突（コップの端）
+            const cupLeft = 150;
+            const cupRight = 350;
+            const cupBottom = 380;
+            
+            if (stem.x < cupLeft + 20) {
+                stem.x = cupLeft + 20;
+                stem.vx *= -0.5;
+                stem.angularVelocity += stem.vx * 0.1;
+            }
+            if (stem.x > cupRight - 20) {
+                stem.x = cupRight - 20;
+                stem.vx *= -0.5;
+                stem.angularVelocity += stem.vx * 0.1;
+            }
+            
+            // 底との衝突
+            if (stemBottom > cupBottom) {
+                stem.y = cupBottom - Math.abs(Math.cos(stem.angle)) * stem.height / 2;
+                stem.vy *= -0.3;
+                stem.vx *= 0.8;
+                stem.angularVelocity *= 0.7;
+            }
+        }
+
+        // 結果判定
+        function judgeResult() {
+            status.textContent = '判定中...';
+            
+            setTimeout(() => {
+                stats.total++;
+                totalCount.textContent = stats.total;
+                
+                // 茶柱の角度を正規化（-90度〜90度の範囲に）
+                let normalizedAngle = ((stem.angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+                if (normalizedAngle > Math.PI) normalizedAngle -= Math.PI * 2;
+                
+                const angleInDegrees = Math.abs(normalizedAngle * 180 / Math.PI);
+                
+                // 縦に近い（±20度以内）かつ、ほぼ静止していれば成功
+                const isVertical = angleInDegrees < 20 || angleInDegrees > 160;
+                const isStable = Math.abs(stem.angularVelocity) < 0.05 && 
+                                Math.abs(stem.vx) < 0.5 && 
+                                Math.abs(stem.vy) < 0.5;
+                
+                if (isVertical && isStable) {
+                    stats.success++;
+                    successCount.textContent = stats.success;
+                    status.textContent = '🎉 茶柱が立った！大吉！ 🎉';
+                    status.style.background = '#c8e6c9';
+                    status.style.color = '#2e7d32';
+                } else {
+                    status.textContent = '😢 茶柱が倒れた... もう一度！';
+                    status.style.background = '#ffcdd2';
+                    status.style.color = '#c62828';
+                }
+                
+                pourButton.disabled = false;
+                tiltSlider.disabled = false;
+            }, 500);
+        }
+
+        // 描画
+        function draw() {
+            // 背景クリア
+            ctx.fillStyle = '#fff9c4';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // コップを傾けて描画
+            ctx.save();
+            ctx.translate(250, 200);
+            ctx.rotate(cupTilt * Math.PI / 180);
+            ctx.translate(-250, -200);
+            
+            // コップ本体
+            ctx.fillStyle = '#e0e0e0';
+            ctx.fillRect(150, 100, 200, 300);
+            
+            // コップの縁
+            ctx.fillStyle = '#bdbdbd';
+            ctx.fillRect(145, 95, 210, 10);
+            
+            // お茶
+            if (teaLevel > 0) {
+                ctx.fillStyle = '#8d6e63';
+                ctx.fillRect(150, 400 - teaLevel, 200, teaLevel);
+                
+                // お茶の表面
+                ctx.fillStyle = '#6d4c41';
+                ctx.fillRect(150, 400 - teaLevel, 200, 5);
+            }
+            
+            ctx.restore();
+            
+            // 茶柱を描画
+            if (gameState !== 'ready') {
+                ctx.save();
+                ctx.translate(stem.x, stem.y);
+                ctx.rotate(stem.angle);
+                
+                // 茶柱（茶色の棒）
+                ctx.fillStyle = '#5d4037';
+                ctx.fillRect(-stem.width / 2, -stem.height / 2, stem.width, stem.height);
+                
+                // 茶柱のハイライト
+                ctx.fillStyle = '#795548';
+                ctx.fillRect(-stem.width / 2, -stem.height / 2, stem.width / 2, stem.height);
+                
+                ctx.restore();
+            }
+            
+            // 注ぐエフェクト
+            if (gameState === 'pouring' && teaLevel < targetTeaLevel) {
+                ctx.fillStyle = '#8d6e63';
+                ctx.globalAlpha = 0.7;
+                for (let i = 0; i < 5; i++) {
+                    const dropY = 50 + i * 30 + (Math.random() - 0.5) * 20;
+                    ctx.fillRect(245 + (Math.random() - 0.5) * 10, dropY, 10, 20);
+                }
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        // アニメーションループ
+        function animate() {
+            updatePhysics();
+            draw();
+            
+            if (gameState === 'pouring' || gameState === 'judging') {
+                requestAnimationFrame(animate);
+            }
+        }
+
+        // 初期描画
+        draw();
+    </script>
+</body>
+</html>

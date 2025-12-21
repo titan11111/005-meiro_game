@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猫マリオ - 無敵モード</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .game-container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .game-info {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-around;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-item {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .score-value {
+            color: #667eea;
+        }
+
+        .life-value {
+            color: #e74c3c;
+        }
+
+        .distance-value {
+            color: #52c41a;
+        }
+
+        .game-viewport {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 50%, #90ee90 100%);
+            border: 3px solid #333;
+            overflow: hidden;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        #gameArea {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3000px;
+            height: 100%;
+            background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 50%, #90ee90 100%);
+        }
+
+        .cloud {
+            position: absolute;
+            font-size: 50px;
+            top: 30px;
+        }
+
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 60px;
+            background: linear-gradient(180deg, #8b7355 0%, #654321 100%);
+            border-top: 3px solid #6b4423;
+        }
+
+        .platform {
+            position: absolute;
+            bottom: 120px;
+            width: 100px;
+            height: 15px;
+            background: linear-gradient(180deg, #8b7355 0%, #654321 100%);
+            border: 2px solid #6b4423;
+            border-radius: 3px;
+        }
+
+        .player {
+            position: absolute;
+            bottom: 70px;
+            left: 0;
+            width: 40px;
+            height: 50px;
+            font-size: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .enemy {
+            position: absolute;
+            bottom: 70px;
+            width: 40px;
+            height: 50px;
+            font-size: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .goal {
+            position: absolute;
+            bottom: 80px;
+            width: 50px;
+            height: 60px;
+            font-size: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3;
+        }
+
+        .player.jumping {
+            animation: playerJump 0.6s ease-out;
+        }
+
+        @keyframes playerJump {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); } /* アニメーションは控えめにし、実際の移動はJSで行う */
+            100% { transform: translateY(0); }
+        }
+
+        .enemy-defeated {
+            animation: enemyDefeat 0.5s ease-out forwards;
+        }
+
+        @keyframes enemyDefeat {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.5); opacity: 0; }
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: auto;
+            min-width: 80px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+            min-width: 120px;
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            min-width: 120px;
+        }
+
+        .instructions {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #333;
+            line-height: 1.8;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .instructions h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .game-over-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-over-content {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-over-content h2 {
+            font-size: 32px;
+            color: #52c41a;
+            margin-bottom: 20px;
+        }
+
+        .game-over-content p {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            font-size: 24px;
+            color: #667eea;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .mobile-info {
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #333;
+        }
+
+        @media (max-width: 600px) {
+            .game-viewport { height: 350px; }
+            .player, .enemy { width: 35px; height: 45px; font-size: 35px; }
+            .control-btn { padding: 12px 20px; font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="mobile-info">
+            📱 <strong>無敵モード</strong>: 敵に当たっても平気！ジャンプで踏んづけよう！
+        </div>
+
+        <div class="game-info">
+            <div class="info-item">スコア: <span class="score-value" id="score">0</span></div>
+            <div class="info-item">ライフ: <span class="life-value" id="life">∞</span></div>
+            <div class="info-item">進度: <span class="distance-value" id="distance">0</span>m</div>
+        </div>
+
+        <div class="game-viewport">
+            <div class="game-over-screen" id="gameOverScreen">
+                <div class="game-over-content">
+                    <h2 id="resultTitle">ゴール！</h2>
+                    <p id="resultMessage"></p>
+                    <div class="score-display">スコア: <span id="finalScore">0</span> 点</div>
+                </div>
+            </div>
+
+            <div id="gameArea">
+                <div class="cloud" style="left: 300px; top: 50px;">☁️</div>
+                <div class="cloud" style="left: 800px; top: 80px;">☁️</div>
+                <div class="cloud" style="left: 1500px; top: 60px;">☁️</div>
+                <div class="cloud" style="left: 2300px; top: 100px;">☁️</div>
+
+                <div class="platform" style="left: 400px;"></div>
+                <div class="platform" style="left: 600px;"></div>
+                <div class="platform" style="left: 1000px; bottom: 150px;"></div>
+                <div class="platform" style="left: 1200px; bottom: 120px;"></div>
+                <div class="platform" style="left: 1600px;"></div>
+                <div class="platform" style="left: 1900px; bottom: 140px;"></div>
+                <div class="platform" style="left: 2200px;"></div>
+
+                <div class="enemy" id="enemy1" style="left: 300px;">🐭</div>
+                <div class="enemy" id="enemy2" style="left: 700px;">🐭</div>
+                <div class="enemy" id="enemy3" style="left: 1100px;">🐭</div>
+                <div class="enemy" id="enemy4" style="left: 1500px;">🐭</div>
+                <div class="enemy" id="enemy5" style="left: 2000px;">🐭</div>
+                <div class="enemy" id="enemy6" style="left: 2400px;">🐭</div>
+
+                <div class="goal" id="goal" style="left: 2750px;">🏁</div>
+
+                <div class="ground"></div>
+
+                <div class="player" id="player">🐱</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" id="leftBtn" style="flex: 1;">← 左</button>
+            <button class="control-btn start-btn" id="startBtn" style="flex: 2;">ゲーム開始</button>
+            <button class="control-btn" id="rightBtn" style="flex: 1;">右 →</button>
+            <button class="control-btn" id="jumpBtn" style="flex: 1;">ジャンプ</button>
+            <button class="control-btn reset-btn" id="resetBtn" style="flex: 1;">リセット</button>
+        </div>
+
+        <div class="instructions">
+            <h3>📖 遊び方（無敵モード）</h3>
+            ✓ 右へ進んでゴール🏁を目指そう！<br>
+            ✓ 敵にぶつかってもダメージを受けません！<br>
+            ✓ 敵の上からジャンプして踏むと倒してスコアゲット！<br>
+            ✓ 足場を使って高いところへ登ろう
+        </div>
+    </div>
+
+    <script>
+        // ゲーム変数
+        let score = 0;
+        let life = 3;
+        let gameRunning = false;
+        let playerX = 50;
+        let playerWorldX = 50;
+        const playerWidth = 40;
+        const playerHeight = 50;
+        const viewportWidth = 600;
+        const viewportHeight = 400;
+        const groundHeight = 60;
+        const gameAreaWidth = 3000;
+        const playerGroundY = viewportHeight - groundHeight - playerHeight;
+        
+        let isJumping = false;
+        let velocityY = 0;
+        let velocityX = 0;
+        const gravity = 0.6;
+        const jumpPower = 15;
+        let playerY = playerGroundY;
+
+        let keys = {};
+        let gameLoopInterval = null;
+        let cameraX = 0;
+
+        const player = document.getElementById('player');
+        const gameArea = document.getElementById('gameArea');
+        const scoreDisplay = document.getElementById('score');
+        const lifeDisplay = document.getElementById('life');
+        const distanceDisplay = document.getElementById('distance');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const resultMessage = document.getElementById('resultMessage');
+        const resultTitle = document.getElementById('resultTitle');
+        const finalScore = document.getElementById('finalScore');
+
+        const enemies = [];
+
+        // 初期化：敵の取得
+        function initEnemies() {
+            document.querySelectorAll('.enemy').forEach((el, i) => {
+                enemies[i] = {
+                    element: el,
+                    x: parseInt(el.style.left),
+                    width: 40,
+                    height: 50,
+                    defeated: false
+                };
+            });
+        }
+
+        // キーボード操作
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (e.key === ' ') {
+                e.preventDefault();
+                jump();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        // モバイル操作
+        document.getElementById('leftBtn').addEventListener('touchstart', (e) => { e.preventDefault(); keys['ArrowLeft'] = true; });
+        document.getElementById('leftBtn').addEventListener('touchend', (e) => { e.preventDefault(); keys['ArrowLeft'] = false; });
+        
+        document.getElementById('rightBtn').addEventListener('touchstart', (e) => { e.preventDefault(); keys['ArrowRight'] = true; });
+        document.getElementById('rightBtn').addEventListener('touchend', (e) => { e.preventDefault(); keys['ArrowRight'] = false; });
+
+        document.getElementById('jumpBtn').addEventListener('touchstart', (e) => { e.preventDefault(); jump(); });
+        
+        // PCクリック操作（長押し対応）
+        document.getElementById('leftBtn').addEventListener('mousedown', () => keys['ArrowLeft'] = true);
+        document.getElementById('leftBtn').addEventListener('mouseup', () => keys['ArrowLeft'] = false);
+        document.getElementById('rightBtn').addEventListener('mousedown', () => keys['ArrowRight'] = true);
+        document.getElementById('rightBtn').addEventListener('mouseup', () => keys['ArrowRight'] = false);
+        document.getElementById('jumpBtn').addEventListener('mousedown', jump);
+
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        document.getElementById('resetBtn').addEventListener('click', resetGame);
+
+        // 継続的な移動（フレーム毎の処理に統合）
+        function handleInput() {
+            if (!gameRunning) return;
+
+            if (keys['ArrowLeft'] || keys['a']) {
+                moveLeft();
+            }
+            if (keys['ArrowRight'] || keys['d']) {
+                moveRight();
+            }
+        }
+
+        function moveLeft() {
+            playerWorldX -= 8;
+            if (playerWorldX < 0) playerWorldX = 0;
+            updateCamera();
+        }
+
+        function moveRight() {
+            playerWorldX += 8;
+            if (playerWorldX + playerWidth > gameAreaWidth) {
+                playerWorldX = gameAreaWidth - playerWidth;
+            }
+            updateCamera();
+        }
+
+        function jump() {
+            if (!gameRunning || isJumping) return;
+            isJumping = true;
+            velocityY = jumpPower;
+            player.classList.add('jumping');
+        }
+
+        function updateCamera() {
+            // カメラがプレイヤーを追従
+            const targetCameraX = playerWorldX - 100;
+            cameraX = Math.max(0, Math.min(targetCameraX, gameAreaWidth - viewportWidth));
+            
+            gameArea.style.transform = `translateX(-${cameraX}px)`;
+            
+            playerX = playerWorldX - cameraX;
+            player.style.left = playerX + 'px';
+
+            // 進度表示
+            distanceDisplay.textContent = Math.floor(playerWorldX);
+        }
+
+        function updatePlayerJump() {
+            if (!isJumping && playerY === playerGroundY) return;
+
+            velocityY -= gravity;
+            playerY -= velocityY;
+
+            // 地面との衝突判定
+            if (playerY >= playerGroundY) {
+                playerY = playerGroundY;
+                isJumping = false;
+                velocityY = 0;
+                player.classList.remove('jumping');
+            }
+
+            // 足場との衝突判定
+            checkPlatformCollision();
+
+            player.style.bottom = (viewportHeight - playerY - playerHeight) + 'px';
+        }
+
+        function checkPlatformCollision() {
+            const platforms = document.querySelectorAll('.platform');
+            
+            platforms.forEach(platform => {
+                const platformX = parseInt(platform.style.left);
+                const platformY = parseInt(platform.style.bottom) + 15; // 足場の上
+                const platformWidth = 100;
+
+                // 足場の上に着地しているか（判定を少し甘くして乗りやすく調整）
+                if (
+                    playerWorldX + playerWidth > platformX + 10 && // 左端の許容範囲
+                    playerWorldX < platformX + platformWidth - 10 && // 右端の許容範囲
+                    playerY >= platformY - 20 && // 縦方向の判定範囲拡大
+                    playerY <= platformY + 30 &&
+                    velocityY <= 0 // 落下中のみ
+                ) {
+                    playerY = platformY;
+                    isJumping = false;
+                    velocityY = 0;
+                    player.classList.remove('jumping');
+                }
+            });
+        }
+
+        function updateEnemies() {
+            enemies.forEach(enemy => {
+                if (enemy.defeated) return;
+
+                const enemyWorldX = enemy.x;
+                const enemyY = playerGroundY;
+                const enemyWidth = 40;
+                const enemyHeight = 50;
+
+                // 1. 敵の上に乗ったか判定（踏みつけ攻撃）
+                // 落下中(velocityY < 0)で、プレイヤーの足元が敵の頭付近にある場合
+                if (
+                    playerY < enemyY && 
+                    playerY + playerHeight > enemyY - 30 && // 判定を広げる
+                    playerWorldX < enemyWorldX + enemyWidth &&
+                    playerWorldX + playerWidth > enemyWorldX &&
+                    velocityY < 0
+                ) {
+                    // 敵を倒した！
+                    score += 10;
+                    scoreDisplay.textContent = score;
+
+                    enemy.element.classList.add('enemy-defeated');
+                    enemy.defeated = true;
+                    setTimeout(() => {
+                        enemy.element.style.display = 'none'; // 完全に消す
+                    }, 500);
+
+                    // 踏んだ反動で少しジャンプ
+                    velocityY = 8; 
+                    return;
+                }
+
+                // 2. 敵の側面に接触（無敵モードなのでダメージ処理を削除）
+                // ここにあった「ライフを減らす」「ゲームオーバー」のコードを削除しました。
+                // 敵とすれ違っても何も起こりません。
+            });
+        }
+
+        function checkGoal() {
+            const goalElement = document.getElementById('goal');
+            const goalX = parseInt(goalElement.style.left);
+            const goalY = 340; // 固定値
+
+            if (
+                playerWorldX + playerWidth > goalX &&
+                playerWorldX < goalX + 50 &&
+                playerY > goalY - 30
+            ) {
+                endGame(true);
+            }
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            handleInput(); // 入力処理
+            updatePlayerJump(); // ジャンプ・重力処理
+            updateEnemies(); // 敵との当たり判定
+            checkGoal(); // ゴール判定
+        }
+
+        function startGame() {
+            if (gameRunning) return;
+
+            gameRunning = true;
+            score = 0;
+            life = "∞"; // 無限表示
+            playerWorldX = 50;
+            playerY = playerGroundY;
+            cameraX = 0;
+            isJumping = false;
+            velocityY = 0;
+
+            scoreDisplay.textContent = score;
+            lifeDisplay.textContent = life;
+            distanceDisplay.textContent = '0';
+            gameOverScreen.style.display = 'none';
+
+            // 敵を復活させる
+            enemies.forEach(enemy => {
+                enemy.defeated = false;
+                enemy.element.classList.remove('enemy-defeated');
+                enemy.element.style.display = 'flex';
+            });
+
+            updateCamera();
+            
+            if (gameLoopInterval) clearInterval(gameLoopInterval);
+            gameLoopInterval = setInterval(gameLoop, 20); // 60FPSに近づけるため間隔短縮
+        }
+
+        function endGame(isGoal) {
+            gameRunning = false;
+            clearInterval(gameLoopInterval);
+
+            if (isGoal) {
+                resultTitle.textContent = '🎉 ゴール！';
+                resultMessage.textContent = 'ステージをクリアしました！';
+                score += 100;
+            }
+            // ゲームオーバー処理は削除（無敵モードのため）
+
+            finalScore.textContent = score;
+            gameOverScreen.style.display = 'flex';
+        }
+
+        function resetGame() {
+            gameRunning = false;
+            if (gameLoopInterval) clearInterval(gameLoopInterval);
+
+            score = 0;
+            life = "∞";
+            playerWorldX = 50;
+            playerY = playerGroundY;
+            cameraX = 0;
+            isJumping = false;
+            velocityY = 0;
+            
+            scoreDisplay.textContent = score;
+            lifeDisplay.textContent = life;
+            distanceDisplay.textContent = '0';
+            gameOverScreen.style.display = 'none';
+
+            // 敵を全て復活
+            enemies.forEach(enemy => {
+                enemy.defeated = false;
+                enemy.element.classList.remove('enemy-defeated');
+                enemy.element.style.display = 'flex';
+            });
+            
+            // プレイヤー位置リセット
+            player.style.bottom = (viewportHeight - playerY - playerHeight) + 'px';
+            player.classList.remove('jumping');
+
+            updateCamera();
+        }
+
+        // 初期化
+        initEnemies();
+    </script>
+</body>
+</html>

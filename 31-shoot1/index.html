@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ビームシューターゲーム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="gameTitle">🚀 ビームシューター 🚀</div>
+        <div id="gameInfo">
+            <span id="score">スコア: 0</span>
+            <span id="life">ライフ: ❤️❤️❤️</span>
+            <span id="power">パワー: 1</span>
+            <span id="shield">バリア: 0</span>
+            <span id="stage">ステージ: 1</span>
+        </div>
+        <canvas id="gameCanvas" width="480" height="720"></canvas>
+        <div id="gameControls">
+            <div id="touchControls">
+                <div id="moveControls">
+                    <button id="leftBtn">←</button>
+                    <button id="rightBtn">→</button>
+                    <button id="upBtn">↑</button>
+                    <button id="downBtn">↓</button>
+                </div>
+                <div id="fireControls">
+                    <button id="shootBtn">🔫</button>
+                    <div id="bombContainer" class="hidden">
+                        <button id="bombBtn">💣</button>
+                        <div id="bombCountDisplay">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="startScreen">
+            <h2>アイテム説明</h2>
+            <ul id="itemList">
+                <li><span class="colorBox" style="background:red;"></span>ショットレベルアップ: ショットが強化される</li>
+                <li><span class="colorBox" style="background:orange;"></span>ワイドショット: 弾が横に広がる</li>
+                <li><span class="colorBox" style="background:purple;"></span>ホーミングショット: 弾が敵を追尾する</li>
+                <li><span class="colorBox" style="background:green;"></span>ライフ回復: ライフを回復する</li>
+                <li><span class="colorBox" style="background:blue;"></span>バリア追加: 一度だけ攻撃を防ぐ</li>
+                <li><span class="colorBox" style="background:black;"></span>ボム追加: ボムストックが増える</li>
+                <li><span class="colorBox" style="background:silver;"></span>サテライト追加: サポート機が追加される</li>
+                <li><span class="colorBox" style="background:deepskyblue;"></span>連射速度アップ: 射撃間隔が短くなる</li>
+                <li><span class="colorBox" style="background:magenta;"></span>貫通弾: 弾が敵を貫通する</li>
+                <li><span class="colorBox" style="background:pink;"></span>アイテム吸引: 周囲のアイテムを引き寄せる</li>
+                <li><span class="colorBox" style="background:darkviolet;"></span>スリープミサイル: 敵を一時的に停止させる</li>
+                <li><span class="colorBox" style="background:aqua;"></span>移動速度アップ: 移動速度が上がる</li>
+                <li><span class="colorBox" style="background:lavenderblush; border:1px solid #000;"></span>敵スロー: 敵の動きが遅くなる</li>
+            </ul>
+            <button id="startBtn">ゲームスタート</button>
+        </div>
+        <div id="gameOver" class="hidden">
+            <h2>ゲームオーバー</h2>
+            <p>最終スコア: <span id="finalScore">0</span></p>
+            <button id="restartBtn">もう一度プレイ</button>
+        </div>
+        <div id="gameClear" class="hidden">
+            <h2>ゲームクリア</h2>
+            <p>最終スコア: <span id="clearScore">0</span></p>
+            <button id="clearRestartBtn">もう一度プレイ</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

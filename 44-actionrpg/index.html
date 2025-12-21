@@ -1,0 +1,5701 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>ぼうけんRPG - 勇者の旅立ち</title>
+<style>
+  :root {
+    --bg: #0b0c10;
+    --panel: rgba(255,255,255,0.06);
+    --panel-strong: rgba(255,255,255,0.12);
+    --outline: rgba(255,255,255,0.24);
+    --text: #eef2f6;
+    --muted: #aab2bf;
+    --accent: #8bd3ff;
+    --danger: #ff6b6b;
+    --gold: #ffd56c;
+    --btn-size: 64px;
+    --font-scale: 1;
+    --landscape-scale: 1; /* デフォルト値（縦画面時） */
+  }
+
+  /* 横画面時のスケール調整 */
+  @media (orientation: landscape) and (max-height: 400px) {
+    :root {
+      --landscape-scale: 0.6;
+    }
+  }
+  @media (orientation: landscape) and (min-height: 401px) and (max-height: 500px) {
+    :root {
+      --landscape-scale: 0.7;
+    }
+  }
+  @media (orientation: landscape) and (min-height: 501px) and (max-height: 600px) {
+    :root {
+      --landscape-scale: 0.8;
+    }
+  }
+  @media (orientation: landscape) and (min-height: 601px) {
+    :root {
+      --landscape-scale: 1;
+    }
+  }
+
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    color: var(--text);
+    background: radial-gradient(1200px 800px at 50% 10%, #141720, #0b0c10 60%);
+    overflow: hidden;
+    -webkit-user-select: none; user-select: none;
+    touch-action: manipulation; /* iOSのダブルタップズームを無効化 */
+    -webkit-touch-callout: none; /* iOSの長押しメニューを無効化 */
+  }
+
+  #root {
+    position: fixed; inset: 0;
+    display: grid; place-items: center;
+  }
+
+  .stage {
+    position: relative;
+    width: min(100vw, 100vh * 16/9);
+    height: min(100vh, 100vw * 9/16);
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.3));
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+
+  #game {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    background: #151821;
+  }
+
+  .hud { 
+    position:absolute; inset:0; pointer-events:none; 
+    font-size: calc(14px * var(--font-scale)); 
+  }
+
+  .hud-top { 
+    position:absolute; top: 8px; left:8px; right:8px; 
+    display:flex; align-items:flex-start; justify-content:space-between; gap:8px; 
+  }
+
+  .hud-right {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+    z-index: 10;
+    /* 右上のステータスと右下のボタンが重ならないようにする */
+    max-width: calc(100vw - 250px); /* 右側のボタンエリア（X+🎒+A+B）を確保 */
+  }
+  
+  .hud-right .stats-row {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .hud-left {
+    display: none; /* 縦画面時は非表示 */
+  }
+
+  .minimap-landscape,
+  .hearts-landscape,
+  .stats-landscape {
+    display: none; /* 縦画面時は非表示 */
+  }
+
+  .hearts { 
+    display:flex; 
+    flex-wrap: nowrap; /* 2段にならないようにする */
+    gap:4px; 
+    background: var(--panel); 
+    border:1px solid var(--outline); 
+    padding:8px 12px; 
+    border-radius:12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    max-width: calc(24px * 10 + 4px * 9 + 24px); /* 最大10個の星が収まる幅 */
+  }
+  .heart { 
+    width:24px; height:24px; 
+    flex-shrink: 0; /* 星のサイズを固定 */
+    background: #ff4364;
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    animation: heartbeat 1.5s ease-in-out infinite;
+  }
+  .heart.empty { 
+    background: #666; 
+    filter: grayscale(1) brightness(0.6);
+    animation: none;
+  }
+  
+  @keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+
+  .counter { 
+    pointer-events:auto; 
+    display:flex; align-items:center; gap:8px; 
+    background: var(--panel); 
+    border:1px solid var(--outline); 
+    padding:8px 12px; border-radius: 999px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+  
+  .coin { 
+    width:20px; height:20px; border-radius:50%; 
+    background: radial-gradient(circle at 35% 35%, #fff7bf, var(--gold)); 
+    border:2px solid #b8860b; 
+    box-shadow: inset 0 0 4px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2);
+    animation: coinSpin 3s linear infinite;
+  }
+  
+  @keyframes coinSpin {
+    0%, 100% { transform: rotateY(0deg); }
+    50% { transform: rotateY(180deg); }
+  }
+
+  .btn-ghost { 
+    pointer-events:auto; 
+    background: var(--panel); border:1px solid var(--outline); 
+    color: var(--text); padding:8px 12px; border-radius:12px; 
+    font-weight:700; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transition: all 0.2s ease; cursor: pointer;
+  }
+  .btn-ghost:active { transform: scale(0.96); }
+
+  .hint { 
+    position:absolute; left:50%; transform: translateX(-50%); 
+    bottom: 68px; background: var(--panel); 
+    border:1px solid var(--outline); padding:8px 12px; 
+    border-radius:12px; opacity:0; transition: opacity .2s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+  .hint.show { opacity: 1; }
+
+  /* 画面回転案内 */
+  .rotate-hint {
+    position: fixed;
+    inset: 0;
+    background: rgba(11, 12, 16, 0.95);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .rotate-hint.show {
+    display: flex;
+  }
+  .rotate-hint-content {
+    text-align: center;
+    color: var(--text);
+    font-size: calc(24px * var(--font-scale));
+    font-weight: 700;
+    padding: 20px;
+    background: var(--panel);
+    border: 2px solid var(--outline);
+    border-radius: 16px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .rotate-hint-icon {
+    font-size: 64px;
+    animation: rotate 2s linear infinite;
+  }
+  @keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(90deg); }
+  }
+  .btn-fullscreen {
+    pointer-events: auto;
+    background: var(--accent);
+    border: 2px solid var(--outline);
+    color: var(--text);
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: calc(18px * var(--font-scale));
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    margin-top: 8px;
+  }
+  .btn-fullscreen:active {
+    transform: scale(0.96);
+    background: var(--panel-strong);
+  }
+
+  .virtual { position:absolute; inset:0; pointer-events:none; }
+  
+  .stick { 
+    position:absolute; left: 60px; bottom: 80px; 
+    width: 176px; height: 176px; pointer-events:auto; 
+    transform: scale(1.5);
+  }
+  .stick .base { 
+    position:absolute; inset: 0; border-radius:50%; 
+    background: var(--panel); border: 2px solid var(--outline);
+    box-shadow: inset 0 4px 8px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
+  }
+  .stick .knob { 
+    --k: calc(var(--btn-size) * 0.75); 
+    position:absolute; left: 50%; top: 50%; 
+    width: var(--k); height: var(--k); 
+    transform: translate(-50%,-50%); border-radius: 50%; 
+    background: linear-gradient(135deg, var(--panel-strong), var(--panel)); 
+    border: 2px solid var(--outline); 
+    box-shadow: 0 4px 8px rgba(0,0,0,0.35);
+  }
+
+  .btn-top-row {
+    position: absolute;
+    right: 70px;
+    bottom: calc(90px + var(--btn-size) + 12px);
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: center;
+    pointer-events: auto;
+    z-index: 10;
+    transform: scale(1.7);
+  }
+  
+  .btn-bottom-row {
+    position: absolute;
+    right: 70px;
+    bottom: 40px;
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: center;
+    pointer-events: auto;
+    z-index: 10;
+    transform: scale(1.7);
+  }
+  
+  .btn-item-select {
+    width: var(--btn-size);
+    height: var(--btn-size);
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--panel-strong), var(--panel));
+    border: 2px solid var(--outline);
+    display: grid;
+    place-items: center;
+    font-size: 2em;
+    line-height: 1;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.35);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  
+  .btn-item-select:active {
+    transform: scale(0.92);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
+  
+  .btn { 
+    width: var(--btn-size); height: var(--btn-size); 
+    border-radius: 50%; 
+    background: linear-gradient(135deg, var(--panel-strong), var(--panel)); 
+    border:2px solid var(--outline); 
+    display:grid; place-items:center; 
+    font-weight: 800; font-size: calc(16px * var(--font-scale));
+    box-shadow: 0 6px 12px rgba(0,0,0,0.35);
+    transition: all 0.2s ease; cursor: pointer;
+  }
+  .btn:active { 
+    transform: scale(0.92); 
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
+  .btn.a { background: linear-gradient(135deg, #ff6b6b, #e74c3c); color: white; }
+  .btn.b { background: linear-gradient(135deg, #4ecdc4, #45b7b8); color: white; }
+  .btn.x { background: linear-gradient(135deg, #f39c12, #e67e22); color: white; }
+
+  dialog { border: none; padding: 0; background: transparent; }
+  .sheet { 
+    width: min(92vw, 480px); 
+    background: rgba(18,20,28,0.9); backdrop-filter: blur(8px); 
+    border: 1px solid var(--outline); color: var(--text); 
+    border-radius: 16px; overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  }
+  .sheet header { 
+    padding: 16px 20px; font-weight: 800; 
+    border-bottom: 1px solid var(--outline);
+    background: var(--panel); font-size: calc(18px * var(--font-scale));
+  }
+  .sheet .content { padding: 16px 20px; }
+  .sheet .actions { 
+    padding: 16px 20px; display:flex; gap: 12px; 
+    justify-content:flex-end; border-top: 1px solid var(--outline);
+    background: var(--panel);
+  }
+
+  .level-up {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: calc(24px * var(--font-scale));
+    font-weight: 800; color: var(--gold);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    opacity: 0; pointer-events: none;
+  }
+
+  @keyframes levelUpAnim {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+    80% { opacity: 1; transform: translate(-50%, -60%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -70%) scale(1); }
+  }
+
+  .speech-bubble {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.95);
+    color: #1a1a1a;
+    padding: 18px 24px;
+    border-radius: 18px;
+    font-size: calc(18px * var(--font-scale));
+    font-weight: 500;
+    line-height: 1.4;
+    max-width: 300px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    border: 2px solid rgba(0,0,0,0.1);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 1000;
+    white-space: pre-line;
+    text-align: left;
+  }
+
+  .speech-bubble.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 20px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid rgba(255, 255, 255, 0.95);
+  }
+
+  .minimap {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 198px;
+    height: 198px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid var(--outline);
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 100;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  }
+
+  .minimap canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+  }
+
+  @media (orientation: landscape) {
+    
+    .stage {
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #game {
+      flex: 1;
+      /* 16:9のアスペクト比を維持しつつ、画面の高さに収まるように */
+      --game-padding: calc(32px * var(--landscape-scale));
+      height: calc(100vh - var(--game-padding));
+      max-height: calc(100vh - var(--game-padding));
+      width: calc((100vh - var(--game-padding)) * 16 / 9);
+      max-width: calc(100vw - calc(400px * var(--landscape-scale)));
+      object-fit: contain;
+    }
+
+    .hud {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      pointer-events: none;
+      font-size: calc(14px * var(--landscape-scale));
+    }
+
+    .minimap {
+      display: none; /* 横画面時は非表示 */
+    }
+
+    .minimap-landscape {
+      display: block !important;
+      position: absolute;
+      top: calc(8px * var(--landscape-scale));
+      left: calc(8px * var(--landscape-scale));
+      width: calc(118.8px * var(--landscape-scale));
+      height: calc(118.8px * var(--landscape-scale));
+      margin: 0;
+      pointer-events: auto;
+      z-index: 10;
+    }
+
+    .hud-right {
+      display: none; /* 横画面時は非表示 */
+    }
+
+    .hud-left {
+      display: flex !important;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: calc(8px * var(--landscape-scale));
+      position: absolute;
+      top: calc(12px * var(--landscape-scale));
+      right: calc(12px * var(--landscape-scale));
+      margin: 0;
+      pointer-events: none;
+    }
+
+    .hud-left .minimap-landscape {
+      display: none !important; /* .hud-left内のminimap-landscapeは非表示 */
+    }
+
+    .hearts-landscape {
+      display: flex !important;
+      flex-wrap: nowrap; /* 2段にならないようにする */
+      gap: calc(4px * var(--landscape-scale));
+      padding: calc(8px * var(--landscape-scale)) calc(12px * var(--landscape-scale));
+      max-width: calc(24px * 10 * var(--landscape-scale) + 4px * 9 * var(--landscape-scale) + 24px * var(--landscape-scale)); /* 最大10個の星が収まる幅 */
+    }
+
+    .hearts-landscape .heart {
+      width: calc(24px * var(--landscape-scale));
+      height: calc(24px * var(--landscape-scale));
+      flex-shrink: 0; /* 星のサイズを固定 */
+    }
+
+    .stats-landscape {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: calc(8px * var(--landscape-scale));
+    }
+
+    .stats-landscape .counter {
+      padding: calc(8px * var(--landscape-scale)) calc(12px * var(--landscape-scale));
+      font-size: calc(14px * var(--landscape-scale));
+    }
+
+    .stats-landscape .coin {
+      width: calc(20px * var(--landscape-scale));
+      height: calc(20px * var(--landscape-scale));
+    }
+
+    .stats-landscape .btn-ghost {
+      padding: calc(8px * var(--landscape-scale)) calc(12px * var(--landscape-scale));
+      font-size: calc(2em * var(--landscape-scale));
+    }
+
+    .hud-left > * {
+      pointer-events: auto;
+    }
+
+    .virtual {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: calc(8px * var(--landscape-scale));
+      pointer-events: none;
+      box-sizing: border-box;
+    }
+
+    .stick {
+      position: absolute;
+      left: calc(58px * var(--landscape-scale)); /* 右上に40px移動（18px + 40px） */
+      bottom: calc(78px * var(--landscape-scale)); /* 上に40px移動（38px + 40px） */
+      width: calc(121px * var(--landscape-scale));
+      height: calc(121px * var(--landscape-scale));
+      margin: 0;
+      pointer-events: auto;
+      z-index: 10;
+      transform: scale(1.5);
+    }
+
+    .btn-top-row {
+      position: absolute;
+      right: calc(68px * var(--landscape-scale)); /* 右上に60px移動（8px + 60px） */
+      bottom: calc((88px + 64px + 16px) * var(--landscape-scale));
+      gap: calc(12px * var(--landscape-scale));
+      pointer-events: auto;
+      z-index: 10;
+      transform: scale(1.7);
+    }
+    
+    .btn-bottom-row {
+      position: absolute;
+      right: calc(68px * var(--landscape-scale)); /* 右上に60px移動（8px + 60px） */
+      bottom: calc(38px * var(--landscape-scale));
+      gap: calc(12px * var(--landscape-scale));
+      pointer-events: auto;
+      z-index: 10;
+      transform: scale(1.7);
+    }
+
+    .btn-top-row .btn,
+    .btn-bottom-row .btn {
+      width: calc(64px * var(--landscape-scale));
+      height: calc(64px * var(--landscape-scale));
+      font-size: calc(16px * var(--landscape-scale));
+    }
+    
+    /* 横画面時も右上のステータスと右下のボタンが重ならないようにする */
+    .hud-left {
+      max-width: calc(100vw - 300px * var(--landscape-scale));
+    }
+    
+    .btn-item-select {
+      width: calc(64px * var(--landscape-scale));
+      height: calc(64px * var(--landscape-scale));
+      font-size: calc(2em * var(--landscape-scale));
+    }
+
+    .hint {
+      left: 50%;
+      bottom: auto;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: calc(14px * var(--landscape-scale));
+      padding: calc(8px * var(--landscape-scale)) calc(12px * var(--landscape-scale));
+    }
+
+    /* iOS向け最適化（横画面時） */
+    @supports (-webkit-touch-callout: none) {
+      .stick {
+        left: calc(108px * var(--landscape-scale)); /* 左に10px移動（98px + 10px） */
+        bottom: calc(118px * var(--landscape-scale)); /* 上に40px移動（78px + 40px） */
+        transform: scale(1.65); /* 1.1倍に拡大（1.5 * 1.1） */
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      .btn-top-row,
+      .btn-bottom-row {
+        right: calc(98px * var(--landscape-scale)); /* 右下に10px移動（108px - 10px） */
+        transform: scale(1.87); /* 1.1倍に拡大（1.7 * 1.1） */
+      }
+
+      .btn-top-row {
+        bottom: calc((116px + 64px + 16px) * var(--landscape-scale)); /* 下に12px移動（128px - 12px） */
+      }
+
+      .btn-bottom-row {
+        bottom: calc(68px * var(--landscape-scale)); /* 右下に10px移動（78px - 10px） */
+      }
+
+      .btn-top-row .btn,
+      .btn-bottom-row .btn,
+      .btn-item-select {
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      /* 右下のボタン専用の強化スタイル（iOS横画面） */
+      .btn-bottom-row .btn:active {
+        transform: scale(0.75) !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.6), inset 0 3px 6px rgba(0,0,0,0.4);
+      }
+    }
+  }
+
+  /* ボタンの打感アニメーション（強化版） */
+  @keyframes buttonPress {
+    0% { transform: scale(1); }
+    30% { transform: scale(0.75); }
+    70% { transform: scale(0.88); }
+    100% { transform: scale(0.95); }
+  }
+
+  .btn.pressed {
+    animation: buttonPress 0.08s ease-out;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5), inset 0 2px 4px rgba(0,0,0,0.3);
+  }
+
+  /* 右下のボタン専用の強化スタイル */
+  .btn-bottom-row .btn {
+    transition: transform 0.05s ease-out, box-shadow 0.05s ease-out;
+  }
+
+  .btn-bottom-row .btn:active {
+    transform: scale(0.80) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.6), inset 0 3px 6px rgba(0,0,0,0.4);
+  }
+
+  /* iOS向け最適化 */
+  @supports (-webkit-touch-callout: none) {
+    .stick {
+      left: 110px; /* 左に10px移動（100px + 10px） */
+      bottom: 120px; /* 上に40px移動（80px + 40px） */
+      transform: scale(1.65); /* 1.1倍に拡大（1.5 * 1.1） */
+      touch-action: none; /* iOSのタッチ操作を最適化 */
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .btn-top-row,
+    .btn-bottom-row {
+      right: 100px; /* 右下に10px移動（110px - 10px） */
+      transform: scale(1.87); /* 1.1倍に拡大（1.7 * 1.1） */
+    }
+
+    .btn-top-row {
+      bottom: calc(118px + var(--btn-size) + 12px); /* 下に12px移動（130px - 12px） */
+    }
+
+    .btn-bottom-row {
+      bottom: 70px; /* 右下に10px移動（80px - 10px） */
+    }
+
+    .btn-top-row .btn,
+    .btn-bottom-row .btn,
+    .btn-item-select {
+      touch-action: manipulation; /* iOSのタッチ操作を最適化 */
+      -webkit-tap-highlight-color: transparent; /* タップ時のハイライトを無効化 */
+    }
+
+    /* 右下のボタン専用の強化スタイル（iOS） */
+    .btn-bottom-row .btn:active {
+      transform: scale(0.75) !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6), inset 0 3px 6px rgba(0,0,0,0.4);
+    }
+  }
+</style>
+</head>
+<body>
+  <div id="root">
+    <div class="stage">
+      <canvas id="game" width="320" height="180"></canvas>
+
+      <div class="hud">
+        <div class="minimap">
+          <canvas id="minimap" width="150" height="150"></canvas>
+        </div>
+        <div class="minimap minimap-landscape">
+          <canvas id="minimap-landscape" width="150" height="150"></canvas>
+        </div>
+        <div class="hud-left">
+          <div class="hearts hearts-landscape" id="hearts-landscape"></div>
+          <div class="stats-landscape">
+            <div class="counter">
+              <div class="coin"></div>
+              <span id="coins-landscape">0</span>
+            </div>
+            <div class="counter" style="background: linear-gradient(135deg, var(--panel), rgba(139,211,255,0.1));">
+              <span style="color: var(--accent); font-weight: 800;">Lv</span>
+              <span id="level-landscape">1</span>
+            </div>
+          </div>
+        </div>
+        <div class="hud-right">
+          <div class="hearts" id="hearts"></div>
+          <div class="stats-row">
+            <div class="counter">
+              <div class="coin"></div>
+              <span id="coins">0</span>
+            </div>
+            <div class="counter" style="background: linear-gradient(135deg, var(--panel), rgba(139,211,255,0.1));">
+              <span style="color: var(--accent); font-weight: 800;">Lv</span>
+              <span id="level">1</span>
+            </div>
+          </div>
+        </div>
+        <div class="hint" id="hint">🎮 移動してみよう</div>
+        <div class="level-up" id="levelUp" style="display: none;">🌟 LEVEL UP! 🌟</div>
+        <div class="speech-bubble" id="speechBubble"></div>
+      </div>
+
+      <div class="virtual">
+        <div class="stick" id="stick">
+          <div class="base"></div>
+          <div class="knob" id="stickKnob"></div>
+        </div>
+        <div class="btn-top-row">
+          <button class="btn-item-select" id="btnPause" title="持ち物">🎒</button>
+          <button class="btn b" id="btnB" title="アクション（宝箱・会話）">
+            <div style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; padding: 2px;">
+              <div style="font-size: 18px; line-height: 1;">🎁/💬</div>
+              <div style="font-size: 8px; color: rgba(255,255,255,0.7); margin-top: 1px; line-height: 1;">Z</div>
+            </div>
+          </button>
+        </div>
+        <div class="btn-bottom-row">
+          <button class="btn x" id="btnX" title="武器使用">
+            <div style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <div id="weaponIcon" style="font-size: 20px;">💣</div>
+              <div style="font-size: 9px; color: rgba(255,255,255,0.7); margin-top: 2px;">X</div>
+            </div>
+          </button>
+          <button class="btn a" id="btnA" title="攻撃">
+            <div style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <div style="font-size: 20px;">⚔️</div>
+              <div style="font-size: 9px; color: rgba(255,255,255,0.7); margin-top: 2px;">J/SP</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <dialog id="tutorial">
+        <div class="sheet">
+          <header>🎮 ぼうけんの始まり</header>
+          <div class="content" id="tutContent">
+            <p>ようこそ、勇者さん！まずは歩いてみましょう。</p>
+          </div>
+          <div class="actions">
+            <button class="btn-ghost" id="tutSkip">スキップ</button>
+            <button class="btn-ghost" id="tutNext">次へ ➡️</button>
+          </div>
+        </div>
+      </dialog>
+
+      <dialog id="weaponSelect">
+        <div class="sheet">
+          <header>🎒 持ち物</header>
+          <div class="content" id="weaponList">
+            <!-- 武器リストはJavaScriptで動的に生成 -->
+          </div>
+          <div class="actions">
+            <button class="btn-ghost" id="btnCloseWeapon">閉じる</button>
+          </div>
+        </div>
+      </dialog>
+
+      <dialog id="chiefEvent">
+        <div class="sheet">
+          <header>👴 村長からの相談</header>
+          <div class="content" id="chiefEventContent">
+            <!-- 内容はJavaScriptで動的に生成 -->
+          </div>
+          <div class="actions">
+            <button class="btn-ghost" id="btnChiefYes">はい</button>
+            <button class="btn-ghost" id="btnChiefNo">いいえ</button>
+          </div>
+        </div>
+      </dialog>
+
+      <dialog id="ending">
+        <div class="sheet">
+          <header>🎉 エンディング</header>
+          <div class="content" id="endingContent">
+            <!-- 内容はJavaScriptで動的に生成 -->
+          </div>
+          <div class="actions">
+            <button class="btn-ghost" id="btnEndingClose">閉じる</button>
+          </div>
+        </div>
+      </dialog>
+
+      <!-- 画面回転案内（携帯プレイ時） -->
+      <div class="rotate-hint" id="rotateHint">
+        <div class="rotate-hint-icon">📱</div>
+        <div class="rotate-hint-content">
+          <p style="margin: 0 0 12px 0;">画面を横にしてプレイしてください</p>
+          <p style="margin: 0; font-size: 0.7em; color: var(--muted);">横にしたら自動的に全画面展開されます</p>
+          <button class="btn-fullscreen" id="btnFullscreen" style="display: none;">全画面で開始</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ユーティリティ
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const dist2 = (x1,y1,x2,y2) => { const dx = x2-x1, dy = y2-y1; return dx*dx+dy*dy; };
+
+  // キャンバス
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const W = 320, H = 180;
+
+  // 安全な定数
+  const TS = 16;
+  const COLS = 20; // 320/16 = 20
+  const ROWS = 11; // 180/16 = 11.25 -> 11
+  const T = { GRASS:0, TREE:1, WATER:2, TALL:3, PATH:4, FLOWER:5, ROCK:6, SAND:7, CACTUS:8, SNOW:9, DESERT:10, ICE:11 };
+
+  // マップ生成関数
+  function generateMap(type, mapX = 0, mapY = 0) {
+    const map = [];
+    for(let y = 0; y < ROWS; y++) {
+      map[y] = [];
+      for(let x = 0; x < COLS; x++) {
+        map[y][x] = T.GRASS;
+      }
+    }
+
+    switch(type) {
+      case 'village': // 中央：村のフィールド
+        // パス
+        for(let y = 3; y < 8 && y < ROWS; y++) {
+          for(let x = 4; x < 16 && x < COLS; x++) {
+            map[y][x] = T.PATH;
+          }
+        }
+        // 木（30%に削減）
+        for(let i = 0; i < 9; i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.TREE;
+          }
+        }
+        // 水（30%に削減）
+        for(let i = 0; i < 3; i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.WATER;
+          }
+        }
+        // 花（30%に削減）
+        for(let i = 0; i < 5; i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.FLOWER;
+          }
+        }
+        break;
+
+      case 'forest': // 上：森のエリア
+        // 木を多く配置（30%に削減）
+        for(let i = 0; i < 15; i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.TREE;
+          }
+        }
+        // パスを少し
+        for(let y = 5; y < 6 && y < ROWS; y++) {
+          for(let x = 2; x < 18 && x < COLS; x++) {
+            if (map[y] && map[y][x] === T.GRASS) {
+              map[y][x] = T.PATH;
+            }
+          }
+        }
+        // 花を少し（30%に削減）
+        for(let i = 0; i < 2; i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.FLOWER;
+          }
+        }
+        break;
+
+      case 'coast': // 下：海岸のエリア
+        // 下側に水を多く配置
+        for(let y = 7; y < ROWS; y++) {
+          for(let x = 0; x < COLS; x++) {
+            if (Math.random() > 0.3) {
+              map[y][x] = T.WATER;
+            }
+          }
+        }
+        // 砂浜
+        for(let y = 5; y < 7 && y < ROWS; y++) {
+          for(let x = 0; x < COLS; x++) {
+            if (map[y] && map[y][x] === T.GRASS) {
+              map[y][x] = T.SAND;
+            }
+          }
+        }
+        // パス
+        for(let y = 2; y < 5 && y < ROWS; y++) {
+          for(let x = 3; x < 17 && x < COLS; x++) {
+            if (map[y] && map[y][x] === T.GRASS) {
+              map[y][x] = T.PATH;
+            }
+          }
+        }
+        // 木を少し（30%に削減）
+        for(let i = 0; i < 5; i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * 5);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.TREE;
+          }
+        }
+        break;
+
+      case 'cave': // 左：洞窟のエリア
+        // 岩を多く配置（30%に削減）
+        for(let i = 0; i < 12; i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.ROCK;
+          }
+        }
+        // 水（洞窟の水たまり）（30%に削減）
+        for(let i = 0; i < 5; i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.WATER;
+          }
+        }
+        // パス
+        for(let y = 4; y < 7 && y < ROWS; y++) {
+          for(let x = 5; x < 15 && x < COLS; x++) {
+            if (map[y] && map[y][x] === T.GRASS) {
+              map[y][x] = T.PATH;
+            }
+          }
+        }
+        break;
+
+      case 'field': // 右：草原のエリア
+        // 花を多く配置（30%に削減）
+        for(let i = 0; i < 9; i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.FLOWER;
+          }
+        }
+        // パス
+        for(let y = 3; y < 8 && y < ROWS; y++) {
+          for(let x = 2; x < 18 && x < COLS; x++) {
+            if (map[y] && map[y][x] === T.GRASS) {
+              map[y][x] = T.PATH;
+            }
+          }
+        }
+        // 木を少し（30%に削減）
+        for(let i = 0; i < 3; i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.TREE;
+          }
+        }
+        break;
+
+      case 'ruins': // 北西：廃墟のエリア（森と洞窟の間）
+        // 岩を多く配置（廃墟の石）（30%に削減）
+        for(let i = 0; i < 11; i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.ROCK;
+          }
+        }
+        // 中央に大きな遺跡エリア
+        for(let y = 4; y < 7 && y < ROWS; y++) {
+          for(let x = 6; x < 14 && x < COLS; x++) {
+            if (map[y] && map[y][x] === T.GRASS) {
+              map[y][x] = T.ROCK;
+            }
+          }
+        }
+        // パス（遺跡への道）
+        for(let y = 2; y < 9 && y < ROWS; y++) {
+          for(let x = 8; x < 12 && x < COLS; x++) {
+            if (map[y] && map[y][x] === T.GRASS) {
+              map[y][x] = T.PATH;
+            }
+          }
+        }
+        // 木を少し（森の名残）（30%に削減）
+        for(let i = 0; i < 2; i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.TREE;
+          }
+        }
+        break;
+
+      case 'garden': // 北東：花畑のエリア（森と草原の間）
+        // 花を大量に配置（30%に削減）
+        for(let i = 0; i < 15; i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.FLOWER;
+          }
+        }
+        // パス（花畑の中の小道）
+        for(let y = 4; y < 7 && y < ROWS; y++) {
+          for(let x = 3; x < 17 && x < COLS; x++) {
+            if (map[y] && map[y][x] === T.GRASS) {
+              map[y][x] = T.PATH;
+            }
+          }
+        }
+        // 木を少し（縁に）
+        for(let i = 0; i < 5; i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * 3);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.TREE;
+          }
+        }
+        for(let i = 0; i < 5; i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * 3) + 8;
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.TREE;
+          }
+        }
+        break;
+
+      case 'cavecoast': // 南西：海岸洞窟のエリア（海岸と洞窟の間）
+        // 左側に洞窟風、右側に海岸風
+        // 左側に岩を配置（30%に削減）
+        for(let i = 0; i < 8; i++){
+          const x = Math.floor(Math.random() * 10);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.ROCK;
+          }
+        }
+        // 右側に水を配置（30%に削減）
+        for(let i = 0; i < 5; i++){
+          const x = Math.floor(Math.random() * 10) + 10;
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.WATER;
+          }
+        }
+        // 下側に砂浜
+        for(let y = 8; y < ROWS; y++) {
+          for(let x = 0; x < COLS; x++) {
+            if (map[y] && map[y][x] === T.GRASS) {
+              map[y][x] = T.SAND;
+            }
+          }
+        }
+        // 中央にパス
+        for(let y = 3; y < 8 && y < ROWS; y++) {
+          for(let x = 8; x < 12 && x < COLS; x++) {
+            if (map[y] && map[y][x] === T.GRASS) {
+              map[y][x] = T.PATH;
+            }
+          }
+        }
+        break;
+
+      case 'beach': // 南東：ビーチのエリア（海岸と草原の間）
+        // 砂浜を多く配置
+        for(let y = 0; y < ROWS; y++) {
+          for(let x = 0; x < COLS; x++) {
+            if (map[y] && map[y][x] === T.GRASS && Math.random() > 0.3) {
+              map[y][x] = T.SAND;
+            }
+          }
+        }
+        // 下側に水
+        for(let y = 7; y < ROWS; y++) {
+          for(let x = 0; x < COLS; x++) {
+            if (map[y] && map[y][x] === T.SAND && Math.random() > 0.5) {
+              map[y][x] = T.WATER;
+            }
+          }
+        }
+        // パス（ビーチ沿い）
+        for(let y = 2; y < 6 && y < ROWS; y++) {
+          for(let x = 2; x < 18 && x < COLS; x++) {
+            if (map[y] && map[y][x] === T.SAND) {
+              map[y][x] = T.PATH;
+            }
+          }
+        }
+        // 花を少し（ビーチの装飾）（30%に削減）
+        for(let i = 0; i < 3; i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * 6);
+          if (map[y] && map[y][x] === T.SAND) {
+            map[y][x] = T.FLOWER;
+          }
+        }
+        break;
+
+      case 'cactus': // 北東方向：サボテン、陽気な世界
+        // ボスフィールド判定（北東の四隅）
+        const isBossFieldNE = (mapX === 3 && mapY === -3);
+        // サボテンを多く配置（通常は30%に削減、ボスフィールドは10%以下に抑える）
+        for(let i = 0; i < (isBossFieldNE ? 1 : 12); i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.CACTUS;
+          }
+        }
+        // パス（陽気な道）
+        for(let y = 4; y < 7 && y < ROWS; y++) {
+          for(let x = 3; x < 17 && x < COLS; x++) {
+            if (map[y] && map[y][x] === T.GRASS) {
+              map[y][x] = T.PATH;
+            }
+          }
+        }
+        // 花を少し（明るい雰囲気、通常は30%に削減、ボスフィールドは10%以下に抑える）
+        for(let i = 0; i < (isBossFieldNE ? 1 : 6); i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.FLOWER;
+          }
+        }
+        break;
+
+      case 'snow': // 北西方向：雪、森林地帯、山
+        // 雪を多く配置
+        for(let y = 0; y < ROWS; y++) {
+          for(let x = 0; x < COLS; x++) {
+            if (map[y] && map[y][x] === T.GRASS && Math.random() > 0.2) {
+              map[y][x] = T.SNOW;
+            }
+          }
+        }
+        // ボスフィールド判定（北西の四隅）
+        const isBossFieldNW = (mapX === -3 && mapY === -3);
+        // 山（岩）を配置（通常は30%に削減、ボスフィールドは10%以下に抑える）
+        for(let i = 0; i < (isBossFieldNW ? 1 : 9); i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.SNOW) {
+            map[y][x] = T.ROCK;
+          }
+        }
+        // 森（木）を配置（通常は30%に削減、ボスフィールドは10%以下に抑える）
+        for(let i = 0; i < (isBossFieldNW ? 1 : 8); i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.SNOW) {
+            map[y][x] = T.TREE;
+          }
+        }
+        // パス
+        for(let y = 5; y < 6 && y < ROWS; y++) {
+          for(let x = 2; x < 18 && x < COLS; x++) {
+            if (map[y] && map[y][x] === T.SNOW) {
+              map[y][x] = T.PATH;
+            }
+          }
+        }
+        break;
+
+      case 'desert': // 南西方向：砂漠と洞窟
+        // 砂漠を多く配置
+        for(let y = 0; y < ROWS; y++) {
+          for(let x = 0; x < COLS; x++) {
+            if (map[y] && map[y][x] === T.GRASS && Math.random() > 0.3) {
+              map[y][x] = T.DESERT;
+            }
+          }
+        }
+        // ボスフィールド判定（南西の四隅）
+        const isBossFieldSW = (mapX === -3 && mapY === 3);
+        // 洞窟（岩）を配置（通常は30%に削減、ボスフィールドは10%以下に抑える）
+        for(let i = 0; i < (isBossFieldSW ? 1 : 11); i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.DESERT) {
+            map[y][x] = T.ROCK;
+          }
+        }
+        // サボテンを少し（通常は30%に削減、ボスフィールドは10%以下に抑える）
+        for(let i = 0; i < (isBossFieldSW ? 0 : 5); i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.DESERT) {
+            map[y][x] = T.CACTUS;
+          }
+        }
+        // パス
+        for(let y = 4; y < 7 && y < ROWS; y++) {
+          for(let x = 5; x < 15 && x < COLS; x++) {
+            if (map[y] && map[y][x] === T.DESERT) {
+              map[y][x] = T.PATH;
+            }
+          }
+        }
+        break;
+
+      case 'ocean': // 南東方向：水と島、海洋
+        // 水を多く配置
+        for(let y = 0; y < ROWS; y++) {
+          for(let x = 0; x < COLS; x++) {
+            if (map[y] && map[y][x] === T.GRASS && Math.random() > 0.4) {
+              map[y][x] = T.WATER;
+            }
+          }
+        }
+        // ボスフィールド判定（南東の四隅）
+        const isBossFieldSE = (mapX === 3 && mapY === 3);
+        // 島（草）を配置（通常は30%に削減、ボスフィールドは10%以下に抑える：小さな島のみ）
+        for(let i = 0; i < (isBossFieldSE ? 1 : 2); i++){
+          const islandX = Math.floor(Math.random() * (COLS - 4)) + 2;
+          const islandY = Math.floor(Math.random() * (ROWS - 4)) + 2;
+          // ボスフィールドでは小さな島（3x3）のみ生成
+          const size = isBossFieldSE ? 1 : 2;
+          for(let y = islandY - size; y < islandY + size + 1 && y < ROWS; y++) {
+            for(let x = islandX - size; x < islandX + size + 1 && x < COLS; x++) {
+              if (map[y] && map[y][x] === T.WATER && Math.random() > (isBossFieldSE ? 0.5 : 0.3)) {
+                map[y][x] = T.GRASS;
+              }
+            }
+          }
+        }
+        // 島に木を配置（通常は30%に削減、ボスフィールドは10%以下に抑える）
+        for(let i = 0; i < (isBossFieldSE ? 0 : 5); i++){
+          const x = Math.floor(Math.random() * COLS);
+          const y = Math.floor(Math.random() * ROWS);
+          if (map[y] && map[y][x] === T.GRASS) {
+            map[y][x] = T.TREE;
+          }
+        }
+        // パス（橋のような）
+        for(let y = 2; y < 9 && y < ROWS; y++) {
+          for(let x = 9; x < 11 && x < COLS; x++) {
+            if (map[y] && map[y][x] === T.WATER) {
+              map[y][x] = T.PATH;
+            }
+          }
+        }
+        break;
+    }
+
+    return map;
+  }
+
+  // マップ管理システム
+  const maps = new Map();
+  let currentMapX = 0, currentMapY = 0;
+  // マップの境界定義（-4から4の範囲）
+  const MIN_MAP_X = -4, MAX_MAP_X = 4;
+  const MIN_MAP_Y = -4, MAX_MAP_Y = 4;
+  const visitedMaps = new Set(); // 訪問したマップを記録
+  
+  function getMapKey(x, y) {
+    return `${x},${y}`;
+  }
+  
+  function markMapVisited(x, y) {
+    visitedMaps.add(getMapKey(x, y));
+  }
+  
+  function isMapVisited(x, y) {
+    return visitedMaps.has(getMapKey(x, y));
+  }
+  
+  function getCurrentMap() {
+    const key = getMapKey(currentMapX, currentMapY);
+    if (!maps.has(key)) {
+      let mapType = 'village';
+      // 既存のマップ
+      if (currentMapX === 0 && currentMapY === -1) mapType = 'forest';
+      else if (currentMapX === 0 && currentMapY === 1) mapType = 'coast';
+      else if (currentMapX === -1 && currentMapY === 0) mapType = 'cave';
+      else if (currentMapX === 1 && currentMapY === 0) mapType = 'field';
+      else if (currentMapX === -1 && currentMapY === -1) mapType = 'ruins';
+      else if (currentMapX === 1 && currentMapY === -1) mapType = 'garden';
+      else if (currentMapX === -1 && currentMapY === 1) mapType = 'cavecoast';
+      else if (currentMapX === 1 && currentMapY === 1) mapType = 'beach';
+      // 新しいマップ：北東方向（サボテン、陽気な世界）
+      else if (currentMapX >= 2 || (currentMapX > 0 && currentMapY <= -2)) mapType = 'cactus';
+      // 新しいマップ：北西方向（雪、森林地帯、山）
+      else if (currentMapX <= -2 || (currentMapX < 0 && currentMapY <= -2)) mapType = 'snow';
+      // 新しいマップ：南西方向（砂漠と洞窟）
+      else if (currentMapX <= -2 || (currentMapX < 0 && currentMapY >= 2)) mapType = 'desert';
+      // 新しいマップ：南東方向（水と島、海洋）
+      else if (currentMapX >= 2 || (currentMapX > 0 && currentMapY >= 2)) mapType = 'ocean';
+      // その他の境界エリア
+      else if (currentMapY <= -2) {
+        if (currentMapX < 0) mapType = 'snow';
+        else mapType = 'cactus';
+      } else if (currentMapY >= 2) {
+        if (currentMapX < 0) mapType = 'desert';
+        else mapType = 'ocean';
+      } else if (currentMapX <= -2) {
+        if (currentMapY < 0) mapType = 'snow';
+        else mapType = 'desert';
+      } else if (currentMapX >= 2) {
+        if (currentMapY < 0) mapType = 'cactus';
+        else mapType = 'ocean';
+      }
+      maps.set(key, generateMap(mapType, currentMapX, currentMapY));
+    }
+    return maps.get(key);
+  }
+
+  const isBlock = (t) => t === T.TREE || t === T.WATER || t === T.ROCK || t === T.CACTUS || t === T.ICE;
+
+  // サウンド
+  // BGM管理
+  let bgmAudio = null;
+  
+  const initBGM = () => {
+    if (!bgmAudio) {
+      bgmAudio = new Audio('bgm.mp3');
+      bgmAudio.loop = true;
+      bgmAudio.volume = 0.5;
+    }
+  };
+  
+  const playBGM = () => {
+    if (bgmAudio) {
+      bgmAudio.currentTime = 0; // 最初から再生
+      bgmAudio.play().catch(e => console.log('BGM play error:', e));
+    }
+  };
+  
+  const stopBGM = () => {
+    if (bgmAudio) {
+      bgmAudio.pause();
+      bgmAudio.currentTime = 0;
+    }
+  };
+
+  const Sound = (() => {
+    let audioContext = null;
+    let unlocked = false;
+    
+    const unlock = () => { 
+      try {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioContext.state === 'suspended') audioContext.resume(); 
+        unlocked = true;
+        // オーディオ解禁時にBGMを初期化
+        initBGM();
+        playBGM();
+      } catch(e) {
+        console.log('Audio not supported');
+      }
+    };
+
+    const playSound = (type) => {
+      if (!unlocked || !audioContext) return;
+      
+      try {
+        const beep = (f, t, waveType='square', g=0.04) => {
+          const o = audioContext.createOscillator();
+          const v = audioContext.createGain();
+          o.type = waveType; 
+          o.frequency.value = f;
+          v.gain.value = g; 
+          o.connect(v); 
+          v.connect(audioContext.destination);
+          const t0 = audioContext.currentTime;
+          o.start(t0); 
+          o.stop(t0 + t);
+        };
+
+        switch(type) {
+          case 'sword': beep(880, 0.05); setTimeout(() => beep(660, 0.08), 50); break;
+          case 'hit': beep(150, 0.15, 'sawtooth', 0.08); break;
+          case 'coin': beep(659, 0.3, 'sine', 0.05); break;
+          case 'chest': beep(523, 0.4, 'triangle', 0.06); break;
+          case 'bomb': beep(80, 0.2, 'square', 0.12); break;
+          case 'talk': beep(523, 0.2, 'triangle', 0.04); break;
+          case 'level': 
+            for(let i = 0; i < 5; i++) {
+              setTimeout(() => beep(523 + i*100, 0.15, 'sine', 0.05), i * 100);
+            }
+            break;
+          case 'button': beep(440, 0.05, 'square', 0.02); break;
+        }
+      } catch(e) {
+        console.log('Audio error:', e);
+      }
+    };
+
+    return { unlock, playSound, get unlocked() { return unlocked; } };
+  })();
+
+  // 初回クリックでオーディオ解禁
+  const unlockAudio = () => {
+    Sound.unlock();
+    window.removeEventListener('pointerdown', unlockAudio);
+  };
+  window.addEventListener('pointerdown', unlockAudio);
+
+  // iOSのダブルタップズーム防止（double-tap zoom prevention）
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (now - lastTouchEnd < 300) {
+      e.preventDefault();
+    }
+    lastTouchEnd = now;
+  }, { passive: false });
+  
+  // ダブルタップ防止の追加対策
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches.length > 1) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  // 入力
+  const Input = {
+    ax: 0, ay: 0,
+    a: false, b: false, x: false,
+    aDown: false, bDown: false, xDown: false,
+    updateEdges() {
+      this.aDown = this.a && !this._pa; this._pa = this.a;
+      this.bDown = this.b && !this._pb; this._pb = this.b;
+      this.xDown = this.x && !this._px; this._px = this.x;
+    },
+  };
+
+  // キーボード入力ハンドラー（後で定義される関数を参照するため、後で設定）
+  let handleKeyDown, handleKeyUp;
+  
+  // キーボード
+  handleKeyDown = (e) => {
+    // Escapeキーは常に有効
+    if (e.key === 'Escape') {
+      if (typeof toggleWeaponSelect === 'function') {
+        toggleWeaponSelect();
+      }
+      e.preventDefault();
+      return;
+    }
+    
+    // ポーズ中やエンディング中は他のキーを無効化
+    if (state.paused || state.ending) {
+      return;
+    }
+    
+    switch(e.key){
+      case 'ArrowLeft': Input.ax = -1; break;
+      case 'ArrowRight': Input.ax = 1; break;
+      case 'ArrowUp': Input.ay = -1; break;
+      case 'ArrowDown': Input.ay = 1; break;
+      case ' ': case 'j': case 'J': Input.a = true; break;
+      case 'k': case 'z': case 'K': case 'Z': Input.b = true; break;
+      case 'x': case 'X': Input.x = true; break;
+      default: return; // 他のキーは処理しない
+    }
+    e.preventDefault();
+  };
+  
+  handleKeyUp = (e) => {
+    // ポーズ中やエンディング中は無効化
+    if (state.paused || state.ending) {
+      return;
+    }
+    
+    switch(e.key){
+      case 'ArrowLeft': if (Input.ax<0) Input.ax = 0; break;
+      case 'ArrowRight': if (Input.ax>0) Input.ax = 0; break;
+      case 'ArrowUp': if (Input.ay<0) Input.ay = 0; break;
+      case 'ArrowDown': if (Input.ay>0) Input.ay = 0; break;
+      case ' ': case 'j': case 'J': Input.a = false; break;
+      case 'k': case 'z': case 'K': case 'Z': Input.b = false; break;
+      case 'x': case 'X': Input.x = false; break;
+      default: return;
+    }
+  };
+  
+  window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('keyup', handleKeyUp);
+
+  // タッチ
+  const stick = document.getElementById('stick');
+  const stickKnob = document.getElementById('stickKnob');
+  let stickId = null, stickCenter = {x:0,y:0};
+  const R = 56;
+
+  const setKnob = (dx,dy) => stickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+
+  // iOS向けのタッチイベント最適化
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  
+  const handleStickStart = (e) => {
+    e.preventDefault();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    stickId = e.pointerId || (e.touches ? e.touches[0].identifier : 0);
+    stickCenter.x = clientX;
+    stickCenter.y = clientY;
+  };
+
+  const handleStickMove = (e) => {
+    if (stickId === null) return;
+    const isTouch = e.touches && e.touches.length > 0;
+    const currentId = isTouch ? e.touches[0].identifier : e.pointerId;
+    
+    if (currentId === stickId || (stickId !== null && !isTouch)) {
+      const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+      const clientY = isTouch ? e.touches[0].clientY : e.clientY;
+      const dx = clientX - stickCenter.x;
+      const dy = clientY - stickCenter.y;
+      const len = Math.hypot(dx,dy) || 1;
+      const cl = Math.min(len, R);
+      const nx = dx/len, ny = dy/len;
+      const kx = nx*cl, ky = ny*cl;
+      setKnob(kx, ky);
+      Input.ax = (cl/R)*nx;
+      Input.ay = (cl/R)*ny;
+      e.preventDefault();
+    }
+  };
+
+  const handleStickEnd = (e) => {
+    const isTouch = e.changedTouches && e.changedTouches.length > 0;
+    const currentId = isTouch ? e.changedTouches[0].identifier : e.pointerId;
+    
+    if (currentId === stickId || (stickId !== null && !isTouch)) {
+      stickId = null;
+      setKnob(0, 0);
+      Input.ax = 0;
+      Input.ay = 0;
+      e.preventDefault();
+    }
+  };
+
+  // イベントリスナーの登録（iOS向けに最適化）
+  if (isIOS) {
+    stick.addEventListener('touchstart', handleStickStart, { passive: false });
+    stick.addEventListener('touchmove', handleStickMove, { passive: false });
+    stick.addEventListener('touchend', handleStickEnd, { passive: false });
+    stick.addEventListener('touchcancel', handleStickEnd, { passive: false });
+  }
+  
+  stick.addEventListener('pointerdown', handleStickStart);
+  window.addEventListener('pointermove', handleStickMove);
+  window.addEventListener('pointerup', handleStickEnd);
+  window.addEventListener('pointercancel', handleStickEnd);
+
+  // ボタンの打感（触覚フィードバック）
+  const vibrate = (pattern = [10]) => {
+    if ('vibrate' in navigator) {
+      try {
+        navigator.vibrate(pattern);
+      } catch (e) {
+        // エラーは無視
+      }
+    }
+  };
+
+  // ボタン
+  const btnA = document.getElementById('btnA');
+  const btnB = document.getElementById('btnB');
+  const btnX = document.getElementById('btnX');
+
+  const pressBtn = (key, btn) => (e) => {
+    e.preventDefault();
+    Input[key] = true;
+    Sound.playSound('button');
+    
+    // 打感：触覚フィードバック（強化版）
+    const isBottomRow = btn.closest('.btn-bottom-row');
+    if (isBottomRow) {
+      // 右下のボタンはより強い振動
+      vibrate([10, 5, 15, 5, 10]);
+    } else {
+      vibrate([5, 5, 10]);
+    }
+    
+    // 打感：視覚的フィードバック（高速化）
+    btn.classList.add('pressed');
+    setTimeout(() => {
+      btn.classList.remove('pressed');
+    }, 80); // 150ms → 80ms に短縮
+  };
+  const releaseBtn = (key) => (e) => {
+    e.preventDefault();
+    Input[key] = false;
+  };
+
+  // ボタンイベント登録（高速化のためタッチイベントも追加）
+  const addButtonEvents = (btn, key) => {
+    const press = pressBtn(key, btn);
+    const release = releaseBtn(key);
+    
+    // ポインターイベント
+    btn.addEventListener('pointerdown', press, { passive: false });
+    btn.addEventListener('pointerup', release, { passive: false });
+    btn.addEventListener('pointercancel', release, { passive: false });
+    
+    // タッチイベント（iOS向け高速化）
+    if (isIOS) {
+      btn.addEventListener('touchstart', press, { passive: false });
+      btn.addEventListener('touchend', release, { passive: false });
+      btn.addEventListener('touchcancel', release, { passive: false });
+    }
+  };
+
+  addButtonEvents(btnA, 'a');
+  addButtonEvents(btnB, 'b');
+  addButtonEvents(btnX, 'x');
+
+  // 武器の種類
+  const WEAPONS = {
+    BOMB: { id: 'bomb', name: '爆弾', icon: '💣', color: '#333' },
+    SHURIKEN: { id: 'shuriken', name: '手裏剣', icon: '⭐', color: '#ffd700' },
+    SPEAR: { id: 'spear', name: '長槍', icon: '🔱', color: '#4a90e2' },
+    BAZOOKA: { id: 'bazooka', name: 'バズーカ', icon: '🚀', color: '#ff4500' }
+  };
+
+  // 携帯デバイス検出
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   ('ontouchstart' in window) || 
+                   (navigator.maxTouchPoints > 0);
+
+  // ゲーム状態
+  const state = {
+    coins: 0,
+    hp: 5, maxHp: 5,
+    level: 1, exp: 0, expToNext: 10,
+    tutorialStep: 0,
+    paused: false,
+    hintTimer: 0,
+    weapons: [WEAPONS.BOMB.id], // 所持武器リスト（初期は爆弾のみ）
+    currentWeapon: WEAPONS.BOMB.id, // 現在装備中の武器
+    bossItems: [], // ボスから入手したアイテム
+    defeatedBosses: [], // 倒したボスのタイプ（'suzaku', 'genbu', 'seiryu', 'kirin'）
+    ending: false, // エンディングフラグ
+    chiefEventShown: false, // 村長イベント表示済みフラグ
+    canPlay: !isMobile, // 携帯の場合は横画面になるまでfalse
+  };
+
+  // HUD要素
+  const heartEl = document.getElementById('hearts');
+  const coinsEl = document.getElementById('coins');
+  const levelEl = document.getElementById('level');
+  const hintEl = document.getElementById('hint');
+  const levelUpEl = document.getElementById('levelUp');
+  const speechBubbleEl = document.getElementById('speechBubble');
+  const minimapCanvas = document.getElementById('minimap');
+  const minimapCtx = minimapCanvas.getContext('2d');
+  
+  // 横画面用の要素
+  const heartElLandscape = document.getElementById('hearts-landscape');
+  const coinsElLandscape = document.getElementById('coins-landscape');
+  const levelElLandscape = document.getElementById('level-landscape');
+  const minimapCanvasLandscape = document.getElementById('minimap-landscape');
+  const minimapCtxLandscape = minimapCanvasLandscape ? minimapCanvasLandscape.getContext('2d') : null;
+  const btnPauseLandscape = document.getElementById('btnPause-landscape');
+
+  function renderHUD(){
+    // 縦画面用 - 最大10個まで表示
+    heartEl.innerHTML = '';
+    const maxHearts = Math.min(state.maxHp, 10); // 最大10個まで
+    for (let i=0;i<maxHearts;i++){
+      const d = document.createElement('div');
+      d.className = 'heart' + (i >= state.hp? ' empty':'');
+      heartEl.appendChild(d);
+    }
+    coinsEl.textContent = state.coins;
+    levelEl.textContent = state.level;
+    
+    // 横画面用 - 最大10個まで表示
+    if (heartElLandscape) {
+      heartElLandscape.innerHTML = '';
+      const maxHeartsLandscape = Math.min(state.maxHp, 10); // 最大10個まで
+      for (let i=0;i<maxHeartsLandscape;i++){
+        const d = document.createElement('div');
+        d.className = 'heart' + (i >= state.hp? ' empty':'');
+        heartElLandscape.appendChild(d);
+      }
+    }
+    if (coinsElLandscape) coinsElLandscape.textContent = state.coins;
+    if (levelElLandscape) levelElLandscape.textContent = state.level;
+  }
+
+  function showHint(txt, secs=1.5){
+    state.hintTimer = secs;
+    hintEl.textContent = txt;
+    hintEl.classList.add('show');
+  }
+
+  let speechBubbleTimer = 0;
+  function showSpeechBubble(npc, text) {
+    speechBubbleEl.textContent = text;
+    speechBubbleEl.classList.add('show');
+    
+    // NPCの位置に吹き出しを配置
+    const canvasRect = canvas.getBoundingClientRect();
+    const stageRect = document.querySelector('.stage').getBoundingClientRect();
+    const scaleX = stageRect.width / W;
+    const scaleY = stageRect.height / H;
+    
+    const bubbleX = (npc.x * scaleX) + stageRect.left;
+    // 吹き出しの下の辺がNPCのアイコンの中央（y位置）に来るように調整
+    // まず一時的に配置して高さを取得
+    speechBubbleEl.style.left = `${bubbleX}px`;
+    speechBubbleEl.style.top = '0px';
+    speechBubbleEl.style.transform = 'translateX(-50%)';
+    
+    // 吹き出しの実際の高さを取得
+    const bubbleHeight = speechBubbleEl.offsetHeight;
+    // NPCのy位置（アイコンの中央）に吹き出しの下の辺が来るように
+    // さらに上に配置するため、追加のオフセットを引く
+    const additionalOffset = 35; // 追加で上に35px
+    const bubbleY = (npc.y * scaleY) + stageRect.top - bubbleHeight - additionalOffset;
+    
+    speechBubbleEl.style.top = `${bubbleY}px`;
+    
+    // 3秒後に自動的に消す
+    speechBubbleTimer = 3.0;
+  }
+
+  function hideSpeechBubble() {
+    speechBubbleEl.classList.remove('show');
+    speechBubbleTimer = 0;
+  }
+
+  // ミニマップ描画
+  function drawMinimap() {
+    // 描画前に現在位置のマップを訪問済みとして記録（念のため）
+    markMapVisited(currentMapX, currentMapY);
+    
+    const drawToCanvas = (ctx, canvas) => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+      // 背景
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // マップのサイズ（9x9グリッド表示）
+      const cellSize = 8; // 9x9グリッドに収めるため少し小さく
+      const drawSize = cellSize - 1; // 実際の描画サイズ（7px）
+      
+      // 中央マップ(0,0)のマスの中心がミニマップの中心に来るようにオフセットを計算
+      // 中央マップは(4,4)の位置（9x9グリッドの中央）
+      // ミニマップの中心: (canvas.width/2, canvas.height/2)
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const offsetX = centerX - 4 * cellSize - drawSize / 2;
+      const offsetY = centerY - 4 * cellSize - drawSize / 2;
+      
+      // 訪問したマップを描画
+      const mapTypes = {
+        '0,0': { name: '村', color: '#8b7355' },
+        '0,-1': { name: '森', color: '#228b22' },
+        '0,1': { name: '海岸', color: '#1e3a8a' },
+        '-1,0': { name: '洞窟', color: '#555' },
+        '1,0': { name: '草原', color: '#2d5016' },
+        '-1,-1': { name: '廃墟', color: '#666' },
+        '1,-1': { name: '花畑', color: '#ff69b4' },
+        '-1,1': { name: '海岸洞窟', color: '#4a5568' },
+        '1,1': { name: 'ビーチ', color: '#d4a574' }
+      };
+      
+      // 新しいマップタイプの色を動的に決定
+      const getMapColor = (x, y) => {
+        const key = getMapKey(x, y);
+        if (mapTypes[key]) return mapTypes[key].color;
+        
+        // 新しいマップタイプの色
+        if (x >= 2 || (x > 0 && y <= -2)) return '#90EE90'; // サボテン（明るい緑）
+        if (x <= -2 || (x < 0 && y <= -2)) return '#E0E0E0'; // 雪（白）
+        if (x <= -2 || (x < 0 && y >= 2)) return '#D2B48C'; // 砂漠（ベージュ）
+        if (x >= 2 || (x > 0 && y >= 2)) return '#4169E1'; // 海洋（青）
+        return '#666'; // デフォルト
+      };
+      
+      // 各マップ位置を描画（9x9グリッド、中央が(4,4)）
+      // x: -4から4まで、y: -4から4まで
+      const mapPositions = [];
+      for(let y = -4; y <= 4; y++) {
+        for(let x = -4; x <= 4; x++) {
+          mapPositions.push({
+            key: `${x},${y}`,
+            x: x + 4, // -4を0に、0を4に、4を8に変換
+            y: y + 4  // -4を0に、0を4に、4を8に変換
+          });
+        }
+      }
+      
+      // 武器が入っている宝箱があるマップを判定
+      const hasWeaponChest = (mx, my) => {
+        // 手裏剣：南東方向（2, 2）
+        if (mx === 2 && my === 2) return true;
+        // 長槍：北西方向（-2, -2）
+        if (mx === -2 && my === -2) return true;
+        // バズーカ：北東方向（2, -2）
+        if (mx === 2 && my === -2) return true;
+        return false;
+      };
+      
+      for (const pos of mapPositions) {
+        const [mx, my] = pos.key.split(',').map(Number);
+        const isCurrent = (currentMapX === mx && currentMapY === my);
+        const isVisited = isMapVisited(mx, my);
+        
+        // 4つのアイテムが揃ったら村（0,0）を強制的に訪問済みとして表示
+        const isVillage = (mx === 0 && my === 0);
+        const shouldShow = isVisited || isCurrent || (isVillage && state.bossItems.length === 4);
+        
+        // 現在位置のマップまたは訪問済みマップを描画
+        if (shouldShow) {
+          const mapColor = mapTypes[pos.key] ? mapTypes[pos.key].color : getMapColor(mx, my);
+          const px = offsetX + pos.x * cellSize;
+          const py = offsetY + pos.y * cellSize;
+          
+          // 4つのアイテムが揃ったら村を点灯（光る効果）
+          const isVillageLighted = isVillage && state.bossItems.length === 4;
+          let fillColor = isCurrent ? '#ffd700' : mapColor;
+          
+          if (isVillageLighted) {
+            // 点灯効果：明るい黄色で点滅
+            const pulse = Math.sin(performance.now() * 0.005) * 0.3 + 0.7;
+            fillColor = `rgba(255, 215, 0, ${pulse})`;
+          }
+          
+          // マップセルを描画
+          ctx.fillStyle = fillColor;
+          ctx.fillRect(px, py, cellSize - 2, cellSize - 2);
+          
+          // 現在位置のハイライト
+          if (isCurrent) {
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(px - 0.5, py - 0.5, cellSize - 1, cellSize - 1);
+            
+            // 現在位置のインジケーター
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(px + cellSize/2, py + cellSize/2, 2, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (isVillageLighted) {
+            // 村が点灯している場合の特別なハイライト
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(px - 1, py - 1, cellSize, cellSize);
+            
+            // 点灯インジケーター（光る円）
+            const glow = Math.sin(performance.now() * 0.005) * 0.5 + 0.5;
+            ctx.fillStyle = `rgba(255, 215, 0, ${glow})`;
+            ctx.beginPath();
+            ctx.arc(px + cellSize/2, py + cellSize/2, 3, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            // 訪問済みマップの枠
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 0.5;
+            ctx.strokeRect(px, py, cellSize - 2, cellSize - 2);
+          }
+          
+          // 武器が入っている宝箱があるマップに小さな赤丸を表示
+          if (hasWeaponChest(mx, my)) {
+            ctx.fillStyle = '#ff0000';
+            ctx.beginPath();
+            ctx.arc(px + cellSize - 3, py + 3, 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+      
+      // グリッド線（デバッグ用、必要に応じてコメントアウト）
+      // ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      // ctx.lineWidth = 1;
+      // for (let i = 0; i <= 3; i++) {
+      //   ctx.beginPath();
+      //   ctx.moveTo(offsetX + i * cellSize, offsetY);
+      //   ctx.lineTo(offsetX + i * cellSize, offsetY + 3 * cellSize);
+      //   ctx.stroke();
+      // }
+      // for (let i = 0; i <= 3; i++) {
+      //   ctx.beginPath();
+      //   ctx.moveTo(offsetX, offsetY + i * cellSize);
+      //   ctx.lineTo(offsetX + 3 * cellSize, offsetY + i * cellSize);
+      //   ctx.stroke();
+      // }
+    };
+    
+    // 縦画面用のミニマップを描画
+    drawToCanvas(minimapCtx, minimapCanvas);
+    
+    // 横画面用のミニマップを描画（同じ内容）
+    if (minimapCtxLandscape && minimapCanvasLandscape) {
+      drawToCanvas(minimapCtxLandscape, minimapCanvasLandscape);
+    }
+  }
+
+  function gainExp(amount) {
+    state.exp += amount;
+    if (state.exp >= state.expToNext) {
+      state.level++;
+      state.exp = 0;
+      state.expToNext = Math.floor(state.expToNext * 1.2);
+      state.maxHp++;
+      state.hp = state.maxHp;
+      Sound.playSound('level');
+      showLevelUp();
+      showHint(`レベル ${state.level}! HP+1`);
+    }
+  }
+
+  function showLevelUp() {
+    levelUpEl.style.display = 'block';
+    levelUpEl.style.animation = 'none';
+    setTimeout(() => {
+      levelUpEl.style.animation = 'levelUpAnim 2s ease-out';
+    }, 10);
+    setTimeout(() => {
+      levelUpEl.style.display = 'none';
+    }, 2000);
+  }
+
+  // エンティティ
+  class Entity {
+    constructor(x,y) {
+      this.x=x; this.y=y; this.w=12; this.h=12;
+      this.vx=0; this.vy=0; this.dir=1; this.hp=1; this.dead=false;
+    }
+  }
+
+  class Player extends Entity {
+    constructor(x,y) {
+      super(x,y);
+      this.speed=60; this.hp=state.hp; this.maxHp=state.maxHp;
+      this.inv=0; this.attackCd=0; this.swordT=0;
+      this.sdx=1; this.sdy=0;
+      this.weaponCd=0; // 武器使用時の硬直時間
+    }
+  }
+
+  class Slime extends Entity {
+    constructor(x,y) {
+      super(x,y);
+      this.speed=25; this.hp=2; this.change=0; this.bounceT=0;
+      this.knockbackT=0; // ノックバック時間
+    }
+    update(dt) {
+      // ノックバック処理
+      if (this.knockbackT > 0) {
+        this.knockbackT -= dt;
+        if (this.knockbackT <= 0) {
+          this.vx = 0;
+          this.vy = 0;
+        }
+        return; // ノックバック中は通常の移動をスキップ
+      }
+      this.bounceT += dt * 4;
+      if ((this.change-=dt)<=0) {
+        this.change = Math.random() * 2 + 0.8;
+        const ang = Math.random() * Math.PI * 2;
+        this.vx = Math.cos(ang) * this.speed;
+        this.vy = Math.sin(ang) * this.speed;
+      }
+    }
+  }
+
+  class Archer extends Entity {
+    constructor(x,y) {
+      super(x,y);
+      this.hp=3; this.cd=0; this.range=180; this.alertT=0;
+    }
+    update(dt) {
+      if (this.alertT > 0) this.alertT -= dt;
+    }
+  }
+
+  class CactusMonster extends Entity {
+    constructor(x,y) {
+      super(x,y);
+      this.speed=20; this.hp=3; this.change=0; this.spikeT=0;
+    }
+    update(dt) {
+      this.spikeT += dt * 3;
+      if ((this.change-=dt)<=0) {
+        this.change = Math.random() * 2.5 + 1.0;
+        const ang = Math.random() * Math.PI * 2;
+        this.vx = Math.cos(ang) * this.speed;
+        this.vy = Math.sin(ang) * this.speed;
+      }
+    }
+  }
+
+  class SnowWolf extends Entity {
+    constructor(x,y) {
+      super(x,y);
+      this.speed=40; this.hp=2; this.change=0; this.howlT=0;
+    }
+    update(dt) {
+      this.howlT += dt * 2;
+      if ((this.change-=dt)<=0) {
+        this.change = Math.random() * 1.5 + 0.5;
+        // プレイヤーに向かって移動
+        const dx = player.x - this.x;
+        const dy = player.y - this.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 0 && dist < 200) {
+          this.vx = (dx / dist) * this.speed;
+          this.vy = (dy / dist) * this.speed;
+        } else {
+          const ang = Math.random() * Math.PI * 2;
+          this.vx = Math.cos(ang) * this.speed;
+          this.vy = Math.sin(ang) * this.speed;
+        }
+      }
+    }
+  }
+
+  class DesertScorpion extends Entity {
+    constructor(x,y) {
+      super(x,y);
+      this.speed=30; this.hp=4; this.change=0; this.stingT=0;
+    }
+    update(dt) {
+      this.stingT += dt * 5;
+      if ((this.change-=dt)<=0) {
+        this.change = Math.random() * 2 + 0.8;
+        const ang = Math.random() * Math.PI * 2;
+        this.vx = Math.cos(ang) * this.speed;
+        this.vy = Math.sin(ang) * this.speed;
+      }
+    }
+  }
+
+  class OceanKraken extends Entity {
+    constructor(x,y) {
+      super(x,y);
+      this.hp=5; this.cd=0; this.range=200; this.tentacleT=0; this.alertT=0;
+    }
+    update(dt) {
+      this.tentacleT += dt * 2;
+      if (this.alertT > 0) this.alertT -= dt;
+    }
+  }
+
+  class FireSpirit extends Entity {
+    constructor(x,y) {
+      super(x,y);
+      this.speed=35; this.hp=2; this.change=0; this.flameT=0;
+    }
+    update(dt) {
+      this.flameT += dt * 6;
+      if ((this.change-=dt)<=0) {
+        this.change = Math.random() * 1.8 + 0.6;
+        const ang = Math.random() * Math.PI * 2;
+        this.vx = Math.cos(ang) * this.speed;
+        this.vy = Math.sin(ang) * this.speed;
+      }
+    }
+  }
+
+  // ボスクラス
+  class Boss extends Entity {
+    constructor(x, y, type) {
+      super(x, y);
+      this.type = type; // 'suzaku', 'genbu', 'seiryu', 'kirin'
+      this.w = 48; this.h = 48; // 4倍の大きさ
+      this.maxHp = 50;
+      this.hp = 50;
+      this.dead = false;
+      this.attackCd = 0;
+      this.attackPattern = 0;
+      this.animT = 0;
+      this.bullets = [];
+      this.phase = 1; // フェーズ（1: 通常、2: 体力半分以下）
+      
+      this.moveT = 0; // 移動タイマー
+      this.moveDir = 0; // 移動方向（0-3: 上下左右）
+      this.moveSpeed = 20; // ゆっくり動く速度
+      this.moveCd = 0; // 移動方向変更のクールダウン
+      
+      // ボスタイプごとの設定
+      switch(type) {
+        case 'suzaku': // 朱雀（南）- 円形に動き回る
+          this.color = '#ff0000'; // 赤
+          this.attackSpeed = 1.5;
+          this.movePattern = 'circle';
+          break;
+        case 'genbu': // 玄武（北）- 前後に動く
+          this.color = '#ff0000'; // 赤に変更
+          this.attackSpeed = 2.0;
+          this.movePattern = 'backforth';
+          break;
+        case 'seiryu': // 青龍（東）- 左右に動く
+          this.color = '#ff0000'; // 赤に変更
+          this.attackSpeed = 1.0;
+          this.movePattern = 'sideways';
+          break;
+        case 'kirin': // 麒麟（西）- プレイヤーを追いかける
+          this.color = '#ff0000'; // 赤に変更
+          this.attackSpeed = 1.8;
+          this.movePattern = 'chase';
+          break;
+      }
+    }
+    
+    update(dt) {
+      this.animT += dt;
+      this.attackCd -= dt;
+      this.moveT += dt;
+      this.moveCd -= dt;
+      
+      // HPが半分以下になったらフェーズ2へ
+      if (this.phase === 1 && this.hp <= this.maxHp / 2) {
+        this.phase = 2;
+        // フェーズ2では移動速度と攻撃速度を上昇
+        this.moveSpeed *= 1.5;
+        this.attackSpeed *= 0.7; // クールダウンが短くなる = 攻撃が速くなる
+        Sound.playSound('level'); // フェーズ変化の音
+      }
+      
+      // ボスの移動パターン
+      if (!this.dead) {
+        this.move(dt);
+      }
+      
+      if (this.attackCd <= 0) {
+        this.attack();
+        this.attackCd = this.attackSpeed;
+        this.attackPattern = (this.attackPattern + 1) % 3;
+      }
+    }
+    
+    move(dt) {
+      const oldX = this.x;
+      const oldY = this.y;
+      
+      if (this.phase === 1) {
+        // フェーズ1: 通常の動き
+        switch(this.movePattern) {
+          case 'circle': // 朱雀：円形に動き回る
+            const radius = 40;
+            const centerX = 160;
+            const centerY = 90;
+            this.x = centerX + Math.cos(this.moveT * 0.5) * radius;
+            this.y = centerY + Math.sin(this.moveT * 0.5) * radius;
+            break;
+            
+          case 'backforth': // 玄武：前後に動く
+            if (this.moveCd <= 0) {
+              this.moveDir = (this.moveDir === 0) ? 1 : 0; // 0: 上、1: 下
+              this.moveCd = 2.0;
+            }
+            if (this.moveDir === 0) {
+              this.y -= this.moveSpeed * dt;
+              if (this.y < 50) {
+                this.y = 50;
+                this.moveDir = 1;
+              }
+            } else {
+              this.y += this.moveSpeed * dt;
+              if (this.y > 130) {
+                this.y = 130;
+                this.moveDir = 0;
+              }
+            }
+            break;
+            
+          case 'sideways': // 青龍：左右に動く
+            if (this.moveCd <= 0) {
+              this.moveDir = (this.moveDir === 0) ? 1 : 0; // 0: 左、1: 右
+              this.moveCd = 2.0;
+            }
+            if (this.moveDir === 0) {
+              this.x -= this.moveSpeed * dt;
+              if (this.x < 80) {
+                this.x = 80;
+                this.moveDir = 1;
+              }
+            } else {
+              this.x += this.moveSpeed * dt;
+              if (this.x > 240) {
+                this.x = 240;
+                this.moveDir = 0;
+              }
+            }
+            break;
+            
+          case 'chase': // 麒麟：プレイヤーを追いかける（ゆっくり）
+            const dx = player.x - this.x;
+            const dy = player.y - this.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist > 0) {
+              const speed = this.moveSpeed * dt;
+              this.x += (dx / dist) * speed;
+              this.y += (dy / dist) * speed;
+              
+              // マップの境界で止まる
+              this.x = Math.max(60, Math.min(260, this.x));
+              this.y = Math.max(50, Math.min(130, this.y));
+            }
+            break;
+        }
+      } else {
+        // フェーズ2: より激しい動き
+        switch(this.movePattern) {
+          case 'circle': // 朱雀：より速い円形移動
+            const radius2 = 50;
+            const centerX2 = 160;
+            const centerY2 = 90;
+            this.x = centerX2 + Math.cos(this.moveT * 1.0) * radius2;
+            this.y = centerY2 + Math.sin(this.moveT * 1.0) * radius2;
+            break;
+            
+          case 'backforth': // 玄武：ジグザグ移動
+            if (this.moveCd <= 0) {
+              this.moveDir = (this.moveDir + 1) % 4; // 0: 上、1: 右上、2: 下、3: 左下
+              this.moveCd = 1.0;
+            }
+            const zigzagSpeed = this.moveSpeed * dt;
+            if (this.moveDir === 0) {
+              this.y -= zigzagSpeed;
+              if (this.y < 50) {
+                this.y = 50;
+                this.moveDir = 2;
+              }
+            } else if (this.moveDir === 1) {
+              this.y -= zigzagSpeed * 0.7;
+              this.x += zigzagSpeed * 0.7;
+              if (this.x > 240 || this.y < 50) {
+                this.moveDir = 3;
+              }
+            } else if (this.moveDir === 2) {
+              this.y += zigzagSpeed;
+              if (this.y > 130) {
+                this.y = 130;
+                this.moveDir = 0;
+              }
+            } else {
+              this.y += zigzagSpeed * 0.7;
+              this.x -= zigzagSpeed * 0.7;
+              if (this.x < 80 || this.y > 130) {
+                this.moveDir = 1;
+              }
+            }
+            break;
+            
+          case 'sideways': // 青龍：円形移動に変更
+            const radius3 = 45;
+            const centerX3 = 160;
+            const centerY3 = 90;
+            this.x = centerX3 + Math.cos(this.moveT * 0.8) * radius3;
+            this.y = centerY3 + Math.sin(this.moveT * 0.8) * radius3;
+            break;
+            
+          case 'chase': // 麒麟：より積極的に追尾
+            const dx2 = player.x - this.x;
+            const dy2 = player.y - this.y;
+            const dist2 = Math.hypot(dx2, dy2);
+            if (dist2 > 0) {
+              const speed2 = this.moveSpeed * dt;
+              this.x += (dx2 / dist2) * speed2;
+              this.y += (dy2 / dist2) * speed2;
+              
+              // マップの境界で止まる
+              this.x = Math.max(60, Math.min(260, this.x));
+              this.y = Math.max(50, Math.min(130, this.y));
+            }
+            break;
+        }
+      }
+      
+      // タイルとの衝突判定（移動を元に戻す）
+      if (collidesTile(this.x, this.y, this.w, this.h)) {
+        this.x = oldX;
+        this.y = oldY;
+      }
+    }
+    
+    attack() {
+      const dx = player.x - this.x;
+      const dy = player.y - this.y;
+      const dist = Math.hypot(dx, dy);
+      
+      if (this.phase === 1) {
+        // フェーズ1: 通常の攻撃
+        switch(this.type) {
+          case 'suzaku': // 朱雀：火の玉を3発
+            for (let i = 0; i < 3; i++) {
+              const angle = Math.atan2(dy, dx) + (i - 1) * 0.3;
+              this.bullets.push({
+                x: this.x, y: this.y,
+                vx: Math.cos(angle) * 80,
+                vy: Math.sin(angle) * 80,
+                life: 3.0,
+                color: '#ff4500'
+              });
+            }
+            break;
+          case 'genbu': // 玄武：氷の弾を5発（扇状）
+            for (let i = 0; i < 5; i++) {
+              const angle = Math.atan2(dy, dx) + (i - 2) * 0.4;
+              this.bullets.push({
+                x: this.x, y: this.y,
+                vx: Math.cos(angle) * 60,
+                vy: Math.sin(angle) * 60,
+                life: 4.0,
+                color: '#00bfff'
+              });
+            }
+            break;
+          case 'seiryu': // 青龍：雷の弾を8発（円形）
+            for (let i = 0; i < 8; i++) {
+              const angle = (i / 8) * Math.PI * 2;
+              this.bullets.push({
+                x: this.x, y: this.y,
+                vx: Math.cos(angle) * 70,
+                vy: Math.sin(angle) * 70,
+                life: 2.5,
+                color: '#ffff00'
+              });
+            }
+            break;
+          case 'kirin': // 麒麟：追尾弾
+            if (dist > 0 && !isNaN(dist)) {
+              this.bullets.push({
+                x: this.x, y: this.y,
+                vx: (dx / dist) * 50,
+                vy: (dy / dist) * 50,
+                life: 5.0,
+                color: '#ffd700',
+                tracking: true
+              });
+            } else {
+              // プレイヤーとの距離が計算できない場合は、デフォルト方向に発射
+              this.bullets.push({
+                x: this.x, y: this.y,
+                vx: 50,
+                vy: 0,
+                life: 5.0,
+                color: '#ffd700',
+                tracking: true
+              });
+            }
+            break;
+        }
+      } else {
+        // フェーズ2: より強力な攻撃
+        switch(this.type) {
+          case 'suzaku': // 朱雀：火の玉を5発（より広範囲）
+            for (let i = 0; i < 5; i++) {
+              const angle = Math.atan2(dy, dx) + (i - 2) * 0.4;
+              this.bullets.push({
+                x: this.x, y: this.y,
+                vx: Math.cos(angle) * 90,
+                vy: Math.sin(angle) * 90,
+                life: 3.5,
+                color: '#ff0000'
+              });
+            }
+            break;
+          case 'genbu': // 玄武：氷の弾を8発（8方向全方向）
+            for (let i = 0; i < 8; i++) {
+              const angle = (i / 8) * Math.PI * 2;
+              this.bullets.push({
+                x: this.x, y: this.y,
+                vx: Math.cos(angle) * 65,
+                vy: Math.sin(angle) * 65,
+                life: 4.5,
+                color: '#00dfff'
+              });
+            }
+            break;
+          case 'seiryu': // 青龍：円形8発 + 追尾弾1発
+            // 円形攻撃
+            for (let i = 0; i < 8; i++) {
+              const angle = (i / 8) * Math.PI * 2;
+              this.bullets.push({
+                x: this.x, y: this.y,
+                vx: Math.cos(angle) * 75,
+                vy: Math.sin(angle) * 75,
+                life: 3.0,
+                color: '#ffff00'
+              });
+            }
+            // 追尾弾
+            if (dist > 0) {
+              this.bullets.push({
+                x: this.x, y: this.y,
+                vx: (dx / dist) * 60,
+                vy: (dy / dist) * 60,
+                life: 4.0,
+                color: '#ffff88',
+                tracking: true
+              });
+            }
+            break;
+          case 'kirin': // 麒麟：連続追尾弾2発
+            if (dist > 0) {
+              for (let i = 0; i < 2; i++) {
+                const angle = Math.atan2(dy, dx) + (i - 0.5) * 0.2;
+                this.bullets.push({
+                  x: this.x, y: this.y,
+                  vx: Math.cos(angle) * 55,
+                  vy: Math.sin(angle) * 55,
+                  life: 5.5,
+                  color: '#ffed4e',
+                  tracking: true
+                });
+              }
+            }
+            break;
+        }
+      }
+      Sound.playSound('button');
+    }
+  }
+
+  // 村長ボスクラス
+  class VillageChiefBoss extends Entity {
+    constructor(x, y) {
+      super(x, y);
+      this.w = 36; this.h = 36; // 通常サイズ
+      this.maxHp = 100;
+      this.hp = 100;
+      this.dead = false;
+      this.phase = 1; // 1: 通常、2: 巨大化、3: 本気
+      this.attackCd = 0;
+      this.bullets = [];
+      this.animT = 0;
+      this.speed = 40;
+      this.scale = 1;
+      this.targetScale = 1; // 目標スケール
+      this.transformTime = 0; // 変形アニメーション時間
+      this.isTransforming = false; // 変形中フラグ
+    }
+    
+    update(dt) {
+      this.animT += dt;
+      this.attackCd -= dt;
+      
+      // 変形アニメーション
+      if (this.isTransforming) {
+        this.transformTime += dt;
+        const transformDuration = 1.0; // 1秒かけて変形
+        if (this.transformTime < transformDuration) {
+          // スムーズにスケールを変化
+          const progress = this.transformTime / transformDuration;
+          const easeProgress = progress < 0.5 
+            ? 2 * progress * progress 
+            : 1 - Math.pow(-2 * progress + 2, 2) / 2; // ease-in-out
+          this.scale = 1 + (this.targetScale - 1) * easeProgress;
+          this.w = 36 * this.scale;
+          this.h = 36 * this.scale;
+        } else {
+          // 変形完了
+          this.scale = this.targetScale;
+          this.w = 36 * this.scale;
+          this.h = 36 * this.scale;
+          this.isTransforming = false;
+        }
+      }
+      
+      // phase 2と3は巨大化
+      if (this.phase === 2 || this.phase === 3) {
+        if (!this.isTransforming && this.scale !== 3) {
+          // 変形開始
+          this.targetScale = 3;
+          this.isTransforming = true;
+          this.transformTime = 0;
+        }
+        if (!this.isTransforming) {
+          this.scale = 3;
+          this.w = 108; this.h = 108;
+        }
+        // phase 3は素早さ2倍
+        if (this.phase === 3) {
+          this.speed = 80;
+        }
+      }
+      
+      // プレイヤーに向かって移動
+      const dx = player.x - this.x;
+      const dy = player.y - this.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > 0) {
+        this.vx = (dx / dist) * this.speed;
+        this.vy = (dy / dist) * this.speed;
+      }
+      
+      if (this.attackCd <= 0) {
+        if (this.phase === 3) {
+          // 本気モード：弾を打つ
+          for (let i = 0; i < 5; i++) {
+            const angle = Math.atan2(dy, dx) + (i - 2) * 0.2;
+            this.bullets.push({
+              x: this.x, y: this.y,
+              vx: Math.cos(angle) * 100,
+              vy: Math.sin(angle) * 100,
+              life: 3.0,
+              color: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'][i % 5]
+            });
+          }
+        }
+        this.attackCd = this.phase === 3 ? 0.8 : 1.5;
+        Sound.playSound('button');
+      }
+    }
+  }
+
+  class Arrow extends Entity {
+    constructor(x,y,vx,vy) {
+      super(x,y);
+      this.vx=vx; this.vy=vy; this.w=6; this.h=2; this.life=2.5;
+    }
+  }
+
+  class Shuriken extends Entity {
+    constructor(x, y, vx, vy) {
+      super(x, y);
+      this.vx = vx;
+      this.vy = vy;
+      this.w = 8;
+      this.h = 8;
+      this.life = 2.0;
+      this.rot = 0;
+      this.dead = false;
+    }
+  }
+
+  class Spear extends Entity {
+    constructor(x, y, vx, vy) {
+      super(x, y);
+      this.vx = vx;
+      this.vy = vy;
+      this.w = 8;
+      this.h = 20;
+      this.life = 2.5;
+      this.rot = 0;
+      this.dead = false;
+    }
+  }
+
+  class Rocket extends Entity {
+    constructor(x, y, vx, vy) {
+      super(x, y);
+      this.vx = vx;
+      this.vy = vy;
+      this.w = 6;
+      this.h = 12;
+      this.life = 3.0;
+      this.rot = 0;
+      this.dead = false;
+    }
+  }
+
+  class Bomb {
+    constructor(x,y,mapX,mapY) {
+      this.x=x; this.y=y; this.t=5.0; this.exploded=false; // 5秒後に爆発
+      this.mapX=mapX; this.mapY=mapY; // マップ座標を保存
+    }
+  }
+
+  class Explosion {
+    constructor(x,y) {
+      this.x=x; this.y=y; this.t=0.4; this.power=2;
+    }
+  }
+
+  // バズーカの破片
+  class Fragment extends Entity {
+    constructor(x, y, vx, vy) {
+      super(x, y);
+      this.vx = vx;
+      this.vy = vy;
+      this.w = 3;
+      this.h = 3;
+      this.life = 0.5;
+      this.dead = false;
+    }
+  }
+
+  // ゲームオブジェクト（マップごとに管理）
+  const player = new Player(160, 96);
+  const mapEntities = new Map(); // マップごとのエンティティを管理
+  
+  function getMapEntities() {
+    const key = getMapKey(currentMapX, currentMapY);
+    if (!mapEntities.has(key)) {
+      const entities = {
+        npcs: [],
+        chests: [],
+        slimes: [],
+        archers: [],
+        cacti: [],
+        snowwolves: [],
+        scorpions: [],
+        krakens: [],
+        firespirits: [],
+        bosses: [],
+        chiefBoss: null
+      };
+      
+      // 四隅にボスを配置（赤い宝と同じ位置）
+      if (currentMapX === -3 && currentMapY === -3) {
+        // 北西：玄武
+        entities.bosses = [new Boss(160, 80, 'genbu')];
+      } else if (currentMapX === 3 && currentMapY === -3) {
+        // 北東：青龍
+        entities.bosses = [new Boss(160, 80, 'seiryu')];
+      } else if (currentMapX === -3 && currentMapY === 3) {
+        // 南西：麒麟
+        entities.bosses = [new Boss(160, 80, 'kirin')];
+      } else if (currentMapX === 3 && currentMapY === 3) {
+        // 南東：朱雀
+        entities.bosses = [new Boss(160, 80, 'suzaku')];
+      }
+      
+      // マップタイプに応じてエンティティを配置
+      if (currentMapX === 0 && currentMapY === 0) {
+        // 中央：村のフィールド
+        entities.npcs = [{
+          x: 160, y: 56, r: 14, 
+          texts: (() => {
+            const base = [
+              'ようこそ、勇者よ！\n私はこの村の長老だ。',
+              '最近、危険なモンスターが\n増えて困っているんだ。',
+              '君の力で村を守って\nくれるとありがたい。',
+              '⚔️ボタンで攻撃、\n💣ボタンで爆弾が使えるぞ。',
+              '頑張ってくれ！'
+            ];
+            
+            // ボスアイテムを獲得したら褒める
+            if (state.bossItems.length > 0) {
+              const items = state.bossItems;
+              if (items.includes('村長の杖')) base.push('おお、村長の杖を！\nよくやった！');
+              if (items.includes('村長のメガネ')) base.push('村長のメガネも！\n素晴らしい！');
+              if (items.includes('村長の証明書')) base.push('村長の証明書まで！\n立派だ！');
+              if (items.includes('村長のハンカチ')) base.push('村長のハンカチも！\n完璧だ！');
+            }
+            
+            return base;
+          })(),
+          deathTexts: [
+            'おいおい...また死んじまったのか。',
+            '頼んだのに、こんなに\n弱いんじゃ困るんだよ。',
+            '村の期待を裏切る気か？\nもっと気合を入れろ！',
+            'コインも半分になっちまった...\n次は気をつけろよ。',
+            'まあ、生き返ってくれただけ\nマシかもしれんがな...'
+          ],
+          currentTextIndex: 0,
+          talked: false,
+          rewardShown: false
+        }];
+        entities.chests = [
+          {x: 208, y: 96, r: 12, opened:false},
+          {x: 80, y: 140, r: 12, opened:false}
+        ];
+        entities.slimes = [new Slime(80,40), new Slime(260,120), new Slime(50,160)];
+        entities.archers = [new Archer(56,40), new Archer(280,60)];
+      } else if (currentMapX === 0 && currentMapY === -1) {
+        // 上：森のエリア
+        entities.chests = [{x: 160, y: 80, r: 12, opened:false}];
+        entities.slimes = [new Slime(100,50), new Slime(220,70), new Slime(60,100), new Slime(260,40)];
+        entities.archers = [new Archer(80,60), new Archer(240,90)];
+      } else if (currentMapX === 0 && currentMapY === 1) {
+        // 下：海岸のエリア
+        entities.chests = [{x: 160, y: 50, r: 12, opened:false}, {x: 240, y: 60, r: 12, opened:false}];
+        entities.slimes = [new Slime(100,40), new Slime(220,50), new Slime(60,30)];
+        entities.archers = [new Archer(120,45)];
+      } else if (currentMapX === -1 && currentMapY === 0) {
+        // 左：洞窟のエリア
+        entities.chests = [{x: 160, y: 90, r: 12, opened:false}];
+        entities.slimes = [new Slime(80,50), new Slime(240,70), new Slime(120,100), new Slime(200,40)];
+        entities.archers = [new Archer(100,60), new Archer(220,80)];
+      } else if (currentMapX === 1 && currentMapY === 0) {
+        // 右：草原のエリア
+        entities.chests = [{x: 160, y: 80, r: 12, opened:false}, {x: 80, y: 100, r: 12, opened:false}];
+        entities.slimes = [new Slime(100,50), new Slime(220,70), new Slime(60,90)];
+        entities.archers = [new Archer(140,60), new Archer(260,80)];
+      } else if (currentMapX === -1 && currentMapY === -1) {
+        // 北西：廃墟のエリア
+        entities.chests = [{x: 160, y: 80, r: 12, opened:false}];
+        entities.slimes = [new Slime(120,60), new Slime(200,80), new Slime(80,100)];
+        entities.archers = [new Archer(100,70), new Archer(220,90)];
+      } else if (currentMapX === 3 && currentMapY === -3) {
+        // 北東の四隅：青龍ボスフィールド（バズーカの宝箱は別の場所）
+        entities.chests = [{x: 160, y: 80, r: 12, opened:false}];
+      } else if (currentMapX === -3 && currentMapY === -3) {
+        // 北西の四隅：玄武ボスフィールド（長槍の宝箱は別の場所）
+        entities.chests = [{x: 160, y: 80, r: 12, opened:false}];
+      } else if (currentMapX === -3 && currentMapY === 3) {
+        // 南西の四隅：麒麟ボスフィールド
+        entities.chests = [{x: 160, y: 80, r: 12, opened:false}];
+      } else if (currentMapX === 3 && currentMapY === 3) {
+        // 南東の四隅：朱雀ボスフィールド（手裏剣の宝箱は別の場所）
+        entities.chests = [{x: 160, y: 80, r: 12, opened:false}];
+      } else if (currentMapX === 1 && currentMapY === -1) {
+        // 北東：花畑のエリア
+        entities.chests = [{x: 160, y: 80, r: 12, opened:false}, {x: 240, y: 60, r: 12, opened:false}];
+        entities.slimes = [new Slime(100,50), new Slime(180,70)];
+        entities.archers = [new Archer(120,60)];
+      } else if (currentMapX === -1 && currentMapY === 1) {
+        // 南西：海岸洞窟のエリア
+        entities.chests = [{x: 80, y: 80, r: 12, opened:false}, {x: 240, y: 100, r: 12, opened:false}];
+        entities.slimes = [new Slime(60,50), new Slime(200,70), new Slime(100,120)];
+        entities.archers = [new Archer(80,60), new Archer(220,80)];
+      } else if (currentMapX === 1 && currentMapY === 1) {
+        // 南東：ビーチのエリア
+        entities.chests = [{x: 160, y: 50, r: 12, opened:false}, {x: 240, y: 70, r: 12, opened:false}];
+        entities.slimes = [new Slime(100,40), new Slime(220,60), new Slime(60,50)];
+        entities.archers = [new Archer(140,45)];
+      } else if (currentMapX === 2 && currentMapY === -2) {
+        // 北東方向：サボテン、陽気な世界（バズーカの宝箱 - 1つのみ）
+        entities.chests = [
+          {x: 160, y: 80, r: 12, opened:false},
+          {x: 80, y: 100, r: 12, opened:false},
+          {x: 240, y: 60, r: 12, opened:false, weapon: 'bazooka'} // バズーカ
+        ];
+        entities.cacti = [new CactusMonster(100,50), new CactusMonster(220,70), new CactusMonster(60,90), new CactusMonster(260,50)];
+        entities.firespirits = [new FireSpirit(140,60), new FireSpirit(180,80)];
+      } else if (currentMapX === -2 && currentMapY === -2) {
+        // 北西方向：雪、森林地帯、山（長槍の宝箱 - 1つのみ）
+        entities.chests = [
+          {x: 80, y: 60, r: 12, opened:false, weapon: 'spear'} // 長槍
+        ];
+        entities.snowwolves = [new SnowWolf(100,50), new SnowWolf(220,70), new SnowWolf(60,100), new SnowWolf(240,40)];
+        entities.archers = [new Archer(120,60), new Archer(200,80)];
+      } else if (currentMapX === 2 && currentMapY === 2) {
+        // 南東方向：水と島、海洋（手裏剣の宝箱 - 1つのみ）
+        entities.chests = [
+          {x: 160, y: 50, r: 12, opened:false},
+          {x: 240, y: 70, r: 12, opened:false},
+          {x: 80, y: 40, r: 12, opened:false, weapon: 'shuriken'} // 手裏剣
+        ];
+        entities.krakens = [new OceanKraken(100,40), new OceanKraken(220,60), new OceanKraken(60,50), new OceanKraken(260,80)];
+        entities.archers = [new Archer(140,45)];
+      } else if (currentMapX >= 2 || (currentMapX > 0 && currentMapY <= -2)) {
+        // その他の北東方向：サボテン、陽気な世界（バズーカなし）
+        entities.chests = [
+          {x: 160, y: 80, r: 12, opened:false},
+          {x: 80, y: 100, r: 12, opened:false}
+        ];
+        entities.cacti = [new CactusMonster(100,50), new CactusMonster(220,70), new CactusMonster(60,90), new CactusMonster(260,50)];
+        entities.firespirits = [new FireSpirit(140,60), new FireSpirit(180,80)];
+      } else if (currentMapX <= -2 || (currentMapX < 0 && currentMapY <= -2)) {
+        // その他の北西方向：雪、森林地帯、山（長槍なし）
+        entities.chests = [
+          {x: 160, y: 80, r: 12, opened:false}
+        ];
+        entities.snowwolves = [new SnowWolf(100,50), new SnowWolf(220,70), new SnowWolf(60,100), new SnowWolf(240,40)];
+        entities.archers = [new Archer(120,60), new Archer(200,80)];
+      } else if (currentMapX <= -2 || (currentMapX < 0 && currentMapY >= 2)) {
+        // 南西方向：砂漠と洞窟
+        entities.chests = [
+          {x: 160, y: 80, r: 12, opened:false},
+          {x: 80, y: 100, r: 12, opened:false}
+        ];
+        entities.scorpions = [new DesertScorpion(100,50), new DesertScorpion(220,70), new DesertScorpion(60,90), new DesertScorpion(240,100)];
+        entities.archers = [new Archer(120,60)];
+      } else if (currentMapX >= 2 || (currentMapX > 0 && currentMapY >= 2)) {
+        // その他の南東方向：水と島、海洋（手裏剣なし）
+        entities.chests = [
+          {x: 160, y: 50, r: 12, opened:false},
+          {x: 240, y: 70, r: 12, opened:false}
+        ];
+        entities.krakens = [new OceanKraken(100,40), new OceanKraken(220,60), new OceanKraken(60,50), new OceanKraken(260,80)];
+        entities.archers = [new Archer(140,45)];
+      } else if (currentMapY <= -2) {
+        // その他の北側エリア
+        if (currentMapX < 0) {
+          entities.chests = [{x: 160, y: 80, r: 12, opened:false}];
+          entities.slimes = [new Slime(100,50), new Slime(220,70)];
+          entities.archers = [new Archer(140,60)];
+        } else {
+          entities.chests = [{x: 160, y: 80, r: 12, opened:false}, {x: 240, y: 60, r: 12, opened:false}];
+          entities.slimes = [new Slime(100,50), new Slime(220,70), new Slime(60,90)];
+          entities.archers = [new Archer(140,60)];
+        }
+      } else if (currentMapY >= 2) {
+        // その他の南側エリア
+        if (currentMapX < 0) {
+          entities.chests = [{x: 160, y: 80, r: 12, opened:false}];
+          entities.slimes = [new Slime(100,50), new Slime(220,70), new Slime(60,90)];
+          entities.archers = [new Archer(120,60)];
+        } else {
+          entities.chests = [{x: 160, y: 50, r: 12, opened:false}, {x: 240, y: 70, r: 12, opened:false}];
+          entities.slimes = [new Slime(100,40), new Slime(220,60), new Slime(60,50)];
+          entities.archers = [new Archer(140,45)];
+        }
+      } else if (currentMapX <= -2) {
+        // その他の西側エリア
+        if (currentMapY < 0) {
+          entities.chests = [{x: 160, y: 80, r: 12, opened:false}];
+          entities.slimes = [new Slime(100,50), new Slime(220,70)];
+          entities.archers = [new Archer(140,60)];
+        } else {
+          entities.chests = [{x: 160, y: 80, r: 12, opened:false}];
+          entities.slimes = [new Slime(100,50), new Slime(220,70), new Slime(60,90)];
+          entities.archers = [new Archer(120,60)];
+        }
+      } else if (currentMapX >= 2) {
+        // その他の東側エリア
+        if (currentMapY < 0) {
+          entities.chests = [{x: 160, y: 80, r: 12, opened:false}, {x: 240, y: 60, r: 12, opened:false}];
+          entities.slimes = [new Slime(100,50), new Slime(220,70), new Slime(60,90)];
+          entities.archers = [new Archer(140,60)];
+        } else {
+          entities.chests = [{x: 160, y: 50, r: 12, opened:false}, {x: 240, y: 70, r: 12, opened:false}];
+          entities.slimes = [new Slime(100,40), new Slime(220,60), new Slime(60,50)];
+          entities.archers = [new Archer(140,45)];
+        }
+      }
+      
+      mapEntities.set(key, entities);
+    }
+    return mapEntities.get(key);
+  }
+  
+  const arrows = [];
+  const bombs = [];
+  const blasts = [];
+  const shurikens = []; // 手裏剣
+  const spears = []; // 長槍（投擲用、今後は使用しない）
+  const rockets = []; // バズーカのロケット
+  const fragments = []; // バズーカの破片
+
+  // 安全な衝突判定
+  function getTile(x, y) {
+    const map = getCurrentMap();
+    if (y < 0 || y >= ROWS || x < 0 || x >= COLS) return T.TREE; // 境界外は壁
+    if (!map[y] || map[y][x] === undefined) return T.TREE;
+    return map[y][x];
+  }
+
+  function moveWithTile(e, dt, allowEdgePass = false) {
+    let nx = e.x + e.vx * dt;
+    let ny = e.y + e.vy * dt;
+    
+    // プレイヤーの場合、画面端での衝突判定をスキップ
+    if (allowEdgePass) {
+      // 画面端に近い場合は、タイル衝突判定をスキップ
+      const nearLeftEdge = nx < TS;
+      const nearRightEdge = nx > W - TS;
+      const nearTopEdge = ny < TS;
+      const nearBottomEdge = ny > H - TS;
+      
+      if (nearLeftEdge || nearRightEdge || nearTopEdge || nearBottomEdge) {
+        // 画面端に近い場合は移動を許可（マップ切り替えのため）
+        e.x = nx;
+        e.y = ny;
+      } else {
+        // 通常の衝突判定
+        if (!collidesTile(nx, e.y, e.w, e.h)) e.x = nx; else e.vx=0;
+        if (!collidesTile(e.x, ny, e.w, e.h)) e.y = ny; else e.vy=0;
+      }
+    } else {
+      // 通常の移動処理
+      if (!collidesTile(nx, e.y, e.w, e.h)) e.x = nx; else e.vx=0;
+      if (!collidesTile(e.x, ny, e.w, e.h)) e.y = ny; else e.vy=0;
+    }
+  }
+
+  function collidesTile(cx, cy, w, h) {
+    // 画面外の場合は衝突しない（マップ切り替えを許可）
+    if (cx - w/2 < 0 || cx + w/2 > W || cy - h/2 < 0 || cy + h/2 > H) {
+      return false;
+    }
+    
+    const x0 = Math.floor((cx-w/2)/TS);
+    const x1 = Math.floor((cx+w/2)/TS);
+    const y0 = Math.floor((cy-h/2)/TS);
+    const y1 = Math.floor((cy+h/2)/TS);
+    
+    for(let y=y0;y<=y1;y++) {
+      for(let x=x0;x<=x1;x++){
+        const tile = getTile(x, y);
+        if (isBlock(tile)) return true;
+      }
+    }
+    return false;
+  }
+
+  // 攻撃
+  function attack() {
+    if (player.attackCd>0) return;
+    player.attackCd = 0.3;
+    
+    const dirX = Math.sign(Input.ax || player.dir) || player.dir;
+    const dirY = Math.sign(Input.ay || 0);
+    player.sdx = dirX; player.sdy = dirY;
+    player.swordT = 0.18;
+
+    Sound.playSound('sword');
+
+    // 通常の剣のリーチ
+    const baseRange = 18;
+    const range = baseRange;
+    const w=16, h=12;
+    const ax = player.x + dirX*range;
+    const ay = player.y + dirY*range;
+    const hit = (e) => Math.abs(e.x-ax)<w/2 && Math.abs(e.y-ay)<h/2;
+    
+    const entities = getMapEntities();
+    let hitSomething = false;
+    for (const s of entities.slimes) {
+      if (!s.dead && hit(s)) {
+        s.hp--;
+        hitSomething = true;
+        if (s.hp<=0) {
+          s.dead=true;
+          state.coins+=3;
+          gainExp(2);
+          showHint('🟢 スライム撃破! +3💰');
+        } else {
+          Sound.playSound('hit');
+        }
+      }
+    }
+    for (const a of entities.archers) {
+      if (!a.dead && hit(a)) {
+        a.hp--;
+        a.alertT = 0.5;
+        hitSomething = true;
+        if (a.hp<=0) {
+          a.dead=true;
+          state.coins+=5;
+          gainExp(3);
+          showHint('🏹 アーチャー撃破! +5💰');
+        } else {
+          Sound.playSound('hit');
+        }
+      }
+    }
+    for (const c of entities.cacti) {
+      if (!c.dead && hit(c)) {
+        c.hp--;
+        hitSomething = true;
+        if (c.hp<=0) {
+          c.dead=true;
+          state.coins+=4;
+          gainExp(2);
+          showHint('🌵 サボテンモンスター撃破! +4💰');
+        } else {
+          Sound.playSound('hit');
+        }
+      }
+    }
+    for (const w of entities.snowwolves) {
+      if (!w.dead && hit(w)) {
+        w.hp--;
+        hitSomething = true;
+        if (w.hp<=0) {
+          w.dead=true;
+          state.coins+=4;
+          gainExp(3);
+          showHint('🐺 雪オオカミ撃破! +4💰');
+        } else {
+          Sound.playSound('hit');
+        }
+      }
+    }
+    for (const sc of entities.scorpions) {
+      if (!sc.dead && hit(sc)) {
+        sc.hp--;
+        hitSomething = true;
+        if (sc.hp<=0) {
+          sc.dead=true;
+          state.coins+=5;
+          gainExp(3);
+          showHint('🦂 サソリ撃破! +5💰');
+        } else {
+          Sound.playSound('hit');
+        }
+      }
+    }
+    for (const k of entities.krakens) {
+      if (!k.dead && hit(k)) {
+        k.hp--;
+        k.alertT = 0.5;
+        hitSomething = true;
+        if (k.hp<=0) {
+          k.dead=true;
+          state.coins+=6;
+          gainExp(4);
+          showHint('🐙 クラーケン撃破! +6💰');
+        } else {
+          Sound.playSound('hit');
+        }
+      }
+    }
+    for (const f of entities.firespirits) {
+      if (!f.dead && hit(f)) {
+        f.hp--;
+        hitSomething = true;
+        if (f.hp<=0) {
+          f.dead=true;
+          state.coins+=4;
+          gainExp(2);
+          showHint('🔥 炎の精霊撃破! +4💰');
+        } else {
+          Sound.playSound('hit');
+        }
+      }
+    }
+  }
+
+  // 武器使用関数
+  function useWeapon() {
+    // ポーズ中やエンディング中は武器を使用できない
+    if (state.paused || state.ending) {
+      return;
+    }
+    
+    // 武器使用中の硬直時間中は使用できない
+    if (player.weaponCd > 0) {
+      return;
+    }
+    
+    // 武器選択ダイアログが開いている場合は閉じる
+    const weaponSelect = document.getElementById('weaponSelect');
+    if (weaponSelect && weaponSelect.open) {
+      weaponSelect.close();
+      state.paused = false;
+    }
+    
+    const weapon = WEAPONS[state.currentWeapon.toUpperCase()];
+    if (!weapon) return;
+
+    // 武器使用時の硬直時間を設定（武器によって異なる）
+    let cooldown = 0.2; // デフォルト
+    
+    switch(state.currentWeapon) {
+      case 'bomb':
+        // 現在のマップの爆弾のみをカウント
+        const currentBombs = bombs.filter(b => b.mapX === currentMapX && b.mapY === currentMapY);
+        if (currentBombs.length >= 3) return;
+        bombs.push(new Bomb(Math.round(player.x/TS)*TS, Math.round(player.y/TS)*TS, currentMapX, currentMapY));
+        Sound.playSound('button');
+        showHint('💣 爆弾設置');
+        cooldown = 0.3; // 爆弾は少し長め
+        break;
+      
+      case 'shuriken':
+        if (shurikens.length >= 5) return;
+        // プレイヤーの進行方向に真っ直ぐ飛ぶ
+        const dirX = Math.sign(Input.ax) || player.dir;
+        const dirY = Math.sign(Input.ay) || 0;
+        // 移動していない場合はプレイヤーの向いている方向に飛ぶ
+        const finalDirX = (dirX === 0 && dirY === 0) ? player.dir : dirX;
+        const finalDirY = (dirX === 0 && dirY === 0) ? 0 : dirY;
+        const speed = 150;
+        shurikens.push(new Shuriken(player.x, player.y, finalDirX * speed, finalDirY * speed));
+        Sound.playSound('sword');
+        showHint('⭐ 手裏剣');
+        cooldown = 0.15; // 手裏剣は素早い
+        break;
+      
+      case 'spear':
+        // 槍は近接攻撃として使用
+        if (player.attackCd > 0) return;
+        player.attackCd = 0.3;
+        
+        const sDirX = Math.sign(Input.ax || player.dir) || player.dir;
+        const sDirY = Math.sign(Input.ay || 0);
+        player.sdx = sDirX; player.sdy = sDirY;
+        player.swordT = 0.18;
+
+        Sound.playSound('sword');
+
+        // 槍の場合はリーチを2倍に
+        const baseRange = 18;
+        const range = baseRange * 2; // 槍は2倍のリーチ
+        const w=16, h=12;
+        const ax = player.x + sDirX*range;
+        const ay = player.y + sDirY*range;
+        const hit = (e) => Math.abs(e.x-ax)<w/2 && Math.abs(e.y-ay)<h/2;
+        
+        const entities = getMapEntities();
+        let hitSomething = false;
+        for (const s of entities.slimes) {
+          if (!s.dead && hit(s)) {
+            s.hp -= 2;
+            hitSomething = true;
+            if (s.hp<=0) {
+              s.dead=true;
+              state.coins+=3;
+              gainExp(2);
+              showHint('🔱 長槍でスライム撃破!');
+            }
+          }
+        }
+        for (const a of entities.archers) {
+          if (!a.dead && hit(a)) {
+            a.hp -= 2;
+            hitSomething = true;
+            if (a.hp<=0) {
+              a.dead=true;
+              state.coins+=5;
+              gainExp(3);
+              showHint('🔱 長槍でアーチャー撃破!');
+            }
+          }
+        }
+        for (const c of entities.cacti) {
+          if (!c.dead && hit(c)) {
+            c.hp -= 2;
+            hitSomething = true;
+            if (c.hp<=0) {
+              c.dead=true;
+              state.coins+=4;
+              gainExp(2);
+              showHint('🔱 長槍でサボテンモンスター撃破!');
+            }
+          }
+        }
+        for (const w of entities.snowwolves) {
+          if (!w.dead && hit(w)) {
+            w.hp -= 2;
+            hitSomething = true;
+            if (w.hp<=0) {
+              w.dead=true;
+              state.coins+=4;
+              gainExp(3);
+              showHint('🔱 長槍で雪オオカミ撃破!');
+            }
+          }
+        }
+        for (const sc of entities.scorpions) {
+          if (!sc.dead && hit(sc)) {
+            sc.hp -= 2;
+            hitSomething = true;
+            if (sc.hp<=0) {
+              sc.dead=true;
+              state.coins+=5;
+              gainExp(3);
+              showHint('🔱 長槍でサソリ撃破!');
+            }
+          }
+        }
+        for (const k of entities.krakens) {
+          if (!k.dead && hit(k)) {
+            k.hp -= 2;
+            hitSomething = true;
+            if (k.hp<=0) {
+              k.dead=true;
+              state.coins+=6;
+              gainExp(4);
+              showHint('🔱 長槍でクラーケン撃破!');
+            }
+          }
+        }
+        for (const f of entities.firespirits) {
+          if (!f.dead && hit(f)) {
+            f.hp -= 2;
+            hitSomething = true;
+            if (f.hp<=0) {
+              f.dead=true;
+              state.coins+=4;
+              gainExp(2);
+              showHint('🔱 長槍で炎の精霊撃破!');
+            }
+          }
+        }
+        // ボスにも当たる
+        for (const boss of entities.bosses) {
+          if (!boss.dead && hit(boss)) {
+            boss.hp -= 2;
+            hitSomething = true;
+            if (boss.hp <= 0) {
+              boss.dead = true;
+              if (!state.defeatedBosses.includes(boss.type)) {
+                state.defeatedBosses.push(boss.type);
+              }
+              state.coins += 50;
+              gainExp(10);
+              const bossNames = {
+                'suzaku': '朱雀',
+                'genbu': '玄武',
+                'seiryu': '青龍',
+                'kirin': '麒麟'
+              };
+              showHint(`💀 ${bossNames[boss.type]}撃破！\n宝箱を確認してみよう`, 3.0);
+            }
+          }
+        }
+        
+        if (hitSomething) {
+          Sound.playSound('hit');
+        }
+        
+        showHint('🔱 長槍');
+        cooldown = 0.25; // 槍のクールダウン
+        break;
+      
+      case 'bazooka':
+        if (rockets.length >= 2) return;
+        const bDirX = Math.sign(Input.ax || player.dir) || player.dir;
+        const bDirY = Math.sign(Input.ay || 0) || 0;
+        if (bDirX === 0 && bDirY === 0) bDirY = 1;
+        const bSpeed = 100;
+        rockets.push(new Rocket(player.x, player.y, bDirX * bSpeed, bDirY * bSpeed));
+        Sound.playSound('bomb');
+        showHint('🚀 バズーカ発射');
+        cooldown = 0.4; // バズーカは重いので長め
+        break;
+    }
+    
+    // 硬直時間を設定
+    player.weaponCd = cooldown;
+  }
+
+  function hitPlayer(dmg) {
+    if (player.inv>0) return;
+    player.hp = Math.max(0, player.hp - dmg);
+    state.hp = player.hp;
+    player.inv = 1.2;
+    Sound.playSound('hit');
+    showHint(`💔 -${dmg} HP`);
+    if (player.hp<=0) respawn();
+  }
+
+  let justRespawned = false; // リスポーン直後のフラグ
+  
+  function respawn() {
+    state.coins = Math.max(0, Math.floor(state.coins/2));
+    // 中央マップに戻る
+    currentMapX = 0;
+    currentMapY = 0;
+    player.x=160; player.y=96;
+    player.hp=player.maxHp;
+    state.hp=player.hp;
+    arrows.length = 0; // 矢をクリア
+    shurikens.length = 0; // 手裏剣をクリア
+    spears.length = 0; // 長槍をクリア
+    rockets.length = 0; // ロケットをクリア
+    fragments.length = 0; // 破片をクリア
+    bombs.length = 0; // 爆弾をクリア
+    blasts.length = 0; // 爆発をクリア
+    hideSpeechBubble();
+    justRespawned = true; // リスポーン直後フラグを立てる
+    showHint('🏠 村に戻りました');
+    Sound.playSound('talk');
+  }
+
+  function hasLineOfSight(x0,y0,x1,y1) {
+    const steps = 40;
+    for(let i=1;i<steps;i++) {
+      const t=i/steps;
+      const x=x0+(x1-x0)*t, y=y0+(y1-y0)*t;
+      const tx=Math.floor(x/TS), ty=Math.floor(y/TS);
+      const tile = getTile(tx, ty);
+      if (isBlock(tile)) return false;
+    }
+    return true;
+  }
+
+  // キャラクター描画
+  function drawCharacter(x, y, type, entity = null) {
+    ctx.save();
+    
+    switch(type) {
+      case 'player':
+        if (entity && entity.inv > 0) {
+          ctx.globalAlpha = 0.6 + 0.4 * Math.sin(performance.now() * 0.02);
+        }
+        
+        // 体（青い服）
+        ctx.fillStyle = '#4a90e2';
+        ctx.fillRect(x-6, y-8, 12, 16);
+        
+        // 頭（肌色）
+        ctx.fillStyle = '#fdbcb4';
+        ctx.fillRect(x-5, y-12, 10, 8);
+        
+        // 髪（茶色）
+        ctx.fillStyle = '#8b4513';
+        ctx.fillRect(x-6, y-14, 12, 4);
+        
+        // 目
+        ctx.fillStyle = '#000';
+        ctx.fillRect(x-3, y-10, 2, 1);
+        ctx.fillRect(x+1, y-10, 2, 1);
+        
+        // 腕
+        ctx.fillStyle = '#fdbcb4';
+        ctx.fillRect(x-8, y-6, 3, 8);
+        ctx.fillRect(x+5, y-6, 3, 8);
+        
+        // 足（靴）
+        ctx.fillStyle = '#2c3e50';
+        ctx.fillRect(x-6, y+6, 5, 4);
+        ctx.fillRect(x+1, y+6, 5, 4);
+        break;
+        
+      case 'slime':
+        const bounce = entity ? Math.sin(entity.bounceT) * 1 : 0;
+        ctx.fillStyle = '#6cf07a';
+        ctx.beginPath();
+        ctx.ellipse(x, y + bounce, 8, 6 - bounce * 0.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // ハイライト
+        ctx.fillStyle = '#a8ffa8';
+        ctx.beginPath();
+        ctx.ellipse(x - 2, y - 1 + bounce, 3, 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 目
+        ctx.fillStyle = '#000';
+        ctx.fillRect(x-3, y-1, 2, 2);
+        ctx.fillRect(x+1, y-1, 2, 2);
+        break;
+        
+      case 'archer':
+        const alert = entity && entity.alertT > 0;
+        if (alert) {
+          ctx.globalAlpha = 0.8 + 0.2 * Math.sin(performance.now() * 0.01);
+        }
+        
+        // 体
+        ctx.fillStyle = alert ? '#ff6b6b' : '#b7a1f0';
+        ctx.fillRect(x-5, y-6, 10, 12);
+        
+        // 頭
+        ctx.fillStyle = '#fdbcb4';
+        ctx.fillRect(x-4, y-10, 8, 6);
+        
+        // フード
+        ctx.fillStyle = '#4a4a4a';
+        ctx.fillRect(x-5, y-12, 10, 4);
+        
+        // 弓
+        ctx.strokeStyle = '#8b4513';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x + 6, y, 8, -Math.PI/3, Math.PI/3);
+        ctx.stroke();
+        
+        // 目
+        ctx.fillStyle = alert ? '#ff0000' : '#000';
+        ctx.fillRect(x-2, y-8, 1, 1);
+        ctx.fillRect(x+1, y-8, 1, 1);
+        break;
+        
+      case 'npc':
+        // 老人風NPC
+        ctx.fillStyle = '#6b4423';
+        ctx.fillRect(x-6, y-8, 12, 16);
+        
+        // 頭
+        ctx.fillStyle = '#fdbcb4';
+        ctx.fillRect(x-4, y-10, 8, 6);
+        
+        // 帽子（つば広帽子風）
+        ctx.fillStyle = '#4a4a4a';
+        ctx.fillRect(x-6, y-14, 12, 3);
+        ctx.fillRect(x-5, y-11, 10, 2);
+        
+        // 長いひげ
+        ctx.fillStyle = '#ddd';
+        ctx.fillRect(x-4, y-6, 8, 4);
+        ctx.fillRect(x-3, y-4, 6, 2);
+        
+        // 杖
+        ctx.strokeStyle = '#8b4513';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x + 8, y + 8);
+        ctx.lineTo(x + 8, y - 10);
+        ctx.stroke();
+        
+        // 杖の先（丸い装飾）
+        ctx.fillStyle = '#8b4513';
+        ctx.beginPath();
+        ctx.arc(x + 8, y - 10, 2, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+        
+      case 'cactus':
+        const spike = entity ? Math.sin(entity.spikeT) * 0.5 : 0;
+        // サボテンモンスター
+        ctx.fillStyle = '#4a7c59';
+        ctx.fillRect(x-6, y-8, 12, 16);
+        // トゲ
+        ctx.fillStyle = '#1a3d2e';
+        for(let i = 0; i < 4; i++) {
+          const tx = x - 4 + i * 3;
+          ctx.fillRect(tx, y - 6 + spike, 1, 2);
+          ctx.fillRect(tx, y + 4 + spike, 1, 2);
+        }
+        // 目
+        ctx.fillStyle = '#ff0000';
+        ctx.fillRect(x-3, y-4, 2, 2);
+        ctx.fillRect(x+1, y-4, 2, 2);
+        break;
+        
+      case 'snowwolf':
+        const howl = entity ? Math.sin(entity.howlT) * 1 : 0;
+        // 雪オオカミ
+        ctx.fillStyle = '#e0e0e0';
+        ctx.fillRect(x-7, y-7, 14, 14);
+        // 耳
+        ctx.fillStyle = '#c0c0c0';
+        ctx.fillRect(x-6, y-9, 4, 4);
+        ctx.fillRect(x+2, y-9, 4, 4);
+        // 目
+        ctx.fillStyle = '#0000ff';
+        ctx.fillRect(x-3, y-4, 2, 2);
+        ctx.fillRect(x+1, y-4, 2, 2);
+        // 口
+        ctx.fillStyle = '#000';
+        ctx.fillRect(x-2, y+2 + howl, 4, 2);
+        break;
+        
+      case 'scorpion':
+        const sting = entity ? Math.sin(entity.stingT) * 1.5 : 0;
+        // サソリ
+        ctx.fillStyle = '#8b4513';
+        ctx.fillRect(x-5, y-5, 10, 8);
+        // 頭
+        ctx.fillRect(x-4, y-7, 8, 4);
+        // 尾
+        ctx.strokeStyle = '#654321';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x+5, y+3);
+        ctx.lineTo(x+8, y-2 + sting);
+        ctx.stroke();
+        // 目
+        ctx.fillStyle = '#ff0000';
+        ctx.fillRect(x-2, y-6, 1, 1);
+        ctx.fillRect(x+1, y-6, 1, 1);
+        // 脚
+        ctx.strokeStyle = '#654321';
+        ctx.lineWidth = 1;
+        for(let i = 0; i < 4; i++) {
+          const lx = x - 4 + i * 2.5;
+          ctx.beginPath();
+          ctx.moveTo(lx, y+3);
+          ctx.lineTo(lx - 2, y+6);
+          ctx.stroke();
+        }
+        break;
+        
+      case 'kraken':
+        const tentacle = entity ? Math.sin(entity.tentacleT) * 2 : 0;
+        // クラーケン
+        ctx.fillStyle = '#2c3e50';
+        ctx.beginPath();
+        ctx.arc(x, y, 10, 0, Math.PI * 2);
+        ctx.fill();
+        // 目
+        ctx.fillStyle = '#ff0000';
+        ctx.fillRect(x-4, y-3, 3, 3);
+        ctx.fillRect(x+1, y-3, 3, 3);
+        // 触手
+        ctx.strokeStyle = '#1a1a2e';
+        ctx.lineWidth = 2;
+        for(let i = 0; i < 4; i++) {
+          const ang = (i / 4) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + Math.cos(ang) * (8 + tentacle), y + Math.sin(ang) * (8 + tentacle));
+          ctx.stroke();
+        }
+        break;
+        
+      case 'firespirit':
+        const flame = entity ? Math.sin(entity.flameT) * 1.5 : 0;
+        // 炎の精霊
+        ctx.fillStyle = '#ff4500';
+        ctx.beginPath();
+        ctx.arc(x, y + flame, 7, 0, Math.PI * 2);
+        ctx.fill();
+        // 炎の外側
+        ctx.fillStyle = '#ffaa00';
+        ctx.beginPath();
+        ctx.arc(x - 2, y - 2 + flame, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x + 2, y - 1 + flame, 4, 0, Math.PI * 2);
+        ctx.fill();
+        // 目
+        ctx.fillStyle = '#ffff00';
+        ctx.fillRect(x-2, y-1 + flame, 1, 1);
+        ctx.fillRect(x+1, y-1 + flame, 1, 1);
+        break;
+    }
+    
+    ctx.restore();
+  }
+
+  // 描画
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+
+    // タイル
+    const map = getCurrentMap();
+    for(let y=0;y<ROWS;y++) {
+      for(let x=0;x<COLS;x++){
+        const t = map[y][x];
+        const px = x*TS, py=y*TS;
+        
+        switch(t){
+          case T.GRASS: 
+            ctx.fillStyle='#2d5016'; 
+            ctx.fillRect(px,py,TS,TS);
+            // 草のテクスチャ
+            ctx.fillStyle='#3a6b1f';
+            for(let i=0;i<3;i++) {
+              const gx = px + (i*5) + 2;
+              const gy = py + 8 + (i%2)*3;
+              ctx.fillRect(gx, gy, 1, 4);
+            }
+            break;
+            
+          case T.PATH: 
+            ctx.fillStyle='#8b7355'; 
+            ctx.fillRect(px,py,TS,TS);
+            ctx.fillStyle='#756347';
+            ctx.fillRect(px+2, py+2, 5, 5);
+            ctx.fillRect(px+9, py+9, 5, 5);
+            break;
+            
+          case T.TREE: 
+            ctx.fillStyle='#2d5016';
+            ctx.fillRect(px,py,TS,TS);
+            // 幹
+            ctx.fillStyle='#8b4513';
+            ctx.fillRect(px+6, py+8, 4, 8);
+            // 葉
+            ctx.fillStyle='#228b22';
+            ctx.fillRect(px+2, py+2, 12, 10);
+            ctx.fillStyle='#32cd32';
+            ctx.fillRect(px+4, py+4, 8, 6);
+            break;
+            
+          case T.WATER: 
+            ctx.fillStyle='#1e3a8a'; 
+            ctx.fillRect(px,py,TS,TS);
+            const waveTime = performance.now() * 0.005;
+            const wave = Math.sin(waveTime + x + y) * 0.3;
+            ctx.fillStyle=`rgba(100,149,237,${0.3 + wave})`;
+            ctx.fillRect(px,py,TS,TS*0.5);
+            break;
+            
+          case T.FLOWER:
+            ctx.fillStyle='#2d5016'; 
+            ctx.fillRect(px,py,TS,TS);
+            ctx.fillStyle='#ff69b4';
+            ctx.fillRect(px+6, py+6, 4, 4);
+            ctx.fillStyle='#ffd700';
+            ctx.fillRect(px+7, py+7, 2, 2);
+            break;
+            
+          case T.ROCK:
+            ctx.fillStyle='#2d5016';
+            ctx.fillRect(px,py,TS,TS);
+            ctx.fillStyle='#555';
+            ctx.fillRect(px+2, py+2, 12, 12);
+            ctx.fillStyle='#666';
+            ctx.fillRect(px+4, py+4, 8, 8);
+            ctx.fillStyle='#444';
+            ctx.fillRect(px+6, py+6, 4, 4);
+            break;
+            
+          case T.SAND:
+            ctx.fillStyle='#d4a574';
+            ctx.fillRect(px,py,TS,TS);
+            ctx.fillStyle='#c9a068';
+            ctx.fillRect(px+2, py+2, 5, 5);
+            ctx.fillRect(px+9, py+9, 5, 5);
+            break;
+            
+          case T.CACTUS:
+            ctx.fillStyle='#2d5016';
+            ctx.fillRect(px,py,TS,TS);
+            // サボテンの本体
+            ctx.fillStyle='#4a7c59';
+            ctx.fillRect(px+6, py+2, 4, 12);
+            // サボテンの腕
+            ctx.fillRect(px+2, py+6, 3, 4);
+            ctx.fillRect(px+11, py+8, 3, 4);
+            // トゲ
+            ctx.fillStyle='#1a3d2e';
+            ctx.fillRect(px+6, py+4, 1, 1);
+            ctx.fillRect(px+9, py+6, 1, 1);
+            ctx.fillRect(px+7, py+9, 1, 1);
+            break;
+            
+          case T.SNOW:
+            ctx.fillStyle='#e8f4f8';
+            ctx.fillRect(px,py,TS,TS);
+            ctx.fillStyle='#d0e8f0';
+            ctx.fillRect(px+2, py+2, 5, 5);
+            ctx.fillRect(px+9, py+9, 5, 5);
+            // 雪の結晶
+            ctx.fillStyle='#ffffff';
+            ctx.fillRect(px+7, py+3, 1, 1);
+            ctx.fillRect(px+6, py+7, 1, 1);
+            ctx.fillRect(px+8, py+7, 1, 1);
+            break;
+            
+          case T.DESERT:
+            ctx.fillStyle='#d2b48c';
+            ctx.fillRect(px,py,TS,TS);
+            ctx.fillStyle='#c19a6b';
+            ctx.fillRect(px+2, py+2, 5, 5);
+            ctx.fillRect(px+9, py+9, 5, 5);
+            // 砂の波紋
+            ctx.fillStyle='#b8860b';
+            for(let i = 0; i < 3; i++) {
+              const wx = px + (i * 5);
+              ctx.fillRect(wx, py + 8, 3, 1);
+            }
+            break;
+            
+          case T.ICE:
+            ctx.fillStyle='#1e3a8a';
+            ctx.fillRect(px,py,TS,TS);
+            const iceTime = performance.now() * 0.003;
+            const iceWave = Math.sin(iceTime + x + y) * 0.2;
+            ctx.fillStyle=`rgba(173,216,230,${0.4 + iceWave})`;
+            ctx.fillRect(px,py,TS,TS);
+            // 氷のひび
+            ctx.strokeStyle='rgba(255,255,255,0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(px+2, py+2);
+            ctx.lineTo(px+6, py+8);
+            ctx.moveTo(px+10, py+4);
+            ctx.lineTo(px+14, py+12);
+            ctx.stroke();
+            break;
+        }
+      }
+    }
+
+    // 現在のマップのエンティティを取得
+    const entities = getMapEntities();
+    
+    // NPC
+    for (const n of entities.npcs){
+      drawCharacter(n.x, n.y, 'npc');
+      if (!n.talked) {
+        ctx.fillStyle = '#ffff00';
+        ctx.fillRect(n.x-1, n.y-20, 2, 6);
+        ctx.fillRect(n.x-1, n.y-12, 2, 2);
+      }
+    }
+    
+    // 宝箱
+    for (const c of entities.chests){ 
+      // ボスフィールドの判定（四隅の座標）
+      const isBossField = (currentMapX === 3 && currentMapY === -3) || // 北東（青龍）
+                          (currentMapX === -3 && currentMapY === -3) || // 北西（玄武）
+                          (currentMapX === -3 && currentMapY === 3) ||  // 南西（麒麟）
+                          (currentMapX === 3 && currentMapY === 3);     // 南東（朱雀）
+      // ボスフィールドの宝箱は赤色
+      const chestColor = isBossField 
+        ? (c.opened ? '#8e6b3f' : '#ff0000')
+        : (c.opened ? '#8e6b3f' : '#d4af37');
+      ctx.fillStyle = chestColor;
+      ctx.fillRect(c.x-8,c.y-6,16,12);
+      
+      if (!c.opened) {
+        // ボスフィールドの宝箱のハイライトも赤系に
+        const highlightColor = isBossField ? '#ff4444' : '#ffd700';
+        ctx.fillStyle = highlightColor;
+        ctx.fillRect(c.x-6, c.y-4, 12, 2);
+        ctx.fillRect(c.x-2, c.y-2, 4, 4);
+        const sparkleTime = performance.now() * 0.01;
+        const sparkle = Math.sin(sparkleTime) * 0.5 + 0.5;
+        ctx.fillStyle = `rgba(255,255,255,${sparkle})`;
+        ctx.fillRect(c.x-10, c.y-8, 2, 2);
+        ctx.fillRect(c.x+8, c.y-8, 2, 2);
+        ctx.fillRect(c.x, c.y-10, 2, 2);
+        
+        // 武器が入っている場合はアイコンを表示
+        if (c.weapon) {
+          const weapon = WEAPONS[c.weapon.toUpperCase()];
+          if (weapon) {
+            ctx.fillStyle = weapon.color;
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(weapon.icon, c.x, c.y - 16);
+          }
+        }
+      }
+    }
+
+    // 爆弾（現在のマップの爆弾のみ描画）
+    for (const b of bombs){ 
+      if (b.mapX !== currentMapX || b.mapY !== currentMapY) continue; // 現在のマップの爆弾のみ
+      const pulseTime = performance.now() * 0.01;
+      const bombColor = b.t < 0.3 ? '#ff0000' : '#333';
+      ctx.fillStyle = bombColor;
+      ctx.fillRect(b.x-4, b.y-4, 8, 8);
+      
+      ctx.fillStyle = '#ff4500';
+      ctx.fillRect(b.x-1, b.y-8, 2, 4);
+      
+      if (b.t < 0.3) {
+        const pulse = Math.sin(pulseTime * 10) * 0.5 + 0.5;
+        ctx.fillStyle = `rgba(255,255,255,${pulse})`;
+        ctx.fillRect(b.x-5, b.y-5, 10, 10);
+      }
+    }
+    
+    // 爆発
+    for (const ex of blasts){ 
+      const intensity = ex.t / 0.4;
+      ctx.save();
+      ctx.globalAlpha = intensity;
+      
+      ctx.fillStyle='#ffaa00';
+      ctx.fillRect(ex.x-TS*2, ex.y-4, TS*4, 8);
+      ctx.fillRect(ex.x-4, ex.y-TS*2, 8, TS*4);
+      
+      ctx.fillStyle='#ff6600';
+      ctx.fillRect(ex.x-TS, ex.y-2, TS*2, 4);
+      ctx.fillRect(ex.x-2, ex.y-TS, 4, TS*2);
+      
+      ctx.fillStyle='#ffffff';
+      ctx.fillRect(ex.x-8, ex.y-1, 16, 2);
+      ctx.fillRect(ex.x-1, ex.y-8, 2, 16);
+      
+      ctx.restore();
+    }
+
+    // 矢
+    for (const ar of arrows){ 
+      ctx.save();
+      const angle = Math.atan2(ar.vy, ar.vx);
+      ctx.translate(ar.x, ar.y);
+      ctx.rotate(angle);
+      
+      ctx.fillStyle='#8b4513';
+      ctx.fillRect(-6, -1, 8, 2);
+      ctx.fillStyle='#ddd';
+      ctx.fillRect(2, -2, 4, 4);
+      
+      ctx.restore();
+    }
+
+    // 手裏剣（くるくる回転、手裏剣のデザイン）
+    for (const s of shurikens) {
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(s.rot); // 高速回転
+      
+      // 光る効果
+      const glowTime = performance.now() * 0.02;
+      const glow = Math.sin(glowTime) * 0.3 + 0.7;
+      
+      // 外側の光
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = '#ffd700';
+      
+      // 手裏剣のデザイン（4つの刃を持つ星型）
+      ctx.fillStyle = `rgba(200, 200, 200, ${glow})`; // 銀色
+      ctx.strokeStyle = '#ffd700'; // 金色の縁取り
+      ctx.lineWidth = 1.5;
+      
+      // 手裏剣の形状（4方向の刃）
+      const bladeLength = 6;
+      const bladeWidth = 2;
+      const centerHole = 1.5;
+      
+      ctx.beginPath();
+      // 4つの刃を描画
+      for (let i = 0; i < 4; i++) {
+        const angle = (i * Math.PI) / 2;
+        const x1 = Math.cos(angle) * bladeLength;
+        const y1 = Math.sin(angle) * bladeLength;
+        const x2 = Math.cos(angle + Math.PI / 4) * bladeWidth;
+        const y2 = Math.sin(angle + Math.PI / 4) * bladeWidth;
+        const x3 = Math.cos(angle - Math.PI / 4) * bladeWidth;
+        const y3 = Math.sin(angle - Math.PI / 4) * bladeWidth;
+        
+        if (i === 0) {
+          ctx.moveTo(x1, y1);
+        } else {
+          ctx.lineTo(x1, y1);
+        }
+        ctx.lineTo(x2, y2);
+        ctx.lineTo(0, 0);
+        ctx.lineTo(x3, y3);
+        ctx.lineTo(x1, y1);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      
+      // 中心の穴
+      ctx.fillStyle = '#333';
+      ctx.beginPath();
+      ctx.arc(0, 0, centerHole, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // 中心の光
+      ctx.shadowBlur = 4;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(0, 0, 0.8, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.restore();
+    }
+
+    // 長槍
+    for (const sp of spears) {
+      ctx.save();
+      const angle = Math.atan2(sp.vy, sp.vx);
+      ctx.translate(sp.x, sp.y);
+      ctx.rotate(angle);
+      
+      // 光る効果
+      const glowTime = performance.now() * 0.015;
+      const glow = Math.sin(glowTime) * 0.2 + 0.8;
+      
+      // 槍の柄（長く）
+      ctx.fillStyle = '#8b4513';
+      ctx.fillRect(-4, -1, 28, 2);
+      
+      // 槍の先（尖った表現、長く）
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = '#4a90e2';
+      ctx.fillStyle = `rgba(74, 144, 226, ${glow})`;
+      // 先端をより尖らせる
+      ctx.beginPath();
+      ctx.moveTo(24, 0);
+      ctx.lineTo(30, -3);
+      ctx.lineTo(30, 3);
+      ctx.closePath();
+      ctx.fill();
+      
+      // 先端のさらに尖った部分
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(28, 0);
+      ctx.lineTo(30, -1.5);
+      ctx.lineTo(30, 1.5);
+      ctx.closePath();
+      ctx.fill();
+      
+      // 槍の装飾（光る）
+      ctx.shadowBlur = 4;
+      ctx.shadowColor = '#ffd700';
+      ctx.fillStyle = `rgba(255, 215, 0, ${glow})`;
+      ctx.fillRect(-4, -2, 2, 4);
+      
+      // 軌跡エフェクト
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#4a90e2';
+      ctx.fillRect(-4, -1, 20, 2);
+      ctx.globalAlpha = 1.0;
+      
+      ctx.restore();
+    }
+
+    // バズーカのロケット
+    for (const r of rockets) {
+      ctx.save();
+      const angle = Math.atan2(r.vy, r.vx);
+      ctx.translate(r.x, r.y);
+      ctx.rotate(angle);
+      
+      // 炎のエフェクト（後ろから）
+      const flameTime = performance.now() * 0.05;
+      const flameSize = Math.sin(flameTime) * 2 + 4;
+      ctx.fillStyle = '#ff6600';
+      ctx.beginPath();
+      ctx.arc(-6, 0, flameSize, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffaa00';
+      ctx.beginPath();
+      ctx.arc(-6, 0, flameSize * 0.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffff00';
+      ctx.beginPath();
+      ctx.arc(-6, 0, flameSize * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // ロケット本体（光る）
+      const glowTime = performance.now() * 0.02;
+      const glow = Math.sin(glowTime) * 0.3 + 0.7;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = '#ff4500';
+      ctx.fillStyle = `rgba(255, 69, 0, ${glow})`;
+      ctx.fillRect(-3, -4, 8, 8);
+      
+      // ロケットの先端（光る）
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = '#ff6600';
+      ctx.fillStyle = `rgba(255, 102, 0, ${glow})`;
+      ctx.beginPath();
+      ctx.moveTo(5, 0);
+      ctx.lineTo(8, -3);
+      ctx.lineTo(8, 3);
+      ctx.closePath();
+      ctx.fill();
+      
+      // 尾翼
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#cc3300';
+      ctx.fillRect(-3, -6, 2, 2);
+      ctx.fillRect(-3, 4, 2, 2);
+      
+      // 炎
+      ctx.fillStyle = '#ffaa00';
+      ctx.fillRect(-6, -2, 3, 4);
+      ctx.fillStyle = '#ffff00';
+      ctx.fillRect(-7, -1, 2, 2);
+      
+      ctx.restore();
+    }
+
+    // 敵
+    for (const s of entities.slimes){ 
+      if (s.dead) continue; 
+      drawCharacter(s.x, s.y, 'slime', s);
+    }
+    for (const a of entities.archers){ 
+      if (a.dead) continue; 
+      drawCharacter(a.x, a.y, 'archer', a);
+    }
+    for (const c of entities.cacti){ 
+      if (c.dead) continue; 
+      drawCharacter(c.x, c.y, 'cactus', c);
+    }
+    for (const w of entities.snowwolves){ 
+      if (w.dead) continue; 
+      drawCharacter(w.x, w.y, 'snowwolf', w);
+    }
+    for (const sc of entities.scorpions){ 
+      if (sc.dead) continue; 
+      drawCharacter(sc.x, sc.y, 'scorpion', sc);
+    }
+    for (const k of entities.krakens){ 
+      if (k.dead) continue; 
+      drawCharacter(k.x, k.y, 'kraken', k);
+    }
+    for (const f of entities.firespirits){ 
+      if (f.dead) continue; 
+      drawCharacter(f.x, f.y, 'firespirit', f);
+    }
+
+    // ボス
+    for (const boss of entities.bosses) {
+      if (boss.dead) continue;
+      
+      ctx.save();
+      ctx.translate(boss.x, boss.y);
+      
+      // ボスの描画（4倍の大きさ）
+      const size = 24;
+      ctx.fillStyle = boss.color;
+      
+      // ボスタイプごとの描画
+      switch(boss.type) {
+        case 'suzaku': // 朱雀（鳥）
+          ctx.fillStyle = '#ff0000';
+          ctx.fillRect(-size, -size, size*2, size*2);
+          // 翼
+          ctx.fillStyle = '#ff6600';
+          ctx.fillRect(-size*1.5, -size*0.5, size, size);
+          ctx.fillRect(size*0.5, -size*0.5, size, size);
+          // 頭
+          ctx.fillStyle = '#ffaa00';
+          ctx.fillRect(-size*0.3, -size*1.2, size*0.6, size*0.6);
+          break;
+        case 'genbu': // 玄武（亀）
+          ctx.fillStyle = '#000080';
+          ctx.fillRect(-size, -size, size*2, size*2);
+          // 甲羅
+          ctx.fillStyle = '#004080';
+          ctx.fillRect(-size*0.7, -size*0.7, size*1.4, size*1.4);
+          // 頭
+          ctx.fillStyle = '#000040';
+          ctx.fillRect(-size*0.5, -size*1.3, size, size*0.6);
+          break;
+        case 'seiryu': // 青龍（龍）
+          ctx.fillStyle = '#00ffff';
+          ctx.fillRect(-size, -size, size*2, size*2);
+          // 体のうねり
+          ctx.fillStyle = '#0088ff';
+          for (let i = 0; i < 3; i++) {
+            ctx.fillRect(-size + i*size*0.7, -size*0.3, size*0.5, size*0.6);
+          }
+          // 頭
+          ctx.fillStyle = '#00aaff';
+          ctx.fillRect(-size*0.5, -size*1.2, size, size*0.8);
+          break;
+        case 'kirin': // 麒麟（鹿）
+          ctx.fillStyle = '#ffd700';
+          ctx.fillRect(-size, -size, size*2, size*2);
+          // 角
+          ctx.fillStyle = '#ffaa00';
+          ctx.fillRect(-size*0.3, -size*1.3, size*0.2, size*0.4);
+          ctx.fillRect(size*0.1, -size*1.3, size*0.2, size*0.4);
+          // 体の模様
+          ctx.fillStyle = '#ffaa00';
+          ctx.fillRect(-size*0.3, -size*0.3, size*0.6, size*0.6);
+          break;
+      }
+      
+      ctx.restore();
+      
+      // 体力バー
+      const barWidth = boss.w;
+      const barHeight = 4;
+      const barX = boss.x - barWidth / 2;
+      const barY = boss.y + boss.h / 2 + 8;
+      
+      // 背景
+      ctx.fillStyle = '#333';
+      ctx.fillRect(barX, barY, barWidth, barHeight);
+      
+      // 体力
+      const hpRatio = boss.hp / boss.maxHp;
+      ctx.fillStyle = hpRatio > 0.5 ? '#00ff00' : hpRatio > 0.25 ? '#ffff00' : '#ff0000';
+      ctx.fillRect(barX, barY, barWidth * hpRatio, barHeight);
+      
+      // 枠
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(barX, barY, barWidth, barHeight);
+      
+      // ボスの弾
+      for (const bullet of boss.bullets) {
+        ctx.fillStyle = bullet.color;
+        ctx.beginPath();
+        ctx.arc(bullet.x, bullet.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    
+    // 村長ボス
+    if (entities.chiefBoss && !entities.chiefBoss.dead) {
+      // 変形中のエフェクト
+      if (entities.chiefBoss.isTransforming) {
+        const progress = entities.chiefBoss.transformTime / 1.0;
+        const glowIntensity = Math.sin(progress * Math.PI * 4) * 0.5 + 0.5;
+        
+        // 光るエフェクト
+        ctx.save();
+        ctx.globalAlpha = glowIntensity * 0.6;
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.arc(entities.chiefBoss.x, entities.chiefBoss.y, entities.chiefBoss.w * 0.8, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 外側の光
+        ctx.globalAlpha = glowIntensity * 0.3;
+        ctx.beginPath();
+        ctx.arc(entities.chiefBoss.x, entities.chiefBoss.y, entities.chiefBoss.w * 1.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      
+      ctx.save();
+      ctx.translate(entities.chiefBoss.x, entities.chiefBoss.y);
+      ctx.scale(entities.chiefBoss.scale, entities.chiefBoss.scale);
+      
+      // 村長の描画（派手な色）
+      if (entities.chiefBoss.phase === 3) {
+        // 本気モード：原色の派手な色
+        const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'];
+        ctx.fillStyle = colors[Math.floor(entities.chiefBoss.animT * 5) % colors.length];
+      } else if (entities.chiefBoss.phase === 2) {
+        // 巨大化モード：少し明るい色
+        ctx.fillStyle = '#8b5a3c';
+      } else {
+        ctx.fillStyle = '#6b4423';
+      }
+      
+      const size = 12;
+      ctx.fillRect(-size, -size, size*2, size*2);
+      
+      // 頭
+      ctx.fillStyle = '#fdbcb4';
+      ctx.fillRect(-size*0.8, -size*1.2, size*1.6, size*0.8);
+      
+      // 帽子
+      ctx.fillStyle = '#4a4a4a';
+      ctx.fillRect(-size*0.8, -size*1.4, size*1.6, size*0.3);
+      
+      // ひげ
+      ctx.fillStyle = '#ddd';
+      ctx.fillRect(-size*0.6, -size*0.4, size*1.2, size*0.4);
+      
+      ctx.restore();
+      
+      // 体力バー
+      const barWidth = entities.chiefBoss.w;
+      const barHeight = 4;
+      const barX = entities.chiefBoss.x - barWidth / 2;
+      const barY = entities.chiefBoss.y + entities.chiefBoss.h / 2 + 8;
+      
+      ctx.fillStyle = '#333';
+      ctx.fillRect(barX, barY, barWidth, barHeight);
+      
+      const hpRatio = entities.chiefBoss.hp / entities.chiefBoss.maxHp;
+      ctx.fillStyle = hpRatio > 0.5 ? '#00ff00' : hpRatio > 0.25 ? '#ffff00' : '#ff0000';
+      ctx.fillRect(barX, barY, barWidth * hpRatio, barHeight);
+      
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(barX, barY, barWidth, barHeight);
+      
+      // 村長の弾
+      for (const bullet of entities.chiefBoss.bullets) {
+        ctx.fillStyle = bullet.color;
+        ctx.beginPath();
+        ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // プレイヤー
+    drawCharacter(player.x, player.y, 'player', player);
+    
+    // 武器使用中のエフェクト（硬直中の視覚効果）
+    if (player.weaponCd > 0) {
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      
+      // 武器使用中の光るエフェクト
+      const effectTime = performance.now() * 0.01;
+      const pulse = Math.sin(effectTime * 10) * 0.3 + 0.7;
+      
+      // プレイヤーの周りに光る円
+      ctx.strokeStyle = `rgba(255, 255, 0, ${pulse})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, 12, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // 内側の光
+      ctx.strokeStyle = `rgba(255, 200, 0, ${pulse * 0.5})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, 10, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // 武器アイコンを表示
+      const weapon = WEAPONS[state.currentWeapon.toUpperCase()];
+      if (weapon) {
+        ctx.fillStyle = weapon.color;
+        ctx.font = '16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(weapon.icon, player.x, player.y - 20);
+      }
+      
+      ctx.restore();
+    }
+
+    // 剣/槍
+    if (player.swordT > 0){
+      const alpha = clamp(player.swordT / 0.18, 0, 1);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      
+      const dx = player.sdx, dy = player.sdy;
+      const isSpear = state.currentWeapon === 'spear';
+      const baseLength = 16;
+      const weaponLength = isSpear ? baseLength * 2 : baseLength; // 槍は2倍の長さ
+      const weaponWidth = isSpear ? 3 : 4;
+      
+      ctx.translate(player.x, player.y);
+      ctx.rotate(Math.atan2(dy, dx));
+      
+      if (isSpear) {
+        // 槍の描画
+        // 槍の柄
+        ctx.fillStyle = '#8b4513';
+        ctx.fillRect(4, -1, weaponLength * 0.7, 2);
+        
+        // 槍の先（尖った表現、長く）
+        const glowTime = performance.now() * 0.015;
+        const glow = Math.sin(glowTime) * 0.2 + 0.8;
+        ctx.shadowBlur = 6;
+        ctx.shadowColor = '#4a90e2';
+        ctx.fillStyle = `rgba(74, 144, 226, ${glow})`;
+        ctx.beginPath();
+        ctx.moveTo(4 + weaponLength * 0.7, 0);
+        ctx.lineTo(4 + weaponLength, -3);
+        ctx.lineTo(4 + weaponLength, 3);
+        ctx.closePath();
+        ctx.fill();
+        
+        // 先端のさらに尖った部分
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(4 + weaponLength * 0.85, 0);
+        ctx.lineTo(4 + weaponLength, -1.5);
+        ctx.lineTo(4 + weaponLength, 1.5);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        // 剣の描画
+        // 剣身
+        ctx.fillStyle = '#e8e8e8';
+        ctx.fillRect(8, -weaponWidth/2, weaponLength, weaponWidth);
+        
+        // 剣先
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(8 + weaponLength - 2, -1, 2, 2);
+        
+        // 柄
+        ctx.fillStyle = '#8b4513';
+        ctx.fillRect(4, -2, 6, 4);
+        
+        // ツバ
+        ctx.fillStyle = '#666';
+        ctx.fillRect(8, -3, 2, 6);
+      }
+      
+      ctx.restore();
+    }
+    
+    // バズーカの破片
+    if (typeof fragments !== 'undefined') {
+      for (const frag of fragments) {
+        ctx.save();
+        ctx.fillStyle = '#ff6600';
+        ctx.beginPath();
+        ctx.arc(frag.x, frag.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+    
+    // ミニマップを描画
+    drawMinimap();
+  }
+
+  // 更新
+  function update(dt) {
+    // 武器使用中の硬直時間を更新
+    if (player.weaponCd > 0) {
+      player.weaponCd -= dt;
+    }
+    
+    // 入力（武器使用中は移動できない）
+    // 横画面時のスケールを考慮して移動速度を調整
+    const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+    let landscapeScale = 1;
+    if (isLandscape) {
+      const scaleValue = getComputedStyle(document.documentElement).getPropertyValue('--landscape-scale').trim();
+      landscapeScale = scaleValue ? parseFloat(scaleValue) : 1;
+      // スケールが未設定（高さ600px超）の場合は1.0
+      if (isNaN(landscapeScale) || landscapeScale === 0) landscapeScale = 1;
+    }
+    let speed = player.speed / landscapeScale; // スケールが小さいほど速度を上げる
+    // 携帯デバイスの場合は移動速度を1.3倍にする
+    if (isMobile) {
+      speed *= 1.3;
+    }
+    if (player.weaponCd <= 0) {
+      player.vx = Input.ax * speed; 
+      player.vy = Input.ay * speed;
+    } else {
+      // 硬直中は移動を停止
+      player.vx = 0;
+      player.vy = 0;
+    }
+    if (Math.abs(Input.ax) > 0.1) player.dir = Math.sign(Input.ax);
+
+    // 攻撃
+    if (Input.aDown) attack();
+
+    if (player.attackCd>0) player.attackCd-=dt;
+    if (player.inv>0) player.inv-=dt;
+    if (player.swordT>0) player.swordT-=dt;
+
+    // プレイヤーの移動（画面端通過を許可）
+    moveWithTile(player, dt, true);
+
+    // マップ切り替えチェック
+    if (player.x < 0) {
+      // 左端：境界チェック
+      if (currentMapX > MIN_MAP_X) {
+        markMapVisited(currentMapX, currentMapY); // 現在のマップを訪問済みに
+        currentMapX--;
+        player.x = W - 10;
+        arrows.length = 0; // 矢をクリア
+        shurikens.length = 0; // 手裏剣をクリア
+        spears.length = 0; // 長槍をクリア
+        rockets.length = 0; // ロケットをクリア
+        fragments.length = 0; // 破片をクリア
+        // 爆弾はマップごとに管理されているので、マップ切り替え時はクリアしない
+        blasts.length = 0; // 爆発をクリア
+        hideSpeechBubble();
+        markMapVisited(currentMapX, currentMapY); // 新しいマップを訪問済みに
+        Sound.playSound('button'); // マップ切り替え音
+      } else {
+        // 境界を越えられない
+        player.x = 0;
+        showHint('通れません。', 2.0);
+        Sound.playSound('button');
+      }
+    } else if (player.x > W) {
+      // 右端：境界チェック
+      if (currentMapX < MAX_MAP_X) {
+        markMapVisited(currentMapX, currentMapY);
+        currentMapX++;
+        player.x = 10;
+        arrows.length = 0;
+        hideSpeechBubble();
+        markMapVisited(currentMapX, currentMapY);
+        Sound.playSound('button');
+      } else {
+        // 境界を越えられない
+        player.x = W;
+        showHint('通れません。', 2.0);
+        Sound.playSound('button');
+      }
+    }
+    if (player.y < 0) {
+      // 上端：境界チェック
+      if (currentMapY > MIN_MAP_Y) {
+        markMapVisited(currentMapX, currentMapY);
+        currentMapY--;
+        player.y = H - 10;
+        arrows.length = 0;
+        hideSpeechBubble();
+        markMapVisited(currentMapX, currentMapY);
+        Sound.playSound('button');
+      } else {
+        // 境界を越えられない（確実に0に戻す）
+        player.y = Math.max(0, player.y);
+        if (player.y < 0) {
+          player.y = 0;
+        }
+        showHint('通れません。', 2.0);
+        Sound.playSound('button');
+      }
+    } else if (player.y > H) {
+      // 下端：境界チェック
+      if (currentMapY < MAX_MAP_Y) {
+        markMapVisited(currentMapX, currentMapY);
+        currentMapY++;
+        player.y = 10;
+        arrows.length = 0;
+        hideSpeechBubble();
+        markMapVisited(currentMapX, currentMapY);
+        Sound.playSound('button');
+      } else {
+        // 境界を越えられない
+        player.y = H;
+        showHint('通れません。', 2.0);
+        Sound.playSound('button');
+      }
+    }
+    
+    // 上端の境界を確実にチェック（念のため追加チェック）
+    if (currentMapY === MIN_MAP_Y && player.y < 0) {
+      player.y = 0;
+    }
+    
+    // 現在のマップを訪問済みにマーク
+    markMapVisited(currentMapX, currentMapY);
+
+    // コンテキスト
+    const entities = getMapEntities();
+    let canTalk = false, canOpen = false;
+    const near = (o,r) => dist2(player.x,player.y,o.x,o.y) < (r*r);
+    
+    for (const n of entities.npcs){ 
+      if (near(n, 20)) canTalk = true; 
+    }
+    for (const c of entities.chests){ 
+      if (!c.opened && near(c, 20)) canOpen = true; 
+    }
+    
+    // リスポーン直後に老人が自動的に愚痴を言う
+    if (justRespawned && currentMapX === 0 && currentMapY === 0) {
+      const npc = entities.npcs.find(n => near(n, 50)); // 少し広めの範囲
+      if (npc && npc.deathTexts) {
+        justRespawned = false;
+        Sound.playSound('talk');
+        // ランダムに愚痴を選ぶ
+        const randomDeathText = npc.deathTexts[Math.floor(Math.random() * npc.deathTexts.length)];
+        showSpeechBubble(npc, randomDeathText);
+        // 通常の会話インデックスはリセットしない（別管理）
+      } else {
+        justRespawned = false;
+      }
+    }
+    
+    if (canTalk) showHint('💬 Zで話す'); 
+    else if (canOpen) showHint('📦 Zで開ける');
+    
+    // Zボタン（B）の処理：宝箱を開く処理を優先、なければ会話
+    if (Input.bDown) {
+      // ポーズ中でないことを確認
+      if (!state.paused && !state.ending) {
+        if (canOpen) {
+          // 宝箱を開く処理（優先）
+          const chest = entities.chests.find(c=>!c.opened && near(c,20)); 
+          if (chest){ 
+            chest.opened = true; 
+            
+            // ボスフィールドの判定
+            const isBossField = (currentMapX === 3 && currentMapY === -3) || // 北東（青龍）
+                              (currentMapX === -3 && currentMapY === -3) || // 北西（玄武）
+                              (currentMapX === -3 && currentMapY === 3) ||  // 南西（麒麟）
+                              (currentMapX === 3 && currentMapY === 3);     // 南東（朱雀）
+            
+            // 武器が入っている場合
+            if (chest.weapon && !state.weapons.includes(chest.weapon)) {
+              state.weapons.push(chest.weapon);
+              const weapon = WEAPONS[chest.weapon.toUpperCase()];
+              Sound.playSound('level');
+              showHint(`📦 ${weapon.icon} ${weapon.name}を入手！`, 3.0);
+            } else if (isBossField) {
+              // ボスフィールドの宝箱：村長の私物アイテムを入手
+              const bossItems = {
+                'suzaku': '村長の杖',      // 南東（朱雀）
+                'genbu': '村長のメガネ',   // 北西（玄武）
+                'seiryu': '村長の証明書',  // 北東（青龍）
+                'kirin': '村長のハンカチ'  // 南西（麒麟）
+              };
+              
+              // マップ座標からボスタイプを判定
+              let bossType = null;
+              if (currentMapX === 3 && currentMapY === -3) bossType = 'seiryu';      // 北東（青龍）
+              else if (currentMapX === -3 && currentMapY === -3) bossType = 'genbu'; // 北西（玄武）
+              else if (currentMapX === -3 && currentMapY === 3) bossType = 'kirin';  // 南西（麒麟）
+              else if (currentMapX === 3 && currentMapY === 3) bossType = 'suzaku'; // 南東（朱雀）
+              
+            const itemName = bossType ? bossItems[bossType] : null;
+            
+            // ボスを倒したかチェック
+            const bossDefeated = bossType && state.defeatedBosses.includes(bossType);
+            
+            if (itemName && bossDefeated && !state.bossItems.includes(itemName)) {
+              // ボスを倒した後に宝箱から村長の私物アイテムを入手
+              state.bossItems.push(itemName);
+              Sound.playSound('level');
+              showHint(`📦 アイテムを手に入れた：${itemName}`, 3.0);
+              
+              // 4つ揃ったかチェック
+              if (state.bossItems.length === 4) {
+                setTimeout(() => {
+                  showHint('📢 村長から話があるようだ\n至急村長のところに戻るように！', 5.0);
+                  Sound.playSound('level');
+                }, 1000);
+              }
+            } else if (itemName && state.bossItems.includes(itemName)) {
+              // 既に入手済み
+              Sound.playSound('chest'); 
+              showHint(`📦 村長の私物が入っていた...（既に入手済み）`, 3.0);
+            } else if (itemName && !bossDefeated) {
+              // ボスを倒していない場合
+              Sound.playSound('chest'); 
+              showHint(`📦 鍵がかかっていて開かない...\nボスを倒す必要がありそうだ`, 3.0);
+            } else {
+              // 通常の報酬（ボスフィールド以外の宝箱）
+              const reward = 10 + state.level * 2;
+              state.coins += reward; 
+              gainExp(3);
+              Sound.playSound('chest'); 
+              showHint(`📦 宝箱から+${reward}💰`);
+            }
+            } else {
+              // 通常の報酬
+              const reward = 10 + state.level * 2;
+              state.coins += reward; 
+              gainExp(3);
+              Sound.playSound('chest'); 
+              showHint(`📦 宝箱から+${reward}💰`);
+            }
+          }
+        } else if (canTalk) {
+          // 会話処理
+          const npc = entities.npcs.find(n => near(n, 20));
+          if (npc) {
+            Sound.playSound('talk');
+            
+            // 4つのアイテムが揃っている場合は村長イベントを表示（村にいる時のみ）
+            if (state.bossItems.length === 4 && currentMapX === 0 && currentMapY === 0) {
+              showChiefEvent();
+              return;
+            }
+            
+            // 吹き出しで会話を表示
+            if (npc.currentTextIndex < npc.texts.length) {
+              showSpeechBubble(npc, npc.texts[npc.currentTextIndex]);
+              npc.currentTextIndex++;
+              
+              // 初回会話時のみ報酬
+              if (!npc.talked && npc.currentTextIndex >= npc.texts.length) {
+                npc.talked = true;
+                state.coins += 5;
+                gainExp(1);
+                showHint('👴 長老から+5💰');
+              }
+            } else {
+              // 全ての会話が終わったら最初に戻す
+              npc.currentTextIndex = 0;
+              showSpeechBubble(npc, npc.texts[0]);
+            }
+          }
+        }
+      }
+    }
+    
+    // Xボタンの処理：武器使用のみ
+    if (Input.xDown) {
+      // ポーズ中でないことを確認
+      if (!state.paused && !state.ending) {
+        useWeapon();
+      }
+    }
+
+    // スライム
+    for (const s of entities.slimes){ 
+      if (s.dead) continue; 
+      s.update(dt); 
+      moveWithTile(s, dt); 
+      if (dist2(s.x,s.y,player.x,player.y) < 15*15) hitPlayer(1); 
+    }
+
+    // アーチャー
+    for (const a of entities.archers){ 
+      if (a.dead) continue; 
+      a.update(dt);
+      if ((a.cd-=dt)<=0){
+        const playerDist = Math.hypot(a.x - player.x, a.y - player.y);
+        if (playerDist < a.range) {
+          if (Math.abs(a.y-player.y)<12 && hasLineOfSight(a.x,a.y,player.x,player.y)) { 
+            const vx = Math.sign(player.x-a.x)*120; 
+            arrows.push(new Arrow(a.x, a.y, vx, 0)); 
+            a.cd=1.5; 
+            a.alertT = 0.5;
+            Sound.playSound('button');
+          } 
+          else if (Math.abs(a.x-player.x)<12 && hasLineOfSight(a.x,a.y,player.x,player.y)) { 
+            const vy = Math.sign(player.y-a.y)*120; 
+            arrows.push(new Arrow(a.x, a.y, 0, vy)); 
+            a.cd=1.5; 
+            a.alertT = 0.5;
+            Sound.playSound('button');
+          } 
+          else a.cd=0.4;
+        } else {
+          a.cd = 0.3;
+        }
+      } 
+    }
+
+    // サボテンモンスター
+    for (const c of entities.cacti){ 
+      if (c.dead) continue; 
+      c.update(dt); 
+      moveWithTile(c, dt); 
+      if (dist2(c.x,c.y,player.x,player.y) < 15*15) hitPlayer(1); 
+    }
+
+    // 雪オオカミ
+    for (const w of entities.snowwolves){ 
+      if (w.dead) continue; 
+      w.update(dt); 
+      moveWithTile(w, dt); 
+      if (dist2(w.x,w.y,player.x,player.y) < 15*15) hitPlayer(1); 
+    }
+
+    // サソリ
+    for (const sc of entities.scorpions){ 
+      if (sc.dead) continue; 
+      sc.update(dt); 
+      moveWithTile(sc, dt); 
+      if (dist2(sc.x,sc.y,player.x,player.y) < 15*15) hitPlayer(2); 
+    }
+
+    // クラーケン
+    for (const k of entities.krakens){ 
+      if (k.dead) continue; 
+      k.update(dt);
+      if ((k.cd-=dt)<=0){
+        const playerDist = Math.hypot(k.x - player.x, k.y - player.y);
+        if (playerDist < k.range) {
+          if (Math.abs(k.y-player.y)<12 && hasLineOfSight(k.x,k.y,player.x,player.y)) { 
+            const vx = Math.sign(player.x-k.x)*100; 
+            arrows.push(new Arrow(k.x, k.y, vx, 0)); 
+            k.cd=2.0; 
+            k.alertT = 0.5;
+            Sound.playSound('button');
+          } 
+          else if (Math.abs(k.x-player.x)<12 && hasLineOfSight(k.x,k.y,player.x,player.y)) { 
+            const vy = Math.sign(player.y-k.y)*100; 
+            arrows.push(new Arrow(k.x, k.y, 0, vy)); 
+            k.cd=2.0; 
+            k.alertT = 0.5;
+            Sound.playSound('button');
+          } 
+          else k.cd=0.5;
+        } else {
+          k.cd = 0.4;
+        }
+      } 
+    }
+
+    // 炎の精霊
+    for (const f of entities.firespirits){ 
+      if (f.dead) continue; 
+      f.update(dt); 
+      moveWithTile(f, dt); 
+      if (dist2(f.x,f.y,player.x,player.y) < 15*15) hitPlayer(1); 
+    }
+
+    // ボス
+    for (const boss of entities.bosses) {
+      if (boss.dead) continue;
+      boss.update(dt);
+      
+      // ボスの弾の更新
+      for (const bullet of boss.bullets) {
+        bullet.x += bullet.vx * dt;
+        bullet.y += bullet.vy * dt;
+        bullet.life -= dt;
+        
+        // 追尾弾の処理
+        if (bullet.tracking) {
+          const dx = player.x - bullet.x;
+          const dy = player.y - bullet.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist > 0) {
+            bullet.vx = (dx / dist) * 50;
+            bullet.vy = (dy / dist) * 50;
+          }
+        }
+        
+        // プレイヤーとの衝突
+        if (dist2(bullet.x, bullet.y, player.x, player.y) < 10*10) {
+          hitPlayer(2);
+          bullet.life = 0;
+        }
+        
+        if (bullet.life <= 0 || collidesTile(bullet.x, bullet.y, 4, 4)) {
+          bullet.dead = true;
+        }
+      }
+      
+      // ボスの弾の後片付け
+      for (let i = boss.bullets.length - 1; i >= 0; i--) {
+        if (boss.bullets[i].dead || boss.bullets[i].life <= 0) {
+          boss.bullets.splice(i, 1);
+        }
+      }
+      
+      // プレイヤーの攻撃判定
+      if (player.swordT > 0) {
+        const range = 30;
+        const w = 20, h = 20;
+        const dirX = player.sdx || player.dir;
+        const dirY = player.sdy || 0;
+        const ax = player.x + dirX * range;
+        const ay = player.y + dirY * range;
+        
+        if (Math.abs(boss.x - ax) < w && Math.abs(boss.y - ay) < h) {
+          boss.hp -= 2;
+          Sound.playSound('hit');
+          if (boss.hp <= 0) {
+            boss.dead = true;
+            // ボスを倒したらコインと経験値を獲得（アイテムは宝箱から取得）
+            if (!state.defeatedBosses.includes(boss.type)) {
+              state.defeatedBosses.push(boss.type);
+            }
+            state.coins += 50;
+            gainExp(10);
+            showHint(`💀 ${boss.type === 'suzaku' ? '朱雀' : boss.type === 'genbu' ? '玄武' : boss.type === 'seiryu' ? '青龍' : '麒麟'}撃破！\n宝箱を確認してみよう`, 3.0);
+          }
+        }
+      }
+      
+      // ボスとの接触ダメージ
+      if (dist2(boss.x, boss.y, player.x, player.y) < 30*30) {
+        hitPlayer(2);
+      }
+    }
+    
+    // 村長ボス
+    if (entities.chiefBoss && !entities.chiefBoss.dead) {
+      entities.chiefBoss.update(dt);
+      moveWithTile(entities.chiefBoss, dt);
+      
+      // 村長の弾の更新
+      for (const bullet of entities.chiefBoss.bullets) {
+        bullet.x += bullet.vx * dt;
+        bullet.y += bullet.vy * dt;
+        bullet.life -= dt;
+        
+        if (dist2(bullet.x, bullet.y, player.x, player.y) < 10*10) {
+          hitPlayer(3);
+          bullet.life = 0;
+        }
+        
+        if (bullet.life <= 0 || collidesTile(bullet.x, bullet.y, 5, 5)) {
+          bullet.dead = true;
+        }
+      }
+      
+      for (let i = entities.chiefBoss.bullets.length - 1; i >= 0; i--) {
+        if (entities.chiefBoss.bullets[i].dead || entities.chiefBoss.bullets[i].life <= 0) {
+          entities.chiefBoss.bullets.splice(i, 1);
+        }
+      }
+      
+      // プレイヤーの攻撃判定
+      if (player.swordT > 0) {
+        const range = 30;
+        const w = 20, h = 20;
+        const dirX = player.sdx || player.dir;
+        const dirY = player.sdy || 0;
+        const ax = player.x + dirX * range;
+        const ay = player.y + dirY * range;
+        
+        if (Math.abs(entities.chiefBoss.x - ax) < w && Math.abs(entities.chiefBoss.y - ay) < h) {
+          entities.chiefBoss.hp -= 3;
+          Sound.playSound('hit');
+          
+          // フェーズ遷移
+          if (entities.chiefBoss.phase === 1 && entities.chiefBoss.hp <= 50) {
+            entities.chiefBoss.phase = 2;
+            // 変形アニメーション開始
+            entities.chiefBoss.targetScale = 3;
+            entities.chiefBoss.isTransforming = true;
+            entities.chiefBoss.transformTime = 0;
+            // NPCが存在する場合のみ吹き出しを表示
+            if (entities.npcs.length > 0) {
+              showSpeechBubble(entities.npcs[0], 'ならば力づくじゃな！');
+            }
+            Sound.playSound('level');
+          } else if (entities.chiefBoss.phase === 2 && entities.chiefBoss.hp <= 25) {
+            entities.chiefBoss.phase = 3;
+            // 変形アニメーション開始（既に巨大化している場合は再変形しない）
+            if (entities.chiefBoss.scale < 3) {
+              entities.chiefBoss.targetScale = 3;
+              entities.chiefBoss.isTransforming = true;
+              entities.chiefBoss.transformTime = 0;
+            }
+            // NPCが存在する場合のみ吹き出しを表示
+            if (entities.npcs.length > 0) {
+              showSpeechBubble(entities.npcs[0], 'そうか、本気をだすかのう！');
+            }
+            Sound.playSound('level');
+          }
+          
+          if (entities.chiefBoss.hp <= 0) {
+            entities.chiefBoss.dead = true;
+            state.ending = true;
+            showEnding();
+          }
+        }
+      }
+      
+      // 村長との接触ダメージ
+      if (dist2(entities.chiefBoss.x, entities.chiefBoss.y, player.x, player.y) < 25*25) {
+        hitPlayer(entities.chiefBoss.phase === 3 ? 4 : 2);
+      }
+    }
+
+    // 矢
+    for (const ar of arrows){ 
+      ar.x += ar.vx*dt; 
+      ar.y += ar.vy*dt; 
+      ar.life-=dt; 
+      if (collidesTile(ar.x,ar.y,6,2)) ar.life=0; 
+      if (ar.life<=0) ar.dead=true; 
+      if (dist2(ar.x,ar.y,player.x,player.y)<12*12){ 
+        ar.dead=true; 
+        hitPlayer(1);
+      } 
+    }
+
+    // 手裏剣
+    for (const s of shurikens) {
+      s.x += s.vx * dt;
+      s.y += s.vy * dt;
+      s.rot += dt * 20; // 回転速度を上げる
+      s.life -= dt;
+      
+      if (collidesTile(s.x, s.y, 4, 4)) s.life = 0;
+      if (s.life <= 0) s.dead = true;
+      
+      const entities = getMapEntities();
+      const hit = (e) => Math.abs(e.x - s.x) < 8 && Math.abs(e.y - s.y) < 8;
+      
+      // 全ての敵タイプに当たり判定
+      const hitEnemy = (enemy, reward, exp, name) => {
+        if (!enemy.dead && hit(enemy)) {
+          enemy.hp--;
+          // 敵を吹っ飛ばす
+          const knockbackSpeed = 200;
+          const knockbackDirX = Math.sign(enemy.x - s.x) || 1;
+          const knockbackDirY = Math.sign(enemy.y - s.y) || 0;
+          enemy.vx = knockbackDirX * knockbackSpeed;
+          enemy.vy = knockbackDirY * knockbackSpeed;
+          enemy.knockbackT = 0.3; // ノックバック時間
+          s.life = 0;
+          if (enemy.hp <= 0) {
+            enemy.dead = true;
+            state.coins += reward;
+            gainExp(exp);
+            showHint(`⭐ 手裏剣で${name}撃破!`);
+          } else {
+            Sound.playSound('hit');
+          }
+        }
+      };
+      
+      for (const sl of entities.slimes) hitEnemy(sl, 3, 2, 'スライム');
+      for (const a of entities.archers) hitEnemy(a, 5, 3, 'アーチャー');
+      for (const c of entities.cacti) hitEnemy(c, 4, 2, 'サボテンモンスター');
+      for (const w of entities.snowwolves) hitEnemy(w, 4, 3, '雪オオカミ');
+      for (const sc of entities.scorpions) hitEnemy(sc, 5, 3, 'サソリ');
+      for (const k of entities.krakens) hitEnemy(k, 6, 4, 'クラーケン');
+      for (const f of entities.firespirits) hitEnemy(f, 4, 2, '炎の精霊');
+      // ボスにも当たる
+      for (const boss of entities.bosses) {
+        if (!boss.dead && hit(boss)) {
+          boss.hp--;
+          s.life = 0;
+          if (boss.hp <= 0) {
+            boss.dead = true;
+            if (!state.defeatedBosses.includes(boss.type)) {
+              state.defeatedBosses.push(boss.type);
+            }
+            state.coins += 50;
+            gainExp(10);
+            const bossNames = {
+              'suzaku': '朱雀',
+              'genbu': '玄武',
+              'seiryu': '青龍',
+              'kirin': '麒麟'
+            };
+            showHint(`💀 ${bossNames[boss.type]}撃破！\n宝箱を確認してみよう`, 3.0);
+          }
+        }
+      }
+    }
+
+    // 長槍
+    for (const sp of spears) {
+      sp.x += sp.vx * dt;
+      sp.y += sp.vy * dt;
+      sp.rot += dt * 5;
+      sp.life -= dt;
+      
+      if (collidesTile(sp.x, sp.y, 8, 20)) sp.life = 0;
+      if (sp.life <= 0) sp.dead = true;
+      
+      const entities = getMapEntities();
+      const hit = (e) => Math.abs(e.x - sp.x) < 12 && Math.abs(e.y - sp.y) < 12;
+      
+      // 全ての敵タイプに当たり判定
+      const hitEnemy = (enemy, reward, exp, name) => {
+        if (!enemy.dead && hit(enemy)) {
+          enemy.hp -= 2;
+          sp.life = 0;
+          if (enemy.hp <= 0) {
+            enemy.dead = true;
+            state.coins += reward;
+            gainExp(exp);
+            showHint(`🔱 長槍で${name}撃破!`);
+          }
+        }
+      };
+      
+      for (const sl of entities.slimes) hitEnemy(sl, 3, 2, 'スライム');
+      for (const a of entities.archers) hitEnemy(a, 5, 3, 'アーチャー');
+      for (const c of entities.cacti) hitEnemy(c, 4, 2, 'サボテンモンスター');
+      for (const w of entities.snowwolves) hitEnemy(w, 4, 3, '雪オオカミ');
+      for (const sc of entities.scorpions) hitEnemy(sc, 5, 3, 'サソリ');
+      for (const k of entities.krakens) hitEnemy(k, 6, 4, 'クラーケン');
+      for (const f of entities.firespirits) hitEnemy(f, 4, 2, '炎の精霊');
+      // ボスにも当たる
+      for (const boss of entities.bosses) {
+        if (!boss.dead && hit(boss)) {
+          boss.hp -= 2;
+          sp.life = 0;
+          if (boss.hp <= 0) {
+            boss.dead = true;
+            if (!state.defeatedBosses.includes(boss.type)) {
+              state.defeatedBosses.push(boss.type);
+            }
+            state.coins += 50;
+            gainExp(10);
+            const bossNames = {
+              'suzaku': '朱雀',
+              'genbu': '玄武',
+              'seiryu': '青龍',
+              'kirin': '麒麟'
+            };
+            showHint(`💀 ${bossNames[boss.type]}撃破！\n宝箱を確認してみよう`, 3.0);
+          }
+        }
+      }
+    }
+
+    // バズーカのロケット
+    for (const r of rockets) {
+      r.x += r.vx * dt;
+      r.y += r.vy * dt;
+      r.rot += dt * 3;
+      r.life -= dt;
+      
+      // 敵との衝突チェック（大爆発）
+      const entities = getMapEntities();
+      let hitEnemy = false;
+      const hitRect = (e) => Math.abs(e.x - r.x) < 15 && Math.abs(e.y - r.y) < 15;
+      
+      // 全ての敵タイプに当たり判定
+      for (const sl of entities.slimes) {
+        if (!sl.dead && hitRect(sl)) {
+          sl.dead = true;
+          hitEnemy = true;
+        }
+      }
+      for (const a of entities.archers) {
+        if (!a.dead && hitRect(a)) {
+          a.dead = true;
+          hitEnemy = true;
+        }
+      }
+      for (const c of entities.cacti) {
+        if (!c.dead && hitRect(c)) {
+          c.dead = true;
+          hitEnemy = true;
+        }
+      }
+      for (const w of entities.snowwolves) {
+        if (!w.dead && hitRect(w)) {
+          w.dead = true;
+          hitEnemy = true;
+        }
+      }
+      for (const sc of entities.scorpions) {
+        if (!sc.dead && hitRect(sc)) {
+          sc.dead = true;
+          hitEnemy = true;
+        }
+      }
+      for (const k of entities.krakens) {
+        if (!k.dead && hitRect(k)) {
+          k.dead = true;
+          hitEnemy = true;
+        }
+      }
+      for (const f of entities.firespirits) {
+        if (!f.dead && hitRect(f)) {
+          f.dead = true;
+          hitEnemy = true;
+        }
+      }
+      // ボスにも当たる
+      for (const boss of entities.bosses) {
+        if (!boss.dead && hitRect(boss)) {
+          boss.hp -= 10;
+          hitEnemy = true;
+          if (boss.hp <= 0) boss.dead = true;
+        }
+      }
+      
+      if (hitEnemy || collidesTile(r.x, r.y, 6, 12) || r.life <= 0) {
+        // 大爆発（中心の爆発）
+        blasts.push(new Explosion(r.x, r.y));
+        Sound.playSound('bomb');
+        r.dead = true;
+        
+        // 4方向に破片を散らす
+        const fragmentSpeed = 120;
+        fragments.push(new Fragment(r.x, r.y, fragmentSpeed, 0)); // 右
+        fragments.push(new Fragment(r.x, r.y, -fragmentSpeed, 0)); // 左
+        fragments.push(new Fragment(r.x, r.y, 0, fragmentSpeed)); // 下
+        fragments.push(new Fragment(r.x, r.y, 0, -fragmentSpeed)); // 上
+        
+        const entities = getMapEntities();
+        const hitRect = (e) => Math.abs(e.x - r.x) < TS * 1.5 && Math.abs(e.y - r.y) < TS * 1.5;
+        
+        // 全ての敵タイプに当たり判定（3ダメージ）
+        const hitEnemy = (enemy, reward, exp, name) => {
+          if (!enemy.dead && hitRect(enemy)) {
+            enemy.hp -= 3; // 3ダメージ
+            if (enemy.hp <= 0) {
+              enemy.dead = true;
+              state.coins += reward;
+              gainExp(exp);
+              showHint(`🚀 バズーカで${name}撃破!`);
+            } else {
+              Sound.playSound('hit');
+            }
+          }
+        };
+        
+        for (const sl of entities.slimes) hitEnemy(sl, 3, 2, 'スライム');
+        for (const a of entities.archers) hitEnemy(a, 5, 3, 'アーチャー');
+        for (const c of entities.cacti) hitEnemy(c, 4, 2, 'サボテンモンスター');
+        for (const w of entities.snowwolves) hitEnemy(w, 4, 3, '雪オオカミ');
+        for (const sc of entities.scorpions) hitEnemy(sc, 5, 3, 'サソリ');
+        for (const k of entities.krakens) hitEnemy(k, 6, 4, 'クラーケン');
+        for (const f of entities.firespirits) hitEnemy(f, 4, 2, '炎の精霊');
+        // ボスにも当たる
+        for (const boss of entities.bosses) {
+          if (!boss.dead && hitRect(boss)) {
+            boss.hp -= 3; // 3ダメージ
+            if (boss.hp <= 0) {
+              boss.dead = true;
+              const items = {
+                'suzaku': '村長の杖',
+                'genbu': '村長のメガネ',
+                'seiryu': '村長の証明書',
+                'kirin': '村長のハンカチ'
+              };
+              const itemName = items[boss.type];
+              if (itemName && !state.bossItems.includes(itemName)) {
+                state.bossItems.push(itemName);
+                showHint(`🎁 ${itemName}を獲得！`, 3.0);
+                Sound.playSound('level');
+                if (state.bossItems.length === 4) {
+                  setTimeout(() => showChiefEvent(), 1000);
+                }
+              }
+              state.coins += 50;
+              gainExp(10);
+              const bossNames = {
+                'suzaku': '朱雀',
+                'genbu': '玄武',
+                'seiryu': '青龍',
+                'kirin': '麒麟'
+              };
+              showHint(`💀 ${bossNames[boss.type]}撃破！`, 3.0);
+            }
+          }
+        }
+        if (hitRect(player)) hitPlayer(2);
+      }
+    }
+
+    // 爆弾（現在のマップの爆弾のみ更新）
+    for (const b of bombs){ 
+      if (b.mapX !== currentMapX || b.mapY !== currentMapY) continue; // 現在のマップの爆弾のみ
+      b.t-=dt; 
+      if (!b.exploded && b.t<=0){ 
+        b.exploded = true; 
+        blasts.push(new Explosion(b.x,b.y)); 
+        Sound.playSound('bomb');
+        
+        const hitRect = (e) => Math.abs(e.x-b.x)<TS*1.5 && Math.abs(e.y-b.y)<8 || Math.abs(e.y-b.y)<TS*1.5 && Math.abs(e.x-b.x)<8;
+        const bombEntities = getMapEntities();
+        for (const s of bombEntities.slimes){ 
+          if (!s.dead && hitRect(s)){ 
+            s.dead=true; 
+            state.coins+=3; 
+            gainExp(2);
+            showHint('💥 爆弾でスライム撃破!'); 
+          } 
+        }
+        for (const a of bombEntities.archers){ 
+          if (!a.dead && hitRect(a)){ 
+            a.dead=true; 
+            state.coins+=5; 
+            gainExp(3);
+            showHint('💥 爆弾でアーチャー撃破!'); 
+          } 
+        }
+        for (const c of bombEntities.cacti){ 
+          if (!c.dead && hitRect(c)){ 
+            c.dead=true; 
+            state.coins+=4; 
+            gainExp(2);
+            showHint('💥 爆弾でサボテンモンスター撃破!'); 
+          } 
+        }
+        for (const w of bombEntities.snowwolves){ 
+          if (!w.dead && hitRect(w)){ 
+            w.dead=true; 
+            state.coins+=4; 
+            gainExp(3);
+            showHint('💥 爆弾で雪オオカミ撃破!'); 
+          } 
+        }
+        for (const sc of bombEntities.scorpions){ 
+          if (!sc.dead && hitRect(sc)){ 
+            sc.dead=true; 
+            state.coins+=5; 
+            gainExp(3);
+            showHint('💥 爆弾でサソリ撃破!'); 
+          } 
+        }
+        for (const k of bombEntities.krakens){ 
+          if (!k.dead && hitRect(k)){ 
+            k.dead=true; 
+            state.coins+=6; 
+            gainExp(4);
+            showHint('💥 爆弾でクラーケン撃破!'); 
+          } 
+        }
+        for (const f of bombEntities.firespirits){ 
+          if (!f.dead && hitRect(f)){ 
+            f.dead=true; 
+            state.coins+=4; 
+            gainExp(2);
+            showHint('💥 爆弾で炎の精霊撃破!'); 
+          } 
+        }
+        // ボスにも当たる
+        for (const boss of bombEntities.bosses) {
+          if (!boss.dead && hitRect(boss)) {
+            boss.hp -= 10;
+            if (boss.hp <= 0) {
+              boss.dead = true;
+              const items = {
+                'suzaku': '村長の杖',
+                'genbu': '村長のメガネ',
+                'seiryu': '村長の証明書',
+                'kirin': '村長のハンカチ'
+              };
+              const itemName = items[boss.type];
+              if (itemName && !state.bossItems.includes(itemName)) {
+                state.bossItems.push(itemName);
+                showHint(`🎁 ${itemName}を獲得！`, 3.0);
+                Sound.playSound('level');
+                if (state.bossItems.length === 4) {
+                  setTimeout(() => showChiefEvent(), 1000);
+                }
+              }
+              state.coins += 50;
+              gainExp(10);
+              const bossNames = {
+                'suzaku': '朱雀',
+                'genbu': '玄武',
+                'seiryu': '青龍',
+                'kirin': '麒麟'
+              };
+              showHint(`💀 ${bossNames[boss.type]}撃破！`, 3.0);
+            }
+          }
+        }
+        if (hitRect(player)) hitPlayer(2);
+      } 
+    }
+    
+    // 後片付け（現在のマップの爆弾のみ）
+    for (let i=bombs.length-1;i>=0;i--){ 
+      if (bombs[i].mapX === currentMapX && bombs[i].mapY === currentMapY && bombs[i].exploded && bombs[i].t<=-0.3) {
+        bombs.splice(i,1); 
+      }
+    }
+    for (const ex of blasts){ ex.t-=dt; }
+    for (let i=arrows.length-1;i>=0;i--) if (arrows[i].dead) arrows.splice(i,1);
+    for (let i=shurikens.length-1;i>=0;i--) if (shurikens[i].dead || shurikens[i].life<=0) shurikens.splice(i,1);
+    for (let i=spears.length-1;i>=0;i--) if (spears[i].dead || spears[i].life<=0) spears.splice(i,1);
+    for (let i=rockets.length-1;i>=0;i--) if (rockets[i].dead || rockets[i].life<=0) rockets.splice(i,1);
+    for (let i=fragments.length-1;i>=0;i--) if (fragments[i].dead || fragments[i].life<=0) fragments.splice(i,1);
+    for (let i=blasts.length-1;i>=0;i--) if (blasts[i].t<=0) blasts.splice(i,1);
+
+    // チュートリアル
+    tutorialTick(dt, { 
+      moved: (Math.abs(Input.ax)+Math.abs(Input.ay))>0.5, 
+      attacked: Input.aDown, 
+      opened: (Input.bDown && canOpen), 
+      talked: (Input.bDown && canTalk)
+    });
+
+    // UI更新
+    renderHUD(); 
+    if (state.hintTimer > 0) {
+      state.hintTimer -= dt;
+      if (state.hintTimer <= 0) hintEl.classList.remove('show');
+    }
+    
+    // 吹き出しのタイマー更新
+    if (speechBubbleTimer > 0) {
+      speechBubbleTimer -= dt;
+      if (speechBubbleTimer <= 0) {
+        hideSpeechBubble();
+      }
+    }
+  }
+
+  // ゲームループ
+  let acc = 0; 
+  const FIXED = 1/60; 
+  let last = performance.now();
+  
+  // 画面回転案内の表示制御
+  const rotateHint = document.getElementById('rotateHint');
+  const btnFullscreen = document.getElementById('btnFullscreen');
+  
+  // 全画面展開がサポートされているかチェック
+  function isFullscreenSupported() {
+    return !!(document.fullscreenEnabled || 
+              document.webkitFullscreenEnabled || 
+              document.mozFullScreenEnabled || 
+              document.msFullscreenEnabled);
+  }
+  
+  // 全画面展開の関数（クロスブラウザ対応）
+  function requestFullscreen() {
+    const element = document.documentElement;
+    if (element.requestFullscreen) {
+      return element.requestFullscreen();
+    } else if (element.webkitRequestFullscreen) {
+      return element.webkitRequestFullscreen();
+    } else if (element.webkitRequestFullScreen) {
+      return element.webkitRequestFullScreen();
+    } else if (element.mozRequestFullScreen) {
+      return element.mozRequestFullScreen();
+    } else if (element.msRequestFullscreen) {
+      return element.msRequestFullscreen();
+    }
+    return Promise.reject(new Error('Fullscreen API not supported'));
+  }
+  
+  // 横画面かどうかを判定（複数の方法で確認）
+  function isLandscapeMode() {
+    // 方法1: CSS media query
+    const mediaQuery = window.matchMedia('(orientation: landscape)');
+    if (mediaQuery.matches) return true;
+    
+    // 方法2: 画面サイズの比較（より確実）
+    const width = window.innerWidth || document.documentElement.clientWidth;
+    const height = window.innerHeight || document.documentElement.clientHeight;
+    if (width > height) return true;
+    
+    // 方法3: screen.orientation API（対応している場合）
+    if (screen.orientation) {
+      const angle = screen.orientation.angle;
+      if (angle === 90 || angle === -90 || angle === 270) return true;
+    }
+    
+    return false;
+  }
+  
+  function checkOrientation() {
+    if (!isMobile) {
+      state.canPlay = true;
+      if (rotateHint) rotateHint.classList.remove('show');
+      return;
+    }
+    
+    const isLandscape = isLandscapeMode();
+    if (isLandscape) {
+      state.canPlay = true;
+      if (rotateHint) rotateHint.classList.remove('show');
+      
+      // 全画面展開ボタンを非表示
+      if (btnFullscreen) btnFullscreen.style.display = 'none';
+      
+      // 横画面になったら自動的に全画面展開を試みる
+      // ただし、既に全画面の場合はスキップ
+      if (!document.fullscreenElement && 
+          !document.webkitFullscreenElement && 
+          !document.mozFullScreenElement && 
+          !document.msFullscreenElement) {
+        requestFullscreen().catch(err => {
+          // 全画面展開が失敗してもゲームは開始する
+          console.log('全画面展開に失敗しました:', err);
+        });
+      }
+    } else {
+      state.canPlay = false;
+      if (rotateHint) rotateHint.classList.add('show');
+      
+      // 全画面展開がサポートされている場合、ボタンを表示
+      if (btnFullscreen && isFullscreenSupported()) {
+        btnFullscreen.style.display = 'block';
+      } else if (btnFullscreen) {
+        btnFullscreen.style.display = 'none';
+      }
+    }
+  }
+  
+  // 全画面展開ボタンのイベントリスナー
+  if (btnFullscreen) {
+    btnFullscreen.addEventListener('click', () => {
+      requestFullscreen().then(() => {
+        // 全画面展開成功後、画面の向きを再チェック
+        setTimeout(checkOrientation, 200);
+      }).catch(err => {
+        console.log('全画面展開に失敗しました:', err);
+        alert('全画面展開に失敗しました。画面を横にしてから再度お試しください。');
+      });
+    });
+  }
+  
+  // 初期チェック
+  checkOrientation();
+  
+  // 画面向き変更を監視
+  window.addEventListener('orientationchange', () => {
+    setTimeout(checkOrientation, 200); // 向き変更の反映を待つ（少し長めに）
+  });
+  
+  // リサイズ時もチェック（念のため）
+  window.addEventListener('resize', () => {
+    setTimeout(checkOrientation, 100);
+  });
+  
+  // 全画面状態の変更を監視（全画面が解除された場合の処理）
+  document.addEventListener('fullscreenchange', checkOrientation);
+  document.addEventListener('webkitfullscreenchange', checkOrientation);
+  document.addEventListener('mozfullscreenchange', checkOrientation);
+  document.addEventListener('MSFullscreenChange', checkOrientation);
+
+  function loop(){
+    const t = performance.now(); 
+    let dt = (t - last)/1000; 
+    last = t; 
+    dt = Math.min(dt, 0.05);
+
+    // 携帯の場合は横画面になるまでゲームを停止
+    if (isMobile && !state.canPlay) {
+      draw(); // 描画のみ（画面回転案内を表示）
+      requestAnimationFrame(loop);
+      return;
+    }
+
+    if (!state.paused && !state.ending){
+      acc += dt; 
+      while (acc >= FIXED){ 
+        Input.updateEdges(); 
+        update(FIXED); 
+        acc -= FIXED; 
+        Input.aDown=Input.bDown=Input.xDown=false; 
+      }
+      draw();
+    } else if (state.ending) {
+      // エンディング中は描画のみ
+      draw();
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  // チュートリアル
+  const tut = document.getElementById('tutorial');
+  const tutContent = document.getElementById('tutContent');
+  const tutNext = document.getElementById('tutNext');
+  const tutSkip = document.getElementById('tutSkip');
+  
+  const steps = [
+    { text: '🎮 左のスティックか矢印キーで歩いてみましょう！', check: s=> s.moved },
+    { text: '⚔️ ⚔️ボタンで攻撃！スライムを倒してみましょう。', check: s=> s.attacked },
+    { text: '💬 💬ボタンで宝箱を開けたり、魔法使いと話したりできます。', check: s=> s.opened || s.talked },
+    { text: '💣 💣ボタンで爆弾を設置！敵をまとめて倒せます。さあ冒険しよう！', check: s=> true },
+  ];
+  
+  function tutorialOpen(){ 
+    state.tutorialStep = 0; 
+    tut.showModal(); 
+    renderStep(); 
+  }
+  
+  function renderStep(){ 
+    tutContent.innerHTML = `<p>${steps[state.tutorialStep].text}</p>`; 
+  }
+  
+  function tutorialTick(dt, flags){
+    const st = steps[state.tutorialStep]; 
+    if (!st) return; 
+    if (st.check(flags)) nextStep();
+  }
+  
+  function nextStep(){ 
+    state.tutorialStep++; 
+    if (state.tutorialStep >= steps.length){ 
+      tut.close(); 
+      showHint('🌟 冒険を楽しんでね！', 4.0); 
+      Sound.playSound('level');
+    } else { 
+      renderStep(); 
+    } 
+  }
+  
+  tutNext.addEventListener('click', ()=> { nextStep(); Sound.playSound('button'); });
+  tutSkip.addEventListener('click', ()=> { tut.close(); Sound.playSound('button'); });
+  
+  // 携帯の場合は横画面になるまでチュートリアルを開始しない
+  if (isMobile && !state.canPlay) {
+    // 横画面になるまで待機
+    const checkAndStartTutorial = () => {
+      if (state.canPlay) {
+        setTimeout(tutorialOpen, 800);
+      } else {
+        setTimeout(checkAndStartTutorial, 500);
+      }
+    };
+    checkAndStartTutorial();
+  } else {
+    setTimeout(tutorialOpen, 800);
+  }
+
+  // 武器切り替え
+  const weaponSelect = document.getElementById('weaponSelect');
+  const weaponList = document.getElementById('weaponList');
+  const btnPause = document.getElementById('btnPause');
+  const btnCloseWeapon = document.getElementById('btnCloseWeapon');
+
+  function renderWeaponList() {
+    weaponList.innerHTML = '';
+    state.weapons.forEach(weaponId => {
+      const weapon = Object.values(WEAPONS).find(w => w.id === weaponId);
+      if (!weapon) return;
+      
+      const isEquipped = state.currentWeapon === weaponId;
+      const item = document.createElement('div');
+      item.style.cssText = `
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px;
+        margin: 8px 0;
+        background: ${isEquipped ? 'rgba(139,211,255,0.2)' : 'var(--panel)'};
+        border: 2px solid ${isEquipped ? 'var(--accent)' : 'var(--outline)'};
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      `;
+      
+      item.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 24px;">${weapon.icon}</span>
+          <span style="font-weight: 700;">${weapon.name}</span>
+        </div>
+        ${isEquipped ? '<span style="color: var(--accent); font-weight: 800;">装備中</span>' : ''}
+      `;
+      
+      // 装備済みでもクリック可能（ダイアログを閉じるため）
+      item.addEventListener('click', () => {
+        if (!isEquipped) {
+          state.currentWeapon = weaponId;
+          renderWeaponList();
+          updateWeaponButton();
+        }
+        Sound.playSound('button');
+        // 武器選択後、即座にダイアログを閉じてポーズを解除
+        weaponSelect.close();
+        // 確実にポーズを解除（即座に実行）
+        state.paused = false;
+      });
+      
+      weaponList.appendChild(item);
+    });
+  }
+
+  function updateWeaponButton() {
+    const weapon = Object.values(WEAPONS).find(w => w.id === state.currentWeapon);
+    if (weapon) {
+      const weaponIcon = document.getElementById('weaponIcon');
+      if (weaponIcon) {
+        weaponIcon.textContent = weapon.icon;
+      }
+      btnX.title = weapon.name;
+    }
+  }
+
+  function toggleWeaponSelect(){
+    if (state.ending) return; // エンディング中は無効
+    
+    state.paused = !state.paused;
+    if (state.paused){ 
+      renderWeaponList();
+      weaponSelect.showModal(); 
+    } else { 
+      weaponSelect.close(); 
+      state.paused = false; // 確実にポーズを解除
+    }
+  }
+  
+  // ダイアログが閉じられた時にポーズを解除
+  weaponSelect.addEventListener('close', () => {
+    state.paused = false;
+  });
+
+  btnPause.addEventListener('click', ()=> { toggleWeaponSelect(); Sound.playSound('button'); });
+  if (btnPauseLandscape) {
+    btnPauseLandscape.addEventListener('click', ()=> { toggleWeaponSelect(); Sound.playSound('button'); });
+  }
+  btnCloseWeapon.addEventListener('click', ()=> { toggleWeaponSelect(); Sound.playSound('button'); });
+
+  // 村長イベント
+  const chiefEvent = document.getElementById('chiefEvent');
+  const chiefEventContent = document.getElementById('chiefEventContent');
+  const btnChiefYes = document.getElementById('btnChiefYes');
+  const btnChiefNo = document.getElementById('btnChiefNo');
+
+  function showChiefEvent() {
+    // 既に表示済みの場合は何もしない
+    if (state.chiefEventShown) {
+      return;
+    }
+    
+    state.paused = true;
+    state.chiefEventShown = true;
+    chiefEventContent.innerHTML = `
+      <p style="margin: 0 0 16px 0;">4つのアイテムを集めた勇者よ、</p>
+      <p style="margin: 0 0 16px 0;">わしも年を取って、もう村長を続けるのが難しくなってきた。</p>
+      <p style="margin: 0 0 16px 0;">君に村長を継いでもらいたいんだが、</p>
+      <p style="margin: 0;">この村を守ってくれるか？</p>
+    `;
+    chiefEvent.showModal();
+  }
+
+  btnChiefYes.addEventListener('click', () => {
+    chiefEvent.close();
+    showEnding('勇者は村長として働くことになった。\n\n村は平和になり、\n人々は幸せに暮らした。');
+    Sound.playSound('level');
+  });
+
+  btnChiefNo.addEventListener('click', () => {
+    chiefEvent.close();
+    state.paused = false;
+    // 村長ボスを出現
+    const entities = getMapEntities();
+    if (entities.npcs.length > 0) {
+      const npc = entities.npcs[0];
+      entities.chiefBoss = new VillageChiefBoss(npc.x, npc.y);
+      showSpeechBubble(npc, 'ならば力づくじゃな！');
+      Sound.playSound('bomb');
+    }
+  });
+
+  // エンディング
+  const endingDialog = document.getElementById('ending');
+  const endingContent = document.getElementById('endingContent');
+  const btnEndingClose = document.getElementById('btnEndingClose');
+
+  function showEnding(text = '') {
+    state.paused = true;
+    state.ending = true;
+    
+    if (!text) {
+      text = '村長を倒した勇者は、\n\n真の力を手に入れた。\n\n村は新たな時代を迎えた...';
+    }
+    
+    // エンディングの種類を判定（YESエンディングかどうか）
+    const isYesEnding = text.includes('村長として働く');
+    
+    if (isYesEnding) {
+      // YESエンディング：迫力のある演出と登場人物
+      endingContent.innerHTML = `
+        <div style="animation: fadeIn 1s ease-in;">
+          <p style="white-space: pre-line; text-align: center; font-size: 24px; line-height: 2; font-weight: bold; color: #ffd700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); margin-bottom: 20px;">
+            ✨ 真の勇者の物語 ✨
+          </p>
+          <p style="white-space: pre-line; text-align: center; font-size: 20px; line-height: 2; color: #fff; margin-bottom: 20px;">
+            ${text}
+          </p>
+          
+          <div style="text-align: center; margin: 30px 0; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 10px;">
+            <p style="font-size: 18px; color: #ffd700; margin-bottom: 15px; font-weight: bold;">登場人物</p>
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; font-size: 14px; color: #fff;">
+              <div>👴 村長（長老）</div>
+              <div>🦸 勇者</div>
+              <div>🟢 スライム</div>
+              <div>🏹 アーチャー</div>
+              <div>🌵 サボテンモンスター</div>
+              <div>🐺 雪オオカミ</div>
+              <div>🦂 サソリ</div>
+              <div>🐙 クラーケン</div>
+              <div>🔥 火の精霊</div>
+              <div>🐉 朱雀</div>
+              <div>🐢 玄武</div>
+              <div>🐲 青龍</div>
+              <div>🦌 麒麟</div>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px;">
+            <div style="display: inline-block; animation: pulse 2s infinite;">
+              <p style="font-size: 32px; margin: 0;">🏆</p>
+            </div>
+          </div>
+          <p style="white-space: pre-line; text-align: center; font-size: 16px; line-height: 2; color: #ccc; margin-top: 30px;">
+            勇者の選択により、<br>
+            村は永遠の平和を手に入れた。<br>
+            <br>
+            人々は勇者を称え、<br>
+            その名は永遠に語り継がれる...
+          </p>
+        </div>
+        <style>
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+          }
+        </style>
+      `;
+    } else {
+      // 通常エンディング
+      endingContent.innerHTML = `<p style="white-space: pre-line; text-align: center; font-size: 18px; line-height: 1.8;">${text}</p>`;
+    }
+    
+    endingDialog.showModal();
+  }
+
+  btnEndingClose.addEventListener('click', () => {
+    endingDialog.close();
+    Sound.playSound('button');
+    // タイトルに戻る（ページをリロードしてBGMを最初から再生）
+    stopBGM();
+    setTimeout(() => {
+      location.reload();
+    }, 300);
+  });
+  
+  // 初期化
+  updateWeaponButton();
+
+  // 初期化
+  markMapVisited(currentMapX, currentMapY); // 初期マップを訪問済みに
+  renderHUD();
+  drawMinimap(); // 初期ミニマップを描画
+  showHint('🎮 移動してみよう', 3);
+
+})();
+</script>
+</body>
+</html>

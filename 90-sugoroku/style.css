@@ -1,0 +1,684 @@
+/* ========================================= */
+/* 基本設定 */
+/* ========================================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Arial', 'Hiragino Sans', 'ヒラギノ角ゴ Pro', 'メイリオ', sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+/* キラキラアニメーション背景 */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+      radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+  animation: sparkle 15s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+/* ========================================= */
+/* 画面共通 */
+/* ========================================= */
+.screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ========================================= */
+/* タイトル画面 */
+/* ========================================= */
+#titleScreen {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(15px);
+}
+
+.title-content {
+  text-align: center;
+  color: white;
+  padding: 30px;
+  max-width: 600px;
+  animation: slideDown 0.8s ease;
+}
+
+@keyframes slideDown {
+  from {
+      transform: translateY(-50px);
+      opacity: 0;
+  }
+  to {
+      transform: translateY(0);
+      opacity: 1;
+  }
+}
+
+.title-glow {
+  font-size: 3.5em;
+  margin-bottom: 20px;
+  text-shadow: 
+      0 0 10px rgba(255, 255, 255, 0.8),
+      0 0 20px rgba(255, 255, 255, 0.6),
+      0 0 30px rgba(255, 182, 193, 0.4),
+      3px 3px 10px rgba(0, 0, 0, 0.8);
+  animation: titleGlow 2s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+  0%, 100% {
+      text-shadow: 
+          0 0 10px rgba(255, 255, 255, 0.8),
+          0 0 20px rgba(255, 255, 255, 0.6),
+          0 0 30px rgba(255, 182, 193, 0.4),
+          3px 3px 10px rgba(0, 0, 0, 0.8);
+  }
+  50% {
+      text-shadow: 
+          0 0 20px rgba(255, 255, 255, 1),
+          0 0 30px rgba(255, 255, 255, 0.8),
+          0 0 40px rgba(255, 182, 193, 0.6),
+          3px 3px 10px rgba(0, 0, 0, 0.8);
+  }
+}
+
+.subtitle {
+  font-size: 1.5em;
+  margin-bottom: 35px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.instructions {
+  margin-top: 40px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 25px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.instructions h3 {
+  font-size: 1.8em;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.instructions p {
+  font-size: 1.2em;
+  margin: 12px 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.fun-message {
+  margin-top: 25px;
+  font-size: 1.1em;
+  color: #ffeb3b;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+  animation: rainbow 3s linear infinite;
+}
+
+@keyframes rainbow {
+  0% { color: #ffeb3b; }
+  25% { color: #ff9800; }
+  50% { color: #f06292; }
+  75% { color: #ba68c8; }
+  100% { color: #ffeb3b; }
+}
+
+/* ========================================= */
+/* ボタン共通 */
+/* ========================================= */
+.big-button {
+  background: linear-gradient(45deg, #f093fb 0%, #f5576c 50%, #ffd700 100%);
+  color: white;
+  border: none;
+  padding: 20px 50px;
+  font-size: 1.5em;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 
+      0 10px 20px rgba(0, 0, 0, 0.4),
+      0 0 20px rgba(255, 215, 0, 0.5);
+  transition: all 0.3s ease;
+  font-weight: bold;
+  position: relative;
+  overflow: hidden;
+}
+
+.big-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.big-button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.big-button:hover {
+  transform: translateY(-5px) scale(1.08);
+  box-shadow: 
+      0 15px 30px rgba(0, 0, 0, 0.5),
+      0 0 30px rgba(255, 215, 0, 0.8);
+}
+
+.big-button:active {
+  transform: translateY(-2px) scale(1.05);
+}
+
+/* ========================================= */
+/* キャラクター選択画面 */
+/* ========================================= */
+#characterScreen {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(15px);
+  overflow-y: auto;
+}
+
+.character-content {
+  padding: 30px 20px;
+  max-width: 1200px;
+  width: 100%;
+}
+
+.character-title {
+  color: white;
+  text-align: center;
+  font-size: 2.5em;
+  margin-bottom: 15px;
+  text-shadow: 
+      0 0 10px rgba(255, 255, 255, 0.8),
+      3px 3px 6px rgba(0, 0, 0, 0.7);
+  animation: titleGlow 2s ease-in-out infinite;
+}
+
+.character-subtitle {
+  color: #ffeb3b;
+  text-align: center;
+  font-size: 1.3em;
+  margin-bottom: 30px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.character-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 25px;
+}
+
+.character-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.8));
+  border-radius: 25px;
+  padding: 30px;
+  width: 200px;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  position: relative;
+  border: 3px solid transparent;
+  animation: cardFloat 3s ease-in-out infinite;
+}
+
+.character-card:nth-child(1) { animation-delay: 0s; }
+.character-card:nth-child(2) { animation-delay: 0.2s; }
+.character-card:nth-child(3) { animation-delay: 0.4s; }
+.character-card:nth-child(4) { animation-delay: 0.6s; }
+.character-card:nth-child(5) { animation-delay: 0.8s; }
+
+@keyframes cardFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.character-card::before {
+  content: '✨';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1.5em;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.character-card:hover::before {
+  opacity: 1;
+  animation: sparkleRotate 1s linear infinite;
+}
+
+@keyframes sparkleRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.character-card:hover {
+  transform: translateY(-15px) scale(1.1) rotate(2deg);
+  box-shadow: 
+      0 20px 40px rgba(0, 0, 0, 0.5),
+      0 0 30px rgba(255, 215, 0, 0.6);
+  background: linear-gradient(145deg, #fff, rgba(255, 255, 255, 0.95));
+  border: 3px solid #ffd700;
+}
+
+.character-emoji {
+  font-size: 5em;
+  display: block;
+  margin-bottom: 15px;
+  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.3));
+}
+
+.character-name {
+  font-size: 1.7em;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 18px;
+  display: block;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.character-info {
+  text-align: left;
+  font-size: 0.95em;
+  color: #555;
+  line-height: 1.8;
+  background: rgba(100, 100, 255, 0.05);
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.character-info p {
+  margin: 6px 0;
+}
+
+.character-info p strong {
+  color: #f5576c;
+}
+
+/* ========================================= */
+/* ゲーム画面 */
+/* ========================================= */
+#gameScreen {
+  background: transparent;
+}
+
+.game-hud {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 100;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+  padding: 20px 30px;
+  border-radius: 20px;
+  box-shadow: 
+      0 8px 20px rgba(0, 0, 0, 0.4),
+      0 0 20px rgba(255, 215, 0, 0.3);
+  border: 3px solid rgba(255, 215, 0, 0.5);
+  animation: hudGlow 2s ease-in-out infinite;
+}
+
+@keyframes hudGlow {
+  0%, 100% {
+      box-shadow: 
+          0 8px 20px rgba(0, 0, 0, 0.4),
+          0 0 20px rgba(255, 215, 0, 0.3);
+  }
+  50% {
+      box-shadow: 
+          0 8px 20px rgba(0, 0, 0, 0.4),
+          0 0 30px rgba(255, 215, 0, 0.6);
+  }
+}
+
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 12px;
+}
+
+.player-emoji {
+  font-size: 3em;
+  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.3));
+}
+
+.bounce {
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.player-details {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.player-name {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #333;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.start-info {
+  font-size: 1.1em;
+  color: #555;
+  font-weight: bold;
+}
+
+.lane-number {
+  color: #f5576c;
+  font-size: 1.3em;
+}
+
+.progress-message {
+  text-align: center;
+  font-size: 1em;
+  color: #f5576c;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.blink {
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+#threeCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ========================================= */
+/* 結果画面 */
+/* ========================================= */
+#resultScreen {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(20px);
+}
+
+.result-content {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.9));
+  border-radius: 35px;
+  padding: 50px 40px;
+  text-align: center;
+  box-shadow: 
+      0 15px 40px rgba(0, 0, 0, 0.6),
+      0 0 40px rgba(255, 215, 0, 0.5);
+  max-width: 450px;
+  border: 4px solid #ffd700;
+  animation: resultPop 0.6s ease;
+}
+
+@keyframes resultPop {
+  0% {
+      transform: scale(0.5);
+      opacity: 0;
+  }
+  70% {
+      transform: scale(1.1);
+  }
+  100% {
+      transform: scale(1);
+      opacity: 1;
+  }
+}
+
+.result-emoji {
+  font-size: 7em;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+}
+
+.bounce-big {
+  animation: bounceBig 0.8s ease;
+}
+
+@keyframes bounceBig {
+  0%, 100% { transform: translateY(0) scale(1); }
+  25% { transform: translateY(-30px) scale(1.1); }
+  50% { transform: translateY(-15px) scale(1.05); }
+  75% { transform: translateY(-5px) scale(1.02); }
+}
+
+.result-title {
+  font-size: 3em;
+  color: #f5576c;
+  margin: 25px 0;
+  text-shadow: 
+      0 0 10px rgba(245, 87, 108, 0.5),
+      2px 2px 4px rgba(0, 0, 0, 0.3);
+  animation: titleGlow 2s ease-in-out infinite;
+}
+
+.result-info {
+  background: linear-gradient(135deg, rgba(100, 100, 255, 0.15), rgba(245, 87, 108, 0.15));
+  padding: 25px;
+  border-radius: 20px;
+  margin: 25px 0;
+  border: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+.result-info p {
+  font-size: 1.5em;
+  color: #555;
+  margin: 12px 0;
+  font-weight: bold;
+}
+
+.result-number {
+  color: #f5576c;
+  font-size: 1.8em;
+  text-shadow: 0 0 10px rgba(245, 87, 108, 0.3);
+}
+
+.result-comment {
+  font-size: 1.4em;
+  color: #333;
+  margin: 25px 0;
+  font-weight: bold;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(255, 200, 100, 0.3), rgba(255, 150, 150, 0.3));
+  border-radius: 15px;
+  border: 2px dashed #ffd700;
+}
+
+.confetti {
+  font-size: 2em;
+  margin: 20px 0;
+  animation: confettiFall 3s ease-in-out infinite;
+}
+
+@keyframes confettiFall {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(10px) rotate(180deg); }
+}
+
+/* ========================================= */
+/* スマホ対応（レスポンシブ） */
+/* ========================================= */
+@media (max-width: 768px) {
+  .title-glow {
+      font-size: 2.5em;
+  }
+  
+  .subtitle {
+      font-size: 1.2em;
+  }
+  
+  .instructions {
+      padding: 20px;
+  }
+  
+  .instructions h3 {
+      font-size: 1.5em;
+  }
+  
+  .instructions p {
+      font-size: 1em;
+  }
+  
+  .character-title {
+      font-size: 2em;
+  }
+  
+  .character-subtitle {
+      font-size: 1.1em;
+  }
+  
+  .character-card {
+      width: 170px;
+      padding: 25px;
+  }
+  
+  .character-emoji {
+      font-size: 4em;
+  }
+  
+  .character-name {
+      font-size: 1.4em;
+  }
+  
+  .character-info {
+      font-size: 0.85em;
+  }
+  
+  .game-hud {
+      top: 10px;
+      left: 10px;
+      padding: 15px 20px;
+  }
+  
+  .player-emoji {
+      font-size: 2.5em;
+  }
+  
+  .player-name {
+      font-size: 1.2em;
+  }
+  
+  .start-info {
+      font-size: 0.95em;
+  }
+  
+  .progress-message {
+      font-size: 0.85em;
+  }
+  
+  .result-content {
+      padding: 40px 30px;
+      max-width: 90%;
+  }
+  
+  .result-emoji {
+      font-size: 5em;
+  }
+  
+  .result-title {
+      font-size: 2.3em;
+  }
+  
+  .result-info p {
+      font-size: 1.2em;
+  }
+  
+  .result-comment {
+      font-size: 1.1em;
+  }
+  
+  .big-button {
+      padding: 16px 35px;
+      font-size: 1.2em;
+  }
+}
+
+@media (max-width: 480px) {
+  .title-glow {
+      font-size: 2em;
+  }
+  
+  .big-button {
+      padding: 14px 30px;
+      font-size: 1.1em;
+  }
+  
+  .character-card {
+      width: 145px;
+      padding: 20px;
+  }
+  
+  .character-emoji {
+      font-size: 3.5em;
+  }
+  
+  .character-name {
+      font-size: 1.2em;
+  }
+  
+  .result-emoji {
+      font-size: 4em;
+  }
+  
+  .result-title {
+      font-size: 2em;
+  }
+}

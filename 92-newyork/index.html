@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New York Heartbeat</title>
+<style>
+body {
+  background: linear-gradient(180deg, #ffffff, #eef4ff);
+  font-family: 'Trebuchet MS', sans-serif;
+  margin: 0;
+  overflow: hidden;
+  height: 100vh;
+}
+#game {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.character {
+  position: absolute;
+  bottom: 0;
+  transition: opacity 0.6s ease-in;
+}
+#male {
+  left: 0;
+  height: 56%;
+}
+#female {
+  right: 10%;
+  height: 70%;
+}
+#dialogue-box {
+  position: absolute;
+  top: 16%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 85%;
+  background: rgba(255,255,255,0.9);
+  border-radius: 20px;
+  padding: 25px 35px;
+  font-size: 1.5em;
+  text-align: center;
+  line-height: 1.6;
+  box-shadow: 0 4px 25px rgba(0,0,0,0.15);
+  display: none;
+}
+#male-dialogue {
+  position: absolute;
+  bottom: 35%;
+  left: 23%;
+  background: rgba(255,255,255,0.9);
+  border-radius: 16px;
+  padding: 12px 18px;
+  font-size: 1.2em;
+  text-align: left;
+  display: none;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+#choices {
+  position: absolute;
+  bottom: 8%;
+  left: 23%;
+  display: none;
+}
+.choice {
+  background: rgba(255,255,255,0.95);
+  border: 2px solid #333;
+  border-radius: 10px;
+  margin: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.1em;
+}
+.choice:hover {
+  background: #e3f1ff;
+  transform: scale(1.05);
+}
+#hearts {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  font-size: 1.6em;
+}
+#popup {
+  display: none;
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255,255,255,0.95);
+  padding: 20px 40px;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 1.4em;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+}
+#start-screen {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  color: white;
+}
+#start-btn {
+  background: #fff;
+  color: #333;
+  border: none;
+  border-radius: 10px;
+  padding: 15px 40px;
+  font-size: 1.4em;
+  cursor: pointer;
+  transition: 0.2s;
+}
+#start-btn:hover {
+  background: #e7f1ff;
+}
+</style>
+</head>
+<body>
+<div id="start-screen">
+  <h1>💬 New York Heartbeat 💬</h1>
+  <p>Talk with New York girls and win their heart!</p>
+  <button id="start-btn">Start Game</button>
+</div>
+
+<div id="game" style="display:none;">
+  <img id="male" class="character" src="images/male_back.png">
+  <img id="female" class="character" src="">
+  <div id="dialogue-box"></div>
+  <div id="male-dialogue"></div>
+  <div id="choices"></div>
+  <div id="hearts">❤️❤️❤️❤️❤️</div>
+  <div id="popup"></div>
+</div>
+
+<script>
+const femaleImgs = ["Ava","Chloe","Emily","Lily","Madison","Mia","Olivia","Rachel","Sarah","Zoe"];
+const femaleEl = document.getElementById("female");
+const dialogue = document.getElementById("dialogue-box");
+const maleSpeech = document.getElementById("male-dialogue");
+const choices = document.getElementById("choices");
+const heartDisplay = document.getElementById("hearts");
+const popup = document.getElementById("popup");
+let voices = [];
+let hearts = 5;
+let currentPersona = null;
+
+// 🔹 ペルソナ別会話データ（NYらしい英語）
+const dialogueData = {
+Ava: [
+{ text:"I teach sunrise yoga in Prospect Park. Do you ever wake up that early?", options:[
+{text:"Sometimes, for peace.",result:"good"},
+{text:"Only if I must.",result:"neutral"},
+{text:"Never, sleep is life.",result:"bad"},
+{text:"That’s insane.",result:"worst"} ]},
+{ text:"I love fresh juice from the market near Brooklyn Bridge. Do you eat clean?", options:[
+{text:"I try to.",result:"good"},
+{text:"Sometimes.",result:"neutral"},
+{text:"I eat pizza daily.",result:"bad"},
+{text:"Healthy food’s boring.",result:"worst"} ]},
+{ text:"Meditation keeps me grounded. What calms you down?", options:[
+{text:"Music and deep breath.",result:"good"},
+{text:"Netflix.",result:"neutral"},
+{text:"Nothing really.",result:"bad"},
+{text:"I don’t calm down.",result:"worst"} ]},
+{ text:"Do you believe balance in life is real?", options:[
+{text:"Yes, I try daily.",result:"good"},
+{text:"Maybe.",result:"neutral"},
+{text:"No way.",result:"bad"},
+{text:"That’s a myth.",result:"worst"} ]}
+],
+Chloe: [
+{ text:"If the lighting’s good, I’ll stop in traffic for a selfie. You too?", options:[
+{text:"Always chasing light.",result:"good"},
+{text:"Only for big moments.",result:"neutral"},
+{text:"No, that’s weird.",result:"bad"},
+{text:"I hate selfies.",result:"worst"} ]},
+{ text:"My PR team’s event tonight’s at SoHo rooftop. Fancy joining?", options:[
+{text:"Sure, sounds fun!",result:"good"},
+{text:"Maybe, if free.",result:"neutral"},
+{text:"Too crowded.",result:"bad"},
+{text:"I hate parties.",result:"worst"} ]},
+{ text:"Do you follow trends or make your own?", options:[
+{text:"I start them.",result:"good"},
+{text:"A bit of both.",result:"neutral"},
+{text:"I ignore them.",result:"bad"},
+{text:"Trends are dumb.",result:"worst"} ]},
+{ text:"I just got a viral post about coffee art! Do you post often?", options:[
+{text:"Sometimes for fun.",result:"good"},
+{text:"Rarely.",result:"neutral"},
+{text:"Never.",result:"bad"},
+{text:"Social media’s fake.",result:"worst"} ]}
+],
+Emily: [
+{ text:"Sometimes the subway at 1am feels more honest than daylight. Ever felt that?", options:[
+{text:"Yes, late nights reveal truth.",result:"good"},
+{text:"Maybe.",result:"neutral"},
+{text:"No, it’s creepy.",result:"bad"},
+{text:"I avoid the subway.",result:"worst"} ]},
+{ text:"I read poetry in small cafés. Do you like poetry?", options:[
+{text:"Yes, deeply.",result:"good"},
+{text:"A little.",result:"neutral"},
+{text:"Not much.",result:"bad"},
+{text:"I hate poems.",result:"worst"} ]},
+{ text:"Do you think people wear masks in this city?", options:[
+{text:"All the time.",result:"good"},
+{text:"Maybe a few.",result:"neutral"},
+{text:"Rarely.",result:"bad"},
+{text:"That’s too dark.",result:"worst"} ]},
+{ text:"I love quiet bookstores more than bars. You?", options:[
+{text:"Bookstores are heaven.",result:"good"},
+{text:"Sometimes.",result:"neutral"},
+{text:"Bars are better.",result:"bad"},
+{text:"I don’t read.",result:"worst"} ]}
+],
+Lily: [
+{ text:"My students made me a paper crown today. Cute, right?", options:[
+{text:"That’s adorable.",result:"good"},
+{text:"Nice.",result:"neutral"},
+{text:"Kids are noisy.",result:"bad"},
+{text:"Sounds boring.",result:"worst"} ]},
+{ text:"Do you talk to strangers’ dogs on the street?", options:[
+{text:"Always!",result:"good"},
+{text:"Sometimes.",result:"neutral"},
+{text:"No.",result:"bad"},
+{text:"Dogs smell.",result:"worst"} ]},
+{ text:"The sunset over Queens tonight was pink. Do you watch sunsets?", options:[
+{text:"Every day if I can.",result:"good"},
+{text:"Sometimes.",result:"neutral"},
+{text:"No time for that.",result:"bad"},
+{text:"Not interested.",result:"worst"} ]},
+{ text:"Do you believe kindness still matters in this city?", options:[
+{text:"Yes, it’s vital.",result:"good"},
+{text:"Maybe.",result:"neutral"},
+{text:"Not really.",result:"bad"},
+{text:"Kindness is weakness.",result:"worst"} ]}
+],
+Madison: [
+{ text:"I live off cold brew and deadlines. How about you?", options:[
+{text:"Same hustle energy.",result:"good"},
+{text:"Sometimes.",result:"neutral"},
+{text:"I hate coffee.",result:"bad"},
+{text:"I avoid work.",result:"worst"} ]},
+{ text:"I’m leading a pitch tomorrow. Confidence or preparation?", options:[
+{text:"Both matter.",result:"good"},
+{text:"Preparation.",result:"neutral"},
+{text:"Confidence.",result:"bad"},
+{text:"Neither.",result:"worst"} ]},
+{ text:"Do you think ambition scares people?", options:[
+{text:"Only the lazy.",result:"good"},
+{text:"Sometimes.",result:"neutral"},
+{text:"Yes, too much.",result:"bad"},
+{text:"Ambition’s useless.",result:"worst"} ]},
+{ text:"How do you unwind after a long workday?", options:[
+{text:"Gym or music.",result:"good"},
+{text:"TV.",result:"neutral"},
+{text:"Sleep instantly.",result:"bad"},
+{text:"I don’t unwind.",result:"worst"} ]}
+],
+Mia: [
+{ text:"Met my best friend because she beat me in a 10K. You run?", options:[
+{text:"Yes, every morning.",result:"good"},
+{text:"Sometimes.",result:"neutral"},
+{text:"No, lazy.",result:"bad"},
+{text:"Running’s dumb.",result:"worst"} ]},
+{ text:"I love competition—it keeps me alive. You competitive?", options:[
+{text:"Very.",result:"good"},
+{text:"Depends.",result:"neutral"},
+{text:"Not really.",result:"bad"},
+{text:"I avoid it.",result:"worst"} ]},
+{ text:"My gym playlist is pure chaos. What’s yours?", options:[
+{text:"Upbeat beats only.",result:"good"},
+{text:"Mixed bag.",result:"neutral"},
+{text:"No music.",result:"bad"},
+{text:"I hate gyms.",result:"worst"} ]},
+{ text:"Do you believe discipline beats motivation?", options:[
+{text:"Always.",result:"good"},
+{text:"Sometimes.",result:"neutral"},
+{text:"No.",result:"bad"},
+{text:"Motivation’s fake.",result:"worst"} ]}
+],
+Olivia: [
+{ text:"Dating in Manhattan’s like a behavioral experiment. Agree?", options:[
+{text:"Totally true.",result:"good"},
+{text:"Sometimes.",result:"neutral"},
+{text:"Not sure.",result:"bad"},
+{text:"That’s weird.",result:"worst"} ]},
+{ text:"I study cognitive bias. Do you think humans act rationally?", options:[
+{text:"Rarely.",result:"good"},
+{text:"Sometimes.",result:"neutral"},
+{text:"Usually.",result:"bad"},
+{text:"Always.",result:"worst"} ]},
+{ text:"Do you analyze people you meet?", options:[
+{text:"Constantly.",result:"good"},
+{text:"Sometimes.",result:"neutral"},
+{text:"No.",result:"bad"},
+{text:"That’s creepy.",result:"worst"} ]},
+{ text:"I find logic comforting. What about you?", options:[
+{text:"Same here.",result:"good"},
+{text:"Depends.",result:"neutral"},
+{text:"Not really.",result:"bad"},
+{text:"Logic’s cold.",result:"worst"} ]}
+],
+Rachel: [
+{ text:"New York at night flirts with you, doesn’t it?", options:[
+{text:"Always does.",result:"good"},
+{text:"Sometimes.",result:"neutral"},
+{text:"Never felt that.",result:"bad"},
+{text:"That’s silly.",result:"worst"} ]},
+{ text:"Movies taught me more than school. You agree?", options:[
+{text:"Totally.",result:"good"},
+{text:"Somewhat.",result:"neutral"},
+{text:"Not really.",result:"bad"},
+{text:"That’s nonsense.",result:"worst"} ]},
+{ text:"Do you believe in fate or coincidence?", options:[
+{text:"Fate.",result:"good"},
+{text:"A bit of both.",result:"neutral"},
+{text:"Coincidence.",result:"bad"},
+{text:"Neither.",result:"worst"} ]},
+{ text:"What’s more powerful—memory or imagination?", options:[
+{text:"Imagination.",result:"good"},
+{text:"Both matter.",result:"neutral"},
+{text:"Memory.",result:"bad"},
+{text:"Neither.",result:"worst"} ]}
+],
+Sarah: [
+{ text:"My night shifts make me love sunrise. Do you like mornings?", options:[
+{text:"Yes, peaceful.",result:"good"},
+{text:"Sometimes.",result:"neutral"},
+{text:"No.",result:"bad"},
+{text:"Mornings are evil.",result:"worst"} ]},
+{ text:"I work in Harlem hospital. Stressful, but worth it.", options:[
+{text:"That’s inspiring.",result:"good"},
+{text:"I see.",result:"neutral"},
+{text:"Sounds tiring.",result:"bad"},
+{text:"I’d quit.",result:"worst"} ]},
+{ text:"What keeps you kind in this city?", options:[
+{text:"Empathy.",result:"good"},
+{text:"Family.",result:"neutral"},
+{text:"Nothing.",result:"bad"},
+{text:"Kindness is fake.",result:"worst"} ]},
+{ text:"Do you believe small acts matter?", options:[
+{text:"Always.",result:"good"},
+{text:"Sometimes.",result:"neutral"},
+{text:"Not really.",result:"bad"},
+{text:"No point.",result:"worst"} ]}
+],
+Zoe: [
+{ text:"The city never sleeps, but I paint after midnight. You a night owl?", options:[
+{text:"Yes, totally.",result:"good"},
+{text:"Sometimes.",result:"neutral"},
+{text:"No, early bird.",result:"bad"},
+{text:"I hate nights.",result:"worst"} ]},
+{ text:"Jazz bars inspire me. Do you like live music?", options:[
+{text:"Love it.",result:"good"},
+{text:"Depends.",result:"neutral"},
+{text:"Not much.",result:"bad"},
+{text:"Too loud.",result:"worst"} ]},
+{ text:"Art is how I breathe. What’s your passion?", options:[
+{text:"Writing.",result:"good"},
+{text:"Music.",result:"neutral"},
+{text:"I don’t know.",result:"bad"},
+{text:"Nothing.",result:"worst"} ]},
+{ text:"Do you think loneliness can be beautiful?", options:[
+{text:"Yes, deeply.",result:"good"},
+{text:"Maybe.",result:"neutral"},
+{text:"Not really.",result:"bad"},
+{text:"That’s sad.",result:"worst"} ]}
+]
+};
+
+// ❤️更新
+function updateHearts(){ heartDisplay.textContent = "❤️".repeat(Math.max(0, hearts)); }
+
+// 🔊ボイス準備
+function loadVoices(){
+  voices = speechSynthesis.getVoices().filter(v => v.lang.startsWith("en") && v.name.match(/Female|Samantha|Victoria|Karen|Moira|Zira/i));
+}
+
+// 🔊発話（キャラごとに声の個性）
+function speak(text, persona){
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "en-US";
+
+  const voice = voices.length ? voices[Math.floor(Math.random()*voices.length)] : null;
+  utter.voice = voice;
+
+  const settings = {
+    Ava: { pitch: 1.2, rate: 1.0 },
+    Chloe: { pitch: 1.4, rate: 1.1 },
+    Emily: { pitch: 1.0, rate: 0.95 },
+    Lily: { pitch: 1.3, rate: 1.05 },
+    Madison: { pitch: 1.1, rate: 1.0 },
+    Mia: { pitch: 1.35, rate: 1.1 },
+    Olivia: { pitch: 1.0, rate: 0.9 },
+    Rachel: { pitch: 1.15, rate: 1.0 },
+    Sarah: { pitch: 1.05, rate: 0.95 },
+    Zoe: { pitch: 1.25, rate: 1.05 }
+  };
+
+  const s = settings[persona] || { pitch: 1.1, rate: 1.0 };
+  utter.pitch = s.pitch;
+  utter.rate = s.rate;
+
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utter);
+}
+
+// 💬会話表示
+function showConversation(){
+  currentPersona = femaleImgs[Math.floor(Math.random()*femaleImgs.length)];
+  femaleEl.src = `images/${currentPersona}.png`;
+
+  const convSet = dialogueData[currentPersona];
+  const conv = convSet[Math.floor(Math.random()*convSet.length)];
+
+  dialogue.textContent = conv.text;
+  dialogue.style.display = "block";
+  speak(conv.text, currentPersona);
+
+  choices.innerHTML = "";
+  conv.options.forEach(opt=>{
+    const btn=document.createElement("div");
+    btn.className="choice";
+    btn.textContent=opt.text;
+    btn.onclick=    btn.onclick=()=>{
+      maleSpeech.textContent=opt.text;
+      maleSpeech.style.display="block";
+      choices.style.display="none";
+
+      if(opt.result==="good"){
+        hearts++;
+        showPopup("❤️ She smiles!");
+      }
+      else if(opt.result==="neutral"){
+        showPopup("😐 She nods.");
+      }
+      else if(opt.result==="bad"){
+        hearts--;
+        showPopup("💢 She frowns.");
+      }
+      else{
+        hearts -= 2;
+        showPopup("💔 She walks away.");
+      }
+
+      updateHearts();
+    };
+    choices.appendChild(btn);
+  });
+  choices.style.display="block";
+}
+
+// 🎁ポップアップ表示
+function showPopup(text){
+  popup.textContent = text;
+  popup.style.display = "block";
+  setTimeout(()=>{
+    popup.style.display = "none";
+    if(hearts <= 0) gameOver();
+    else if(hearts >= 10) gameClear();
+    else showConversation();
+  },1600);
+}
+
+// 💔ゲームオーバー
+function gameOver(){
+  dialogue.textContent = "She lost interest... 💔";
+  popup.textContent = "💔 Game Over 💔";
+  popup.style.display = "block";
+  hearts = 0;
+  updateHearts();
+  setTimeout(()=>{ location.reload(); }, 2500);
+}
+
+// 💖ゲームクリア
+function gameClear(){
+  dialogue.textContent = "She’s impressed by you. 💖";
+  popup.textContent = "💖 You won her heart! 💖";
+  popup.style.display = "block";
+  setTimeout(()=>{ location.reload(); }, 2500);
+}
+
+// ▶️ゲーム開始
+document.getElementById("start-btn").onclick = ()=>{
+  document.getElementById("start-screen").style.display = "none";
+  document.getElementById("game").style.display = "block";
+  loadVoices();
+  showConversation();
+};
+
+window.speechSynthesis.onvoiceschanged = loadVoices;
+</script>
+</body>
+</html>
+

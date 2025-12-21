@@ -1,0 +1,979 @@
+/* ========== リセット ========== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Hiragino Kaku Gothic ProN', 'メイリオ', 'Yu Gothic', sans-serif;
+  background: #000;
+  color: #fff;
+}
+
+/* ========== 画面共通 ========== */
+.screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.screen.active {
+  display: flex;
+  opacity: 1;
+}
+
+/* ========== ローディング画面 ========== */
+#loading-screen {
+  background: linear-gradient(135deg, #000000 0%, #1a0a0a 100%);
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-content {
+  text-align: center;
+  padding: 20px;
+}
+
+.game-title {
+  font-size: 3.5rem;
+  margin-bottom: 10px;
+  text-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+  letter-spacing: 0.2em;
+}
+
+.game-subtitle {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #aaa;
+  letter-spacing: 0.3em;
+}
+
+.version-tag {
+  font-size: 1rem;
+  color: #ff6b6b;
+  margin-bottom: 30px;
+}
+
+.loading-bar {
+  width: 300px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+  margin: 0 auto 20px;
+}
+
+.loading-progress {
+  height: 100%;
+  background: linear-gradient(90deg, #ff0000, #ff6b6b);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.loading-text {
+  font-size: 1.2rem;
+  color: #888;
+}
+
+/* ========== タイトル画面 ========== */
+#title-screen {
+  background: linear-gradient(135deg, #0a0a1a 0%, #1a0a0a 100%);
+  justify-content: center;
+  align-items: center;
+  overflow-y: auto;
+}
+
+.title-content {
+  text-align: center;
+  padding: 20px;
+  max-width: 700px;
+}
+
+.glitch-text {
+  animation: glitch 3s infinite;
+}
+
+@keyframes glitch {
+  0%, 90%, 100% {
+      transform: translate(0);
+      text-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+  }
+  92% {
+      transform: translate(-2px, 2px);
+      text-shadow: 2px 0 rgba(255, 0, 0, 0.8), -2px 0 rgba(0, 255, 255, 0.8);
+  }
+  94% {
+      transform: translate(2px, -2px);
+      text-shadow: -2px 0 rgba(255, 0, 0, 0.8), 2px 0 rgba(0, 255, 255, 0.8);
+  }
+  96% {
+      transform: translate(-2px, -2px);
+  }
+}
+
+.new-features {
+  margin: 20px 0;
+  padding: 15px;
+  background: rgba(255, 107, 107, 0.1);
+  border: 2px solid rgba(255, 107, 107, 0.3);
+  border-radius: 10px;
+}
+
+.new-tag {
+  font-size: 1.2rem;
+  color: #ff6b6b;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.story-text {
+  margin: 30px 0;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.story-text p {
+  margin: 10px 0;
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+.controls-info {
+  margin-top: 30px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.controls-info p {
+  margin: 5px 0;
+}
+
+/* ========== ボタン ========== */
+.btn {
+  padding: 15px 40px;
+  font-size: 1.1rem;
+  background: linear-gradient(135deg, #8b0000, #ff0000);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 0, 0, 0.4);
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  margin: 10px;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 0, 0, 0.6);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-large {
+  font-size: 1.3rem;
+  padding: 20px 50px;
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #333, #555);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.btn-secondary:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+}
+
+/* ========== ステージ選択画面 ========== */
+#stage-select-screen {
+  background: linear-gradient(135deg, #0a0a1a 0%, #1a0a0a 100%);
+  justify-content: center;
+  align-items: center;
+  overflow-y: auto;
+}
+
+.stage-select-content {
+  text-align: center;
+  padding: 20px;
+  width: 100%;
+  max-width: 1400px;
+}
+
+.screen-title {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  text-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+}
+
+.player-stats {
+  font-size: 1.3rem;
+  margin-bottom: 20px;
+  color: #ffd700;
+}
+
+.stages-container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+
+.stage-card {
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid rgba(255, 0, 0, 0.3);
+  border-radius: 15px;
+  padding: 25px 20px;
+  width: 260px;
+  transition: all 0.3s ease;
+}
+
+.stage-card:hover {
+  border-color: rgba(255, 0, 0, 0.8);
+  box-shadow: 0 0 30px rgba(255, 0, 0, 0.3);
+  transform: translateY(-5px);
+}
+
+.stage-icon {
+  font-size: 3.5rem;
+  margin-bottom: 15px;
+}
+
+.stage-card h3 {
+  font-size: 1.3rem;
+  margin-bottom: 10px;
+  color: #ff6b6b;
+}
+
+.stage-name {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.stage-desc {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #aaa;
+  margin-bottom: 10px;
+  min-height: 45px;
+}
+
+.stage-danger {
+  font-size: 0.95rem;
+  color: #ff9800;
+  margin-bottom: 15px;
+}
+
+.stage-btn {
+  font-size: 1rem;
+  padding: 12px 30px;
+}
+
+.stage-status {
+  margin-top: 15px;
+  font-size: 1.5rem;
+}
+
+.stage-status.cleared::after {
+  content: '✓ クリア済み';
+  color: #4caf50;
+  font-size: 1rem;
+}
+
+/* ========== ゲーム画面 ========== */
+#game-screen {
+  display: block;
+}
+
+#game-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+#game-ui {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100;
+}
+
+#game-ui > * {
+  pointer-events: auto;
+}
+
+/* 上部UI */
+.ui-top {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+  pointer-events: none;
+}
+
+.stage-info, .objective {
+  background: rgba(0, 0, 0, 0.7);
+  padding: 10px 20px;
+  border-radius: 25px;
+  border: 2px solid rgba(255, 0, 0, 0.3);
+  font-size: 1.1rem;
+}
+
+/* HPバー */
+.hp-container {
+  position: absolute;
+  top: 80px;
+  left: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 10px 15px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 0, 0, 0.5);
+  min-width: 250px;
+}
+
+.hp-label {
+  font-size: 1rem;
+  margin-bottom: 5px;
+}
+
+.hp-bar {
+  width: 100%;
+  height: 25px;
+  background: rgba(100, 0, 0, 0.5);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.hp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff0000, #ff6b6b);
+  width: 100%;
+  transition: width 0.3s ease;
+}
+
+.hp-text {
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* アイテムスロット */
+.item-slots {
+  position: absolute;
+  top: 190px;
+  left: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.item-slot {
+  width: 70px;
+  height: 70px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.item-icon {
+  font-size: 2rem;
+}
+
+.item-count {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background: rgba(255, 0, 0, 0.8);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+/* アイテム使用ボタン */
+.item-buttons {
+  position: absolute;
+  top: 270px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.btn-item {
+  padding: 8px 15px;
+  font-size: 0.9rem;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.btn-item:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ミニマップ */
+.minimap {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 10px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+#minimap-canvas {
+  display: block;
+}
+/* 恐怖演出オーバーレイ */
+.fear-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0);
+  transition: background 0.3s ease;
+  pointer-events: none;
+}
+
+.fear-overlay.flash-red {
+  background: rgba(255, 0, 0, 0.3);
+  animation: flash 0.5s;
+}
+
+@keyframes flash {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+.fear-overlay.shake {
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0); }
+  10%, 30%, 50%, 70%, 90% { transform: translate(-5px, 5px); }
+  20%, 40%, 60%, 80% { transform: translate(5px, -5px); }
+}
+
+/* ダメージオーバーレイ */
+.damage-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 0, 0, 0);
+  pointer-events: none;
+  transition: background 0.1s ease;
+}
+
+.damage-overlay.hit {
+  background: rgba(255, 0, 0, 0.5);
+  animation: damage-flash 0.3s;
+}
+
+@keyframes damage-flash {
+  0%, 100% { background: rgba(255, 0, 0, 0); }
+  50% { background: rgba(255, 0, 0, 0.5); }
+}
+
+/* ジャンプスケア */
+.jumpscare {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  font-size: 10rem;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.jumpscare.active {
+  display: flex;
+  animation: jumpscare-anim 0.5s;
+}
+
+@keyframes jumpscare-anim {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* メッセージ表示 */
+.message-display {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  padding: 15px 30px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 0, 0, 0.5);
+  font-size: 1.2rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  max-width: 80%;
+  text-align: center;
+  z-index: 200;
+}
+
+.message-display.show {
+  opacity: 1;
+}
+
+/* アイテムピックアッププロンプト */
+.pickup-prompt {
+  position: absolute;
+  bottom: 180px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 0, 0.9);
+  color: #000;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.pickup-prompt.show {
+  opacity: 1;
+}
+
+/* バーチャルジョイスティック */
+.virtual-joystick {
+  display: none;
+  position: absolute;
+  bottom: 30px;
+  left: 30px;
+}
+
+.joystick-base {
+  width: 120px;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  position: relative;
+}
+
+.joystick-stick {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 0, 0, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.1s ease;
+}
+
+/* ポーズメニュー */
+.pause-menu {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.95);
+  padding: 40px;
+  border-radius: 20px;
+  border: 2px solid rgba(255, 0, 0, 0.5);
+  text-align: center;
+  display: none;
+  z-index: 300;
+}
+
+.pause-menu.active {
+  display: block;
+}
+
+.pause-menu h3 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #ff6b6b;
+}
+
+.pause-stats {
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+  text-align: left;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.pause-stats p {
+  margin: 5px 0;
+}
+
+.pause-menu .btn {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+}
+
+/* ========== ゲームオーバー画面 ========== */
+#gameover-screen {
+  background: linear-gradient(135deg, #1a0000 0%, #000000 100%);
+  justify-content: center;
+  align-items: center;
+}
+
+.gameover-content {
+  text-align: center;
+  padding: 20px;
+}
+
+.gameover-title {
+  font-size: 4rem;
+  color: #ff0000;
+  margin-bottom: 30px;
+  text-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+.gameover-icon {
+  font-size: 8rem;
+  margin: 30px 0;
+}
+
+.gameover-text {
+  font-size: 1.5rem;
+  margin-bottom: 40px;
+  color: #ccc;
+}
+
+.gameover-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+/* ========== クリア画面 ========== */
+#clear-screen {
+  background: linear-gradient(135deg, #0a1a0a 0%, #0a0a1a 100%);
+  justify-content: center;
+  align-items: center;
+}
+
+.clear-content {
+  text-align: center;
+  padding: 20px;
+}
+
+.clear-title {
+  font-size: 3rem;
+  margin-bottom: 30px;
+  color: #4caf50;
+  text-shadow: 0 0 30px rgba(76, 175, 80, 0.8);
+  animation: pulse 2s infinite;
+}
+
+.star-get {
+  font-size: 8rem;
+  margin: 30px 0;
+  animation: star-spin 3s ease-in-out infinite;
+}
+
+@keyframes star-spin {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.2); }
+}
+
+.clear-message {
+  font-size: 1.5rem;
+  margin: 20px 0;
+  line-height: 1.8;
+}
+
+.clear-stats {
+  margin: 20px 0;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  font-size: 1.2rem;
+}
+
+.clear-stats p {
+  margin: 10px 0;
+}
+
+.clear-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+/* ========== エンディング画面 ========== */
+#ending-screen {
+  background: linear-gradient(135deg, #000814 0%, #001d3d 100%);
+  justify-content: center;
+  align-items: center;
+  overflow-y: auto;
+}
+
+.ending-content {
+  text-align: center;
+  padding: 40px 20px;
+  max-width: 800px;
+}
+
+.ending-title {
+  font-size: 3rem;
+  margin-bottom: 30px;
+  background: linear-gradient(90deg, #ffd700, #ffed4e, #ffd700);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 3s infinite;
+}
+
+@keyframes shine {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.5); }
+}
+
+.stars-collected {
+  font-size: 5rem;
+  margin: 30px 0;
+}
+
+.star-icon {
+  display: inline-block;
+  animation: star-float 2s ease-in-out infinite;
+  margin: 0 10px;
+}
+
+.star-icon:nth-child(1) { animation-delay: 0s; }
+.star-icon:nth-child(2) { animation-delay: 0.3s; }
+.star-icon:nth-child(3) { animation-delay: 0.6s; }
+.star-icon:nth-child(4) { animation-delay: 0.9s; }
+
+@keyframes star-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.ending-story {
+  margin: 40px 0;
+  padding: 30px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+}
+
+.ending-story p {
+  font-size: 1.3rem;
+  line-height: 2;
+  margin: 15px 0;
+}
+
+.ending-thanks {
+  font-size: 2rem !important;
+  margin-top: 40px !important;
+  color: #ffd700;
+}
+
+/* ========== スマホ対応 ========== */
+@media (max-width: 768px) {
+  .game-title {
+      font-size: 2.5rem;
+  }
+
+  .game-subtitle {
+      font-size: 1.2rem;
+  }
+
+  .version-tag {
+      font-size: 0.9rem;
+  }
+
+  .story-text p {
+      font-size: 1rem;
+  }
+
+  .screen-title {
+      font-size: 2rem;
+  }
+
+  .stages-container {
+      flex-direction: column;
+      align-items: center;
+  }
+
+  .stage-card {
+      width: 90%;
+      max-width: 350px;
+  }
+
+  .ui-top {
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+  }
+
+  .stage-info, .objective {
+      font-size: 0.9rem;
+      padding: 8px 15px;
+  }
+
+  .hp-container {
+      min-width: 200px;
+      top: 90px;
+      left: 10px;
+  }
+
+  .item-slots {
+      top: 200px;
+      left: 10px;
+  }
+
+  .item-slot {
+      width: 60px;
+      height: 60px;
+  }
+
+  .item-icon {
+      font-size: 1.5rem;
+  }
+
+  .item-buttons {
+      top: 270px;
+      left: 10px;
+  }
+
+  .minimap {
+      bottom: 170px;
+      right: 10px;
+  }
+
+  #minimap-canvas {
+      width: 120px;
+      height: 120px;
+  }
+
+  .virtual-joystick {
+      display: block;
+  }
+
+  .clear-title, .gameover-title {
+      font-size: 2rem;
+  }
+
+  .star-get, .gameover-icon {
+      font-size: 5rem;
+  }
+
+  .ending-title {
+      font-size: 2rem;
+  }
+
+  .ending-story p {
+      font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-title {
+      font-size: 2rem;
+  }
+
+  .btn {
+      font-size: 1rem;
+      padding: 12px 30px;
+  }
+
+  .btn-large {
+      font-size: 1.1rem;
+      padding: 15px 35px;
+  }
+
+  .controls-info {
+      font-size: 0.8rem;
+  }
+
+  .pause-menu {
+      width: 90%;
+      padding: 30px 20px;
+  }
+
+  .message-display {
+      font-size: 1rem;
+      padding: 12px 20px;
+      bottom: 100px;
+  }
+
+  .hp-container {
+      font-size: 0.9rem;
+  }
+
+  .item-slot {
+      width: 50px;
+      height: 50px;
+  }
+
+  .item-icon {
+      font-size: 1.3rem;
+  }
+
+  .btn-item {
+      font-size: 0.8rem;
+      padding: 6px 12px;
+  }
+}

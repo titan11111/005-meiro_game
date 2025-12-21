@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>タイマーゲーム</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      max-width: 500px;
+      width: 100%;
+    }
+
+    h1 {
+      color: #2d3436;
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .timer-display {
+      font-size: 5rem;
+      font-weight: bold;
+      color: #667eea;
+      margin: 30px 0;
+      font-family: 'Courier New', monospace;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .timer-display.warning {
+      color: #e17055;
+      animation: pulse 0.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.1);
+      }
+    }
+
+    .timer-display.finished {
+      color: #00b894;
+      font-size: 6rem;
+    }
+
+    .message {
+      font-size: 1.5rem;
+      color: #636e72;
+      margin: 20px 0;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .controls {
+      margin-top: 30px;
+    }
+
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      border-radius: 50px;
+      cursor: pointer;
+      margin: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #e0e0e0;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 20px 0;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      width: 100%;
+      transition: width 0.1s linear;
+      border-radius: 10px;
+    }
+
+    .progress-fill.warning {
+      background: linear-gradient(90deg, #fdcb6e 0%, #e17055 100%);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>タイマー</h1>
+    <div class="timer-display" id="timerDisplay">30</div>
+    <div class="message" id="message">自動的にタイマーが開始されます</div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="controls">
+      <button id="startBtn" onclick="startTimer()">開始</button>
+      <button id="resetBtn" onclick="resetTimer()">リセット</button>
+    </div>
+  </div>
+
+  <script>
+    let timerInterval = null;
+    let timeLeft = 30;
+    let isRunning = false;
+
+    const timerDisplay = document.getElementById('timerDisplay');
+    const message = document.getElementById('message');
+    const progressFill = document.getElementById('progressFill');
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    function updateDisplay() {
+      timerDisplay.textContent = timeLeft;
+      const progress = ((30 - timeLeft) / 30) * 100;
+      progressFill.style.width = progress + '%';
+
+      if (timeLeft <= 10) {
+        timerDisplay.classList.add('warning');
+        progressFill.classList.add('warning');
+        message.textContent = `残り${timeLeft}秒！`;
+      } else {
+        timerDisplay.classList.remove('warning');
+        progressFill.classList.remove('warning');
+        message.textContent = 'タイマー稼働中';
+      }
+
+      if (timeLeft === 0) {
+        timerDisplay.classList.remove('warning');
+        timerDisplay.classList.add('finished');
+        message.textContent = '時間です！';
+        message.style.color = '#00b894';
+        message.style.fontWeight = 'bold';
+        progressFill.style.background = 'linear-gradient(90deg, #00b894 0%, #00cec9 100%)';
+      }
+    }
+
+    function startTimer() {
+      if (isRunning) return;
+      
+      isRunning = true;
+      startBtn.disabled = true;
+      message.textContent = 'タイマー稼働中';
+      message.style.color = '#636e72';
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateDisplay();
+
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          isRunning = false;
+          startBtn.disabled = false;
+          // 終了音を鳴らす（オプション）
+          playFinishSound();
+        }
+      }, 1000);
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timeLeft = 30;
+      isRunning = false;
+      startBtn.disabled = false;
+      timerDisplay.classList.remove('warning', 'finished');
+      progressFill.classList.remove('warning');
+      progressFill.style.background = 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)';
+      message.textContent = 'リセットしました';
+      message.style.color = '#636e72';
+      message.style.fontWeight = 'normal';
+      updateDisplay();
+    }
+
+    function playFinishSound() {
+      // 簡易的なビープ音（オプション）
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    }
+
+    // ページ読み込み時に自動的にタイマーを開始
+    window.addEventListener('DOMContentLoaded', () => {
+      updateDisplay();
+      // 少し遅延させて視覚的にわかりやすくする
+      setTimeout(() => {
+        startTimer();
+      }, 500);
+    });
+  </script>
+</body>
+</html>
+

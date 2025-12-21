@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>市長シミュレーター：完全版</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+        :root {
+            --bg-color: #1a1a1a;
+            --container-bg: #2c3e50;
+            --text-color: #ecf0f1;
+            --accent-color: #3498db;
+            --border-color: #7f8c8d;
+            --crt-green: #33ff33;
+            --crt-bg: #0d1a0d;
+        }
+
+        * { box-sizing: border-box; touch-action: manipulation; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'DotGothic16', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+            padding: 0;
+        }
+
+        .game-container {
+            background-color: var(--container-bg);
+            width: 100%;
+            max-width: 600px;
+            height: 100dvh;
+            max-height: 800px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            padding: 10px;
+        }
+
+        @media (min-width: 601px) {
+            .game-container {
+                height: 95vh;
+                border: 4px solid var(--border-color);
+                box-shadow: 8px 8px 0px #000;
+                border-radius: 4px;
+            }
+        }
+
+        /* --- スタート画面 --- */
+        .start-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(44, 62, 80, 0.98);
+            z-index: 300;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            color: white;
+        }
+        
+        .start-btn {
+            background: #e74c3c;
+            color: #fff;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-family: 'DotGothic16', sans-serif;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+            cursor: pointer;
+            margin-top: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* --- ニュースティッカー --- */
+        .news-ticker-container {
+            background-color: #000;
+            color: #f1c40f;
+            padding: 4px 0;
+            border-top: 2px solid #f39c12;
+            border-bottom: 2px solid #f39c12;
+            overflow: hidden;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .news-ticker-content {
+            display: inline-block;
+            padding-left: 100%;
+            animation: ticker 15s linear infinite;
+        }
+        @keyframes ticker {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+
+        /* --- ヘッダー --- */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px dashed var(--border-color);
+            padding-bottom: 5px;
+            flex-shrink: 0;
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        
+        .mayor-icon {
+            width: 36px; height: 36px;
+            border: 2px solid #fff; border-radius: 50%;
+            background-color: #000;
+            object-fit: cover;
+        }
+
+        h1 { margin: 0; font-size: 1.1rem; letter-spacing: 1px; }
+
+        .turn-badge {
+            background-color: #e67e22;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .bgm-btn {
+            background: none; border: none; font-size: 1.2rem; cursor: pointer;
+            position: absolute; top: 12px; right: 10px; z-index: 20;
+        }
+
+        /* --- ステータスバー --- */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            background: #222;
+            padding: 6px;
+            border: 2px solid #7f8c8d;
+            flex-shrink: 0;
+        }
+        .stat-box { text-align: center; flex: 1; border-right: 1px solid #444; }
+        .stat-box:last-child { border-right: none; }
+        .stat-label { font-size: 0.65em; color: #aaa; margin-bottom: 1px; }
+        .stat-value { font-size: 1.1em; font-weight: bold; color: #fff; }
+
+        /* --- CRT ログ画面 --- */
+        .screen-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            border: 4px inset #555;
+            background-color: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .screen {
+            background-color: var(--crt-bg);
+            color: var(--crt-green);
+            padding: 15px;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            font-family: 'VT323', 'Courier New', monospace;
+            text-shadow: 0 0 2px rgba(51, 255, 51, 0.7);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .screen::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .screen::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: rgba(18, 16, 16, 0.1);
+            opacity: 0;
+            z-index: 2;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.02; }
+            50% { opacity: 0.05; }
+            100% { opacity: 0.02; }
+        }
+
+        .screen p { margin: 0 0 8px 0; border-bottom: 1px solid #1a331a; padding-bottom: 2px; position: relative; z-index: 1;}
+        .screen p::before { content: "> "; color: #1a1; }
+
+        .cursor {
+            display: inline-block;
+            width: 0.6em;
+            height: 1em;
+            background-color: var(--crt-green);
+            vertical-align: text-bottom;
+            animation: blink 1s step-end infinite;
+            margin-left: 2px;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* --- 操作ボタン --- */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-shrink: 0;
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+
+        button.choice-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-bottom: 3px solid #2980b9;
+            padding: 12px 10px;
+            font-family: 'DotGothic16', sans-serif;
+            font-size: 0.95rem;
+            cursor: pointer;
+            text-align: left;
+            border-radius: 4px;
+            line-height: 1.2;
+            transition: all 0.1s;
+        }
+
+        button.choice-btn:active {
+            border-bottom: 1px solid #2980b9;
+            transform: translateY(2px);
+            margin-bottom: 2px;
+        }
+
+        .btn-subtext {
+            font-size: 0.8em; color: #dbeeff; float: right; opacity: 0.9; margin-left: 5px;
+            background: rgba(0,0,0,0.2); padding: 2px 4px; border-radius: 4px;
+        }
+
+        @media (max-height: 700px) {
+            button.choice-btn { padding: 10px 8px; font-size: 0.85rem; }
+            .header-left h1 { font-size: 0.9rem; }
+            .screen { padding: 10px; }
+            .news-ticker-container { font-size: 0.75rem; }
+        }
+        
+        @media (max-height: 600px) {
+            button.choice-btn { padding: 8px 6px; }
+            .stat-value { font-size: 1rem; }
+        }
+
+        /* --- SNS画面 / エンディング --- */
+        .overlay, .ending-modal {
+            display: none;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 100;
+            justify-content: center; align-items: center;
+            backdrop-filter: blur(2px);
+            padding: 15px;
+        }
+        .ending-modal { z-index: 200; position: fixed; }
+
+        .sns-window {
+            background-color: #fff; color: #333;
+            width: 100%; height: 100%;
+            max-height: 500px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 4px solid #3498db;
+            display: flex; flex-direction: column;
+        }
+        .sns-header {
+            background-color: #3498db; color: white; padding: 10px;
+            text-align: center; font-weight: bold; flex-shrink: 0;
+        }
+        .sns-feed {
+            padding: 10px; background-color: #f0f2f5; overflow-y: auto; flex: 1;
+        }
+        .tweet {
+            background: white; padding: 10px; margin-bottom: 10px;
+            border-radius: 8px; border: 1px solid #ddd; display: flex; gap: 10px;
+        }
+        .avatar {
+            width: 40px; height: 40px; min-width: 40px;
+            background-color: #ecf0f1; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; font-size: 20px;
+        }
+        .tweet-content { flex: 1; }
+        .user-name { font-weight: bold; font-size: 0.9em; margin-bottom: 2px; }
+        .tweet-text { font-size: 0.9em; line-height: 1.4; }
+        .likes { color: #e74c3c; font-size: 0.8em; margin-top: 5px; text-align: right; font-weight: bold; }
+        .sns-close-btn {
+            width: 100%; background-color: #2ecc71; color: white; border: none;
+            border-bottom: 5px solid #27ae60; padding: 15px;
+            font-family: 'DotGothic16', sans-serif; font-size: 1.1em;
+            cursor: pointer; flex-shrink: 0;
+        }
+        .ending-content {
+            background: #fff; color: #333; padding: 30px 20px;
+            border: 6px solid #f1c40f; width: 100%; max-width: 500px;
+            box-shadow: 0 0 30px #f1c40f; border-radius: 8px; text-align: center;
+        }
+        .ending-title { font-size: 2em; margin-bottom: 15px; color: #d35400; font-weight: bold; }
+        .restart-btn {
+            margin-top:20px; padding:15px 30px; background:#e74c3c;
+            color:white; border:none; font-size:1.1em; cursor:pointer;
+            width: 100%; border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <div class="start-overlay" id="start-overlay">
+        <h1 style="font-size: 2em; margin-bottom: 10px;">市長シミュレーター</h1>
+        <p style="opacity: 0.8; font-size: 0.9em;">サウンドあり</p>
+        <button class="start-btn" onclick="startGameWithAudio()">TAP TO START</button>
+    </div>
+
+    <div class="news-ticker-container">
+        <div class="news-ticker-content" id="news-ticker">BREAKING NEWS: 新市長が就任、今後の都市計画に注目が集まっています...</div>
+    </div>
+
+    <header>
+        <div class="header-left">
+            <img src="images/character.png" alt="市長" class="mayor-icon" onerror="this.style.display='none'">
+            <h1>市長シミュレーター</h1>
+        </div>
+        <div class="turn-badge" id="turn-display">YEAR 1 / 20</div>
+    </header>
+
+    <button class="bgm-btn" id="bgm-btn" onclick="toggleBGM()">🔊</button>
+
+    <div class="status-bar">
+        <div class="stat-box">
+            <div class="stat-label">ECONOMY</div>
+            <div class="stat-label">💰 経済</div>
+            <div id="stat-eco" class="stat-value">10</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">NATURE</div>
+            <div class="stat-label">🌿 自然</div>
+            <div id="stat-nature" class="stat-value">10</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">CULTURE</div>
+            <div class="stat-label">🎨 文化</div>
+            <div id="stat-culture" class="stat-value">10</div>
+        </div>
+    </div>
+
+    <div class="screen-container">
+        <div class="screen" id="log-screen"></div>
+    </div>
+
+    <div class="controls" id="controls"></div>
+
+    <div class="overlay" id="sns-overlay">
+        <div class="sns-window">
+            <div class="sns-header">📱 市民のトレンド</div>
+            <div class="sns-feed" id="sns-feed"></div>
+            <button class="sns-close-btn" onclick="closeSnsAndProceed()">決定して次の年へ ▶</button>
+        </div>
+    </div>
+</div>
+
+<div class="ending-modal" id="ending-modal">
+    <div class="ending-content">
+        <div class="ending-rank">FINAL RESULT</div>
+        <h2 class="ending-title" id="ending-title">???</h2>
+        <p id="ending-desc">...</p>
+        <div style="margin-top:20px; font-size:0.9em; color:#666;" id="ending-stats-summary"></div>
+        <button class="restart-btn" onclick="initGame()">RESTART</button>
+    </div>
+</div>
+
+<script>
+    /* * --- Audio System --- */
+    const bgm = new Audio('Neon Reverie.mp3'); 
+    bgm.loop = true;
+    bgm.volume = 0.4;
+    let isMuted = false;
+
+    function startGameWithAudio() {
+        const overlay = document.getElementById('start-overlay');
+        bgm.play().then(() => {
+            console.log("BGM再生成功");
+        }).catch(error => {
+            console.log("BGM再生エラー:", error);
+        });
+
+        overlay.style.transition = 'opacity 0.5s';
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 500);
+
+        initGame();
+    }
+
+    function toggleBGM() {
+        const btn = document.getElementById('bgm-btn');
+        if (isMuted) {
+            bgm.volume = 0.4;
+            btn.innerText = "🔊";
+            isMuted = false;
+        } else {
+            bgm.volume = 0;
+            btn.innerText = "🔇";
+            isMuted = true;
+        }
+    }
+
+    /* * --- Typewriter Logic --- */
+    let typeQueue = [];
+    let isTyping = false;
+    let currentCursor = null;
+
+    function typeText(element, text, speed = 20) {
+        return new Promise(resolve => {
+            let i = 0;
+            element.innerHTML = "";
+            currentCursor = document.createElement("span");
+            currentCursor.className = "cursor";
+            element.appendChild(currentCursor);
+
+            function type() {
+                if (i < text.length) {
+                    const charSpan = document.createElement("span");
+                    charSpan.innerText = text.charAt(i);
+                    element.insertBefore(charSpan, currentCursor);
+                    i++;
+                    scrollToBottom();
+                    setTimeout(type, speed);
+                } else {
+                    resolve();
+                }
+            }
+            type();
+        });
+    }
+
+    function log(msg) {
+        typeQueue.push(msg);
+        processQueue();
+    }
+
+    async function processQueue() {
+        if (isTyping || typeQueue.length === 0) return;
+        isTyping = true;
+
+        const msg = typeQueue.shift();
+        const screen = document.getElementById('log-screen');
+        const oldCursors = screen.querySelectorAll('.cursor');
+        oldCursors.forEach(c => c.remove());
+
+        const p = document.createElement('p');
+        screen.appendChild(p);
+
+        await typeText(p, msg);
+
+        isTyping = false;
+        if (typeQueue.length > 0) {
+            processQueue();
+        }
+    }
+
+    /* * --- Game Logic (20 Years / 20 Events) --- */
+
+    let gameState = {
+        turn: 1,
+        maxTurns: 20,
+        stats: { eco: 10, nature: 10, culture: 10 }
+    };
+
+    let pendingChoice = null;
+
+    const events = [
+        {
+            id: 1,
+            text: "駅前の大規模再開発計画が浮上しています。",
+            news: "駅前一等地の再開発案、まもなく決定か",
+            choices: [
+                { label: "巨大ショッピングモール", tags: "経済↑ 自然↓", effect: { eco: 6, nature: -4, culture: 0 }, log: "巨大モール建設により、地価が高騰した。", voices: [{ name: "JK_Mika", text: "タスバ入るってマジ！？神すぎ🥤", icon: "👧" }, { name: "商店街会長", text: "黒船来襲だ...我々の店はどうなる。", icon: "👴" }, { name: "野鳥観察会", text: "あの森は渡り鳥の休憩地だったのに...", icon: "🐦" }] },
+                { label: "緑地公園と市民広場", tags: "自然↑ 経済↓", effect: { eco: -2, nature: 5, culture: 2 }, log: "緑豊かな公園が市民のオアシスとなった。", voices: [{ name: "子育てママ", text: "子供を遊ばせる場所が欲しかったの！🌸", icon: "👩" }, { name: "社畜", text: "昼休みに芝生で寝れる。最高。", icon: "👔" }, { name: "不動産王", text: "一等地を公園にするとは、正気か？", icon: "💰" }] },
+                { label: "現代美術館と劇場", tags: "文化↑ 経済↓", effect: { eco: -1, nature: -1, culture: 6 }, log: "前衛的な美術館がオープンし話題に。", voices: [{ name: "美大生", text: "やっとこの街にも文化の風が吹いた🎨", icon: "🎨" }, { name: "観光客", text: "映えスポット発見！#CityArt", icon: "📸" }, { name: "納税者", text: "そんな箱物より道路直してくれよ💢", icon: "🚗" }] }
+            ]
+        },
+        {
+            id: 2,
+            text: "シリコンバレーからIT企業の誘致打診。",
+            news: "世界的IT企業、当市への進出を検討中",
+            choices: [
+                { label: "税制優遇で全面誘致", tags: "経済↑↑ 文化↓", effect: { eco: 8, nature: -2, culture: -3 }, log: "ガラス張りのビル群が空を覆った。", voices: [{ name: "Tech_Bro", text: "ここを第二のシリコンバレーにするぜ🚀", icon: "💻" }, { name: "古参住民", text: "横文字ばかりで、もはや別の街だ...", icon: "👵" }, { name: "投資家Z", text: "株価爆上がりｗ 買い占め正解。", icon: "📈" }] },
+                { label: "環境配慮型オフィスのみ", tags: "自然↑ 経済↑", effect: { eco: 3, nature: 3, culture: 0 }, log: "森と調和したエコなオフィスが完成。", voices: [{ name: "LOHAS", text: "屋上庭園のあるオフィス、素敵ですね🌿", icon: "🥗" }, { name: "外資系CEO", text: "規制がうるさい街だが、ブランドにはなる。", icon: "🕴️" }] },
+                { label: "断固拒否し、伝統を守る", tags: "文化↑ 経済↓", effect: { eco: -3, nature: 1, culture: 7 }, log: "誘致を断り、静かな街並みを守った。", voices: [{ name: "頑固職人", text: "よくぞ言った！チャラい奴らは要らん。", icon: "🔨" }, { name: "就活生", text: "えー、地元で働けるチャンスだったのに😭", icon: "🎓" }] }
+            ]
+        },
+        {
+            id: 3,
+            text: "市民フェスティバル、今年のメインテーマは？",
+            news: "今年のフェス開催決定、テーマ選定へ",
+            choices: [
+                { label: "ドローン＆ロボット博", tags: "経済↑", effect: { eco: 5, nature: -1, culture: 1 }, log: "空をドローンが埋め尽くした。", voices: [{ name: "メカ好き", text: "未来キター！ドローンレース熱い！", icon: "🤖" }, { name: "猫の飼い主", text: "ルンバが脱走して大騒ぎだニャ🐈", icon: "🐈" }] },
+                { label: "大フラワーガーデン", tags: "自然↑", effect: { eco: 1, nature: 5, culture: 1 }, log: "街中が花の香りに包まれた。", voices: [{ name: "インフルエンサー", text: "お花畑で自撮りなう💐 #FlowerFes", icon: "📱" }, { name: "花粉症患者", text: "くしゃみが止まらん...市長を訴える🤧", icon: "😷" }] },
+                { label: "戦国武者行列パレード", tags: "文化↑", effect: { eco: 1, nature: 0, culture: 5 }, log: "甲冑姿の市民が歴史絵巻を再現。", voices: [{ name: "歴女", text: "尊い...推しの武将コス最高すぎ...", icon: "😍" }, { name: "子供", text: "鎧の人こわいよ〜泣", icon: "👶" }] }
+            ]
+        },
+        {
+            id: 4,
+            text: "市内を流れる川の水質汚染が発覚。",
+            news: "【緊急】リバーサイドエリアで異臭騒ぎ",
+            choices: [
+                { label: "工場排水の規制を厳罰化", tags: "自然↑ 経済↓", effect: { eco: -5, nature: 7, culture: 0 }, log: "工場は撤退したが、清流が戻った。", voices: [{ name: "釣り人", text: "やっと幻の魚が戻ってきたぞ！", icon: "🎣" }, { name: "工場長", text: "こんな厳しい基準じゃやってられん...倒産だ。", icon: "🏭" }] },
+                { label: "税金を投入し浄化装置", tags: "経済↓ 自然↑", effect: { eco: -3, nature: 4, culture: 0 }, log: "巨額の予算を使い、水質を改善した。", voices: [{ name: "主婦", text: "水は綺麗になったけど、また増税？", icon: "👛" }, { name: "市長ファン", text: "迅速な対応さすがです！", icon: "👏" }] },
+                { label: "経済優先、見て見ぬふり", tags: "経済↑ 自然↓↓", effect: { eco: 6, nature: -8, culture: 0 }, log: "川はドブ川となり、異臭を放ち始めた...", voices: [{ name: "近隣住民", text: "川が虹色に光ってるんだけど...☠️", icon: "🤢" }, { name: "闇医者", text: "最近、変な咳をする患者が増えたねぇ。", icon: "💊" }] }
+            ]
+        },
+        {
+            id: 5,
+            text: "築100年の赤レンガ倉庫、取り壊しか保存か。",
+            news: "歴史的建造物の処遇巡り議論沸騰",
+            choices: [
+                { label: "取り壊してタワマン建設", tags: "経済↑ 文化↓", effect: { eco: 6, nature: 0, culture: -6 }, log: "歴史は瓦礫となり、高級マンションが建った。", voices: [{ name: "セレブ", text: "眺望最高！駅直結で便利！", icon: "🏙️" }, { name: "歴史学会", text: "野蛮な行為だ。歴史の破壊者め。", icon: "📜" }] },
+                { label: "レトロなカフェに改装", tags: "文化↑ 経済↓", effect: { eco: -2, nature: 0, culture: 7 }, log: "おしゃれな観光地として再生した。", voices: [{ name: "カフェ巡り", text: "パンケーキふわふわ🥞", icon: "☕" }, { name: "映画監督", text: "素晴らしいロケ地だ。次回作はここで。", icon: "🎬" }] },
+                { label: "放置しツタ植物園にする", tags: "自然↑ 文化↑", effect: { eco: -2, nature: 5, culture: 4 }, log: "廃墟美が話題のミステリースポットに。", voices: [{ name: "廃墟マニア", text: "この朽ち果てて自然に還る感じ...たまらん。", icon: "📷" }, { name: "虫嫌い", text: "虫が増えて最悪なんですけど。", icon: "🐛" }] }
+            ]
+        },
+        {
+            id: 6,
+            text: "エネルギー不足の懸念。新たな発電所計画。",
+            news: "電力需要逼迫、次世代エネルギーの選択",
+            choices: [
+                { label: "最新鋭の地熱発電所", tags: "自然↑ 経済↑", effect: { eco: 3, nature: 4, culture: 0 }, log: "温泉街と共存するクリーンな発電所。", voices: [{ name: "温泉女将", text: "湯量は減らないんでしょうね？", icon: "♨️" }, { name: "エコ学者", text: "これぞ持続可能な未来モデルだ。", icon: "🌏" }] },
+                { label: "大型石炭火力発電所", tags: "経済↑↑ 自然↓", effect: { eco: 7, nature: -5, culture: 0 }, log: "安価な電力で工場がフル稼働。", voices: [{ name: "工場長", text: "電気代が安くて助かる！ガンガン回すぞ。", icon: "🏭" }, { name: "喘息持ち", text: "空気が悪い...咳が止まらない。", icon: "😷" }] },
+                { label: "風神を祀る巨大風車", tags: "文化↑ 自然↑", effect: { eco: 1, nature: 2, culture: 5 }, log: "風車が新たな観光名所となった。", voices: [{ name: "宮司", text: "風の神様も喜んでおられる。", icon: "⛩️" }, { name: "写真家", text: "夕焼けと風車のシルエットが最高。", icon: "📸" }] }
+            ]
+        },
+        {
+            id: 7,
+            text: "カジノを含む統合型リゾート(IR)の誘致。",
+            news: "ラスベガス級の娯楽施設、是非を問う",
+            choices: [
+                { label: "積極誘致で観光立国", tags: "経済↑↑ 治安↓", effect: { eco: 9, nature: -2, culture: -2 }, log: "街は24時間眠らない歓楽街に変貌。", voices: [{ name: "ギャンブラー", text: "一発逆転！ドリーム掴むぜ！", icon: "🎰" }, { name: "PTA会長", text: "子供の教育に悪すぎる！反対！", icon: "😤" }] },
+                { label: "自然体験型リゾート", tags: "自然↑ 経済↑", effect: { eco: 3, nature: 5, culture: 0 }, log: "富裕層向けの静かな隠れ家リゾート。", voices: [{ name: "セレブ妻", text: "こういう静かな場所を求めてたの。", icon: "💎" }, { name: "地元民", text: "高すぎて俺たちには関係ないな。", icon: "🤷" }] },
+                { label: "伝統芸能ホール建設", tags: "文化↑↑", effect: { eco: -2, nature: 0, culture: 7 }, log: "古典芸能の聖地として世界的に有名に。", voices: [{ name: "人間国宝", text: "芸の道は、この街と共にあり。", icon: "🎎" }, { name: "若者", text: "渋すぎてちょっと入りにくい...", icon: "🎧" }] }
+            ]
+        },
+        {
+            id: 8,
+            text: "交通渋滞が悪化。解決策は？",
+            news: "通勤ラッシュ限界、抜本的改革必要",
+            choices: [
+                { label: "地下鉄網の拡張工事", tags: "経済↑ 自然↓", effect: { eco: 5, nature: -2, culture: 0 }, log: "移動は便利になったが、地下水脈に影響が。", voices: [{ name: "サラリーマン", text: "通勤時間が半分になった！", icon: "🚃" }, { name: "井戸所有者", text: "井戸水が枯れちまったよ...", icon: "🚰" }] },
+                { label: "路面電車の復活", tags: "文化↑ 自然↑", effect: { eco: 1, nature: 2, culture: 5 }, log: "レトロなチンチン電車が街を走る。", voices: [{ name: "鉄オタ", text: "この車両は昭和30年代の...！", icon: "🚋" }, { name: "急ぐ人", text: "遅い！車線減らすな！", icon: "🚗" }] },
+                { label: "空飛ぶタクシー特区", tags: "経済↑↑ 自然↓↓", effect: { eco: 8, nature: -4, culture: 1 }, log: "空を車が飛び交うSFな光景に。", voices: [{ name: "未来志向", text: "まるで映画の世界だ！", icon: "🛸" }, { name: "バード", text: "ぶつかる！危ない！ピヨ！", icon: "🐦" }] }
+            ]
+        },
+        {
+            id: 9,
+            text: "AIによる市政運営システムの導入提案。",
+            news: "AI市長誕生か？効率化への期待と不安",
+            choices: [
+                { label: "全権限をAIに委譲", tags: "経済↑↑ 文化↓", effect: { eco: 7, nature: 2, culture: -5 }, log: "無駄が完全に排除された管理社会へ。", voices: [{ name: "合理主義者", text: "コネも汚職もない。完璧だ。", icon: "🤖" }, { name: "詩人", text: "この街には「ゆらぎ」がない。", icon: "🥀" }] },
+                { label: "AIをアドバイザーに", tags: "経済↑ 文化↑", effect: { eco: 4, nature: 0, culture: 2 }, log: "人間とAIが協調するバランス型市政。", voices: [{ name: "公務員", text: "残業が減って助かります。", icon: "🍵" }] },
+                { label: "アナログな対話を重視", tags: "文化↑↑ 経済↓", effect: { eco: -3, nature: 0, culture: 6 }, log: "膝を突き合わせた話し合いで結束強化。", voices: [{ name: "町内会長", text: "やっぱ顔見て話さねえとな！", icon: "🍶" }, { name: "若手", text: "会議長すぎ...メールで良くない？", icon: "📱" }] }
+            ]
+        },
+        {
+            id: 10,
+            text: "野良猫の数が増えすぎて苦情が殺到。",
+            news: "猫ブームの影で...地域トラブル増加",
+            choices: [
+                { label: "「猫の楽園」観光地化", tags: "経済↑ 文化↑", effect: { eco: 5, nature: -1, culture: 4 }, log: "世界中から猫好きが集まる聖地に。", voices: [{ name: "猫おじさん", text: "わしらの時代が来たニャ！", icon: "🐈" }, { name: "衛生係", text: "フンの始末が追いつきません...", icon: "🧹" }] },
+                { label: "避妊去勢と保護活動", tags: "自然↑ 文化↑", effect: { eco: -2, nature: 4, culture: 3 }, log: "人と猫が穏やかに共生する街へ。", voices: [{ name: "ボランティア", text: "さくら猫が増えてきました。", icon: "🏥" }] },
+                { label: "徹底的な捕獲と排除", tags: "自然↑↑ 文化↓↓", effect: { eco: 0, nature: 5, culture: -8 }, log: "猫はいなくなったが、街は冷え込んだ。", voices: [{ name: "神経質な人", text: "やっと庭が荒らされずに済む。", icon: "🏠" }, { name: "子供", text: "ミーちゃんどこ行っちゃったの？", icon: "😭" }] }
+            ]
+        },
+        {
+            id: 11,
+            text: "国際映画祭の開催オファー。",
+            news: "銀幕の祭典、当市で開催なるか",
+            choices: [
+                { label: "派手なレッドカーペット", tags: "文化↑↑ 経済↑", effect: { eco: 4, nature: -1, culture: 8 }, log: "ハリウッドスターが街を歩いた。", voices: [{ name: "映画ファン", text: "サインもらった！一生の宝！", icon: "✍️" }, { name: "警備員", text: "人が多すぎて制御不能だ！", icon: "👮" }] },
+                { label: "インディーズ映画中心", tags: "文化↑", effect: { eco: 1, nature: 0, culture: 5 }, log: "コアな映画ファンの交流の場に。", voices: [{ name: "監督志望", text: "こういう深い作品が見たかった。", icon: "🎥" }] },
+                { label: "開催辞退、予算を福祉へ", tags: "経済↑ 文化↓", effect: { eco: 3, nature: 0, culture: -4 }, log: "祭りは幻となったが、財政は健全化。", voices: [{ name: "現実主義者", text: "浮かれてる場合じゃないからね。", icon: "👓" }, { name: "夢追い人", text: "つまんない街になっちゃったな。", icon: "🎸" }] }
+            ]
+        },
+        {
+            id: 12,
+            text: "ゴミ処理場の容量が限界に。",
+            news: "【深刻】ゴミ溢れる危機、待ったなし",
+            choices: [
+                { label: "最新鋭の焼却炉建設", tags: "経済↑ 自然↓", effect: { eco: -5, nature: -3, culture: 0 }, log: "処理能力は向上したがCO2も増加。", voices: [{ name: "市民", text: "とりあえずゴミ出しできて安心。", icon: "🗑️" }, { name: "環境団体", text: "時代に逆行している！", icon: "📢" }] },
+                { label: "徹底した分別とリサイクル", tags: "自然↑↑ 経済↓", effect: { eco: -2, nature: 7, culture: 2 }, log: "「ゼロ・ウェイスト都市」宣言。", voices: [{ name: "主婦", text: "分別が20種類！？めんどくさい！", icon: "💢" }, { name: "エコロジスト", text: "美しい...これぞ未来。", icon: "✨" }] },
+                { label: "ゴミをアートにする展示", tags: "文化↑ 自然↑", effect: { eco: 1, nature: 3, culture: 6 }, log: "ゴミがお洒落なオブジェに変わった。", voices: [{ name: "芸術家", text: "廃材こそが最高の素材だ。", icon: "🎨" }, { name: "一般人", text: "いや、臭うんですけど...", icon: "👃" }] }
+            ]
+        },
+        {
+            id: 13,
+            text: "未知のウイルス「サイバー風邪」が流行。",
+            news: "電脳空間も感染？新型ウイルス猛威",
+            choices: [
+                { label: "都市封鎖(ロックダウン)", tags: "経済↓↓ 自然↑", effect: { eco: -8, nature: 5, culture: -2 }, log: "経済は止まったが、空気は綺麗に。", voices: [{ name: "店主", text: "もう限界...店を畳みます。", icon: "🚪" }, { name: "鹿", text: "街中、誰もいない。散歩しよ。", icon: "🦌" }] },
+                { label: "ワクチン開発に全投資", tags: "経済↑ 科学↑", effect: { eco: -5, nature: 0, culture: 3 }, log: "特効薬が開発され、世界を救った。", voices: [{ name: "研究者", text: "寝ずに開発した甲斐があった。", icon: "🥼" }, { name: "陰謀論者", text: "マイクロチップが入ってるぞ！", icon: "👽" }] },
+                { label: "集団免疫と祈祷", tags: "文化↑ 経済↑", effect: { eco: 2, nature: -4, culture: 5 }, log: "祭りで疫病退散を祈願した。", voices: [{ name: "長老", text: "昔からこうやって乗り越えてきた。", icon: "📿" }, { name: "医師", text: "科学を信じてください...", icon: "🩺" }] }
+            ]
+        },
+        {
+            id: 14,
+            text: "遺跡発掘調査でオーパーツが発見！？",
+            news: "古代文明の痕跡か、捏造か",
+            choices: [
+                { label: "大規模な発掘と博物館", tags: "文化↑↑ 経済↑", effect: { eco: 2, nature: -2, culture: 9 }, log: "歴史を覆す発見に世界が注目。", voices: [{ name: "考古学者", text: "これは世紀の発見です！", icon: "🏺" }, { name: "ミステリー誌", text: "宇宙人関与説、濃厚。", icon: "👽" }] },
+                { label: "埋め戻して開発続行", tags: "経済↑↑ 文化↓↓", effect: { eco: 7, nature: -1, culture: -7 }, log: "古代のロマンより、今のビル建設。", voices: [{ name: "デベロッパー", text: "工期が遅れるわけにはいかん。", icon: "👷" }, { name: "歴史ファン", text: "なんてことを...呪われるぞ。", icon: "👻" }] },
+                { label: "パワースポットとして開放", tags: "経済↑ 文化↑", effect: { eco: 4, nature: 1, culture: 3 }, log: "運気が上がると評判の場所に。", voices: [{ name: "占い師", text: "ここには強い気が満ちている...", icon: "🔮" }] }
+            ]
+        },
+        {
+            id: 15,
+            text: "宇宙エレベーターの建設候補地に選定。",
+            news: "天まで届く塔、夢か幻か",
+            choices: [
+                { label: "全力で誘致を受ける", tags: "経済↑↑↑ 自然↓↓", effect: { eco: 12, nature: -6, culture: 1 }, log: "街は宇宙への玄関口となった。", voices: [{ name: "宇宙飛行士", text: "火星出張、行ってきます。", icon: "🚀" }, { name: "天文学者", text: "光害で星が見えなくなった。", icon: "🔭" }] },
+                { label: "リスクが高いので拒否", tags: "自然↑ 経済↓", effect: { eco: -4, nature: 2, culture: 0 }, log: "静かな空を守る選択をした。", voices: [{ name: "慎重派", text: "倒れてきたらどうすんだよ。", icon: "😰" }] },
+                { label: "VR宇宙体験施設を作る", tags: "文化↑ 経済↑", effect: { eco: 3, nature: 0, culture: 5 }, log: "安全に宇宙気分を味わえる名所に。", voices: [{ name: "ゲーマー", text: "無重力体験ヤバすぎｗ", icon: "🎮" }] }
+            ]
+        },
+        {
+            id: 16,
+            text: "少子高齢化が深刻化。対策は？",
+            news: "消滅可能性都市のリスト入り？",
+            choices: [
+                { label: "移民・外国人労働者受入", tags: "経済↑ 文化変容", effect: { eco: 6, nature: 0, culture: 3 }, log: "多国籍な文化が混ざり合う街に。", voices: [{ name: "ケバブ屋", text: "イラッシャイ！オイシイヨ！", icon: "🥙" }, { name: "保守派", text: "ここは日本なのか...？", icon: "🇯🇵" }] },
+                { label: "子育て支援金の倍増", tags: "経済↓ 自然↑", effect: { eco: -5, nature: 2, culture: 2 }, log: "子供の声が街に戻ってきた。", voices: [{ name: "パパ", text: "オムツ代助かる〜！", icon: "👶" }, { name: "財務担当", text: "財源が...もう持ちません。", icon: "💸" }] },
+                { label: "全市民サイボーグ化計画", tags: "経済↑↑ 自然↓↓", effect: { eco: 8, nature: -5, culture: -5 }, log: "老いを超越した新人類の街へ。", voices: [{ name: "サイボーグ爺", text: "わしの腰はチタン製じゃ！ガハハ！", icon: "🦾" }, { name: "倫理学者", text: "人間性の喪失だ。", icon: "📚" }] }
+            ]
+        },
+        {
+            id: 17,
+            text: "巨大台風が接近中。防災計画は？",
+            news: "【超大型】100年に一度の暴風雨警戒",
+            choices: [
+                { label: "巨大防潮堤「グレートウォール」", tags: "経済↑ 自然↓", effect: { eco: -3, nature: -5, culture: -2 }, log: "街は守られたが、海が見えなくなった。", voices: [{ name: "沿岸住民", text: "命には代えられないよ。", icon: "🌊" }, { name: "サーファー", text: "いい波が来なくなった...", icon: "🏄" }] },
+                { label: "自然の力を利用(グリーンインフラ)", tags: "自然↑↑ 経済↓", effect: { eco: -2, nature: 6, culture: 0 }, log: "湿地帯が水を吸収し、被害を防いだ。", voices: [{ name: "生物学者", text: "これが自然本来のレジリエンス。", icon: "🌱" }] },
+                { label: "地下シェルター都市へ移住", tags: "経済↑ 文化↓", effect: { eco: 5, nature: -3, culture: -5 }, log: "地上を捨て、地下帝国を築いた。", voices: [{ name: "モグラ人間", text: "太陽が...恋しい...", icon: "☀️" }] }
+            ]
+        },
+        {
+            id: 18,
+            text: "eスポーツの世界大会決勝戦。",
+            news: "ゲームの祭典、熱狂の渦",
+            choices: [
+                { label: "専用スタジアム建設", tags: "経済↑ 文化↑", effect: { eco: 4, nature: -2, culture: 5 }, log: "ゲーマーの聖地として定着。", voices: [{ name: "プロゲーマー", text: "GG！最高の環境だ。", icon: "🖱️" }, { name: "運動部", text: "グラウンドも整備してよ...", icon: "⚾" }] },
+                { label: "商店街でストリート対戦", tags: "文化↑ 経済↑", effect: { eco: 2, nature: 0, culture: 6 }, log: "レトロな街並みと最新ゲームの融合。", voices: [{ name: "八百屋", text: "よくわからんが、大繁盛だ！", icon: "🥕" }] },
+                { label: "ゲーム禁止条例制定", tags: "文化↓↓ 教育↑", effect: { eco: -3, nature: 1, culture: -8 }, log: "子供は外で遊ぶようになったが...", voices: [{ name: "教育ママ", text: "ゲーム脳にならなくて安心。", icon: "👩‍🏫" }, { name: "子供", text: "隣の市に引っ越したい。", icon: "😠" }] }
+            ]
+        },
+        {
+            id: 19,
+            text: "市長の銅像を建てようという声が。",
+            news: "市政20周年の記念碑建立計画",
+            choices: [
+                { label: "黄金の巨大像を建てる", tags: "経済↓ 文化↓", effect: { eco: -6, nature: -1, culture: -5 }, log: "市民の冷ややかな視線を感じる。", voices: [{ name: "市民A", text: "税金の無駄遣い乙。", icon: "😒" }, { name: "ハト", text: "いい休憩場所だクルックー。", icon: "🕊️" }] },
+                { label: "その予算で学校にエアコンを", tags: "経済↑ 文化↑", effect: { eco: 2, nature: 0, culture: 4 }, log: "市長の支持率が急上昇した。", voices: [{ name: "小学生", text: "涼しい〜！市長ありがとう！", icon: "🎒" }] },
+                { label: "AIアートのモニュメント", tags: "文化↑ 経済↑", effect: { eco: 1, nature: 0, culture: 6 }, log: "理解不能な形だが、なぜか人気に。", voices: [{ name: "評論家", text: "この不可解さが現代を象徴している。", icon: "🧐" }] }
+            ]
+        },
+        {
+            id: 20,
+            text: "技術的特異点(シンギュラリティ)到達。",
+            news: "AIが人類の知能を超越。その時市長は",
+            choices: [
+                { label: "AIと融合し、永遠の市長へ", tags: "All Max", effect: { eco: 10, nature: 10, culture: 10 }, log: "肉体を捨て、ネットワークの神となった。", voices: [{ name: "元市民", text: "市長が...サーバーになったぞ...", icon: "💻" }] },
+                { label: "電源を抜いて人間宣言", tags: "文化↑↑ 経済↓↓", effect: { eco: -10, nature: 5, culture: 10 }, log: "不便だが温かい、人間らしい生活へ。", voices: [{ name: "哲学者", text: "人間とは何か、思い出した。", icon: "🤔" }] },
+                { label: "火星への集団移住", tags: "経済↑ 自然↓↓", effect: { eco: 5, nature: -20, culture: 5 }, log: "地球を捨て、新天地へ旅立った。", voices: [{ name: "火星人", text: "ワレワレハ、カンゲイスル。", icon: "🐙" }] }
+            ]
+        }
+    ];
+
+    function initGame() {
+        gameState.turn = 1;
+        gameState.stats = { eco: 10, nature: 10, culture: 10 };
+        document.getElementById('ending-modal').style.display = 'none';
+        
+        const screen = document.getElementById('log-screen');
+        screen.innerHTML = '';
+        typeQueue = [];
+        
+        log('システム起動...');
+        log('市長シミュレーター v2.0 (Long Run)');
+        log('20年間の市政運営を開始します。');
+
+        updateUI();
+        loadEvent();
+    }
+
+    function updateUI() {
+        document.getElementById('turn-display').innerText = `YEAR ${gameState.turn} / ${gameState.maxTurns}`;
+        
+        document.getElementById('stat-eco').innerText = gameState.stats.eco;
+        document.getElementById('stat-nature').innerText = gameState.stats.nature;
+        document.getElementById('stat-culture').innerText = gameState.stats.culture;
+    }
+
+    function loadEvent() {
+        const controlsDiv = document.getElementById('controls');
+        controlsDiv.innerHTML = '';
+
+        const eventIndex = (gameState.turn - 1) % events.length;
+        const currentEvent = events[eventIndex];
+
+        updateTicker(currentEvent.news);
+        setTimeout(() => {
+            log(`\n[ 第${gameState.turn}年 ] ${currentEvent.text}`);
+        }, 500);
+
+        currentEvent.choices.forEach(choice => {
+            const btn = document.createElement('button');
+            btn.className = 'choice-btn';
+            btn.innerHTML = `${choice.label} <span class="btn-subtext">${choice.tags}</span>`;
+            btn.onclick = () => openSns(choice);
+            controlsDiv.appendChild(btn);
+        });
+    }
+
+    function updateTicker(text) {
+        const ticker = document.getElementById('news-ticker');
+        ticker.innerText = `BREAKING NEWS: ${text}  ///  現在の市況: 経済${gameState.stats.eco} 自然${gameState.stats.nature} 文化${gameState.stats.culture}  ///  `;
+    }
+
+    function openSns(choice) {
+        pendingChoice = choice;
+        const overlay = document.getElementById('sns-overlay');
+        const feed = document.getElementById('sns-feed');
+        feed.innerHTML = '';
+
+        choice.voices.forEach(voice => {
+            const tweet = document.createElement('div');
+            tweet.className = 'tweet';
+            const likes = Math.floor(Math.random() * 800) + 12;
+            
+            tweet.innerHTML = `
+                <div class="avatar">${voice.icon}</div>
+                <div class="tweet-content">
+                    <div class="user-name">${voice.name}</div>
+                    <div class="tweet-text">${voice.text}</div>
+                    <div class="likes">❤️ ${likes} Likes</div>
+                </div>
+            `;
+            feed.appendChild(tweet);
+        });
+
+        overlay.style.display = 'flex';
+    }
+
+    function closeSnsAndProceed() {
+        document.getElementById('sns-overlay').style.display = 'none';
+        if(pendingChoice) {
+            executeChoice(pendingChoice);
+        }
+    }
+
+    function executeChoice(choice) {
+        gameState.stats.eco += choice.effect.eco;
+        gameState.stats.nature += choice.effect.nature;
+        gameState.stats.culture += choice.effect.culture;
+
+        log(`> 決定: ${choice.label}`);
+        log(`> ${choice.log}`);
+
+        gameState.turn++;
+
+        if (gameState.turn > gameState.maxTurns) {
+            updateUI();
+            showEnding();
+        } else {
+            updateUI();
+            loadEvent();
+            scrollToBottom();
+        }
+    }
+
+    function scrollToBottom() {
+        const screen = document.getElementById('log-screen');
+        screen.scrollTop = screen.scrollHeight;
+    }
+
+    function showEnding() {
+        const modal = document.getElementById('ending-modal');
+        const title = document.getElementById('ending-title');
+        const desc = document.getElementById('ending-desc');
+        const summary = document.getElementById('ending-stats-summary');
+
+        const { eco, nature, culture } = gameState.stats;
+        let resultTitle = "", resultDesc = "";
+
+        // 20年版の評価基準（数値が高くなりやすいので閾値を調整）
+        const HIGH = 40;
+        const LOW = 10;
+
+        if (eco > HIGH && nature < LOW) {
+            resultTitle = "🌃 ネオ・サイバーシティ";
+            resultDesc = "空を覆う摩天楼、飛び交うドローン。経済は頂点に達したが、緑は失われた不夜城。";
+        } else if (nature > HIGH && eco < 15) {
+            resultTitle = "🌲 聖なる森の都市";
+            resultDesc = "文明と森が完全に融合した姿。経済規模は小さいが、地上で最も美しい楽園。";
+        } else if (culture > HIGH) {
+            resultTitle = "🎭 千年の都";
+            resultDesc = "世界中から人々が訪れる、芸術と歴史の聖地。その魅力は永遠に語り継がれる。";
+        } else if (eco > 30 && nature > 30 && culture > 30) {
+            resultTitle = "💎 奇跡のユートピア";
+            resultDesc = "全てのバランスが黄金比で保たれた伝説の都市。教科書に載るレベルの偉業です。";
+        } else if (eco < LOW && nature < LOW && culture < LOW) {
+            resultTitle = "👻 限界集落・ゴーストタウン";
+            resultDesc = "街は破綻し、誰もいなくなった...。市長、どこで間違えたのでしょうか。";
+        } else if (eco >= nature && eco >= culture) {
+            resultTitle = "🏢 メガロポリス";
+            resultDesc = "標準的な発展を遂げた大都市。便利だが、どこか無機質な空気が漂う。";
+        } else if (nature >= eco && nature >= culture) {
+            resultTitle = "🏡 田園都市";
+            resultDesc = "自然豊かなベッドタウン。派手さはないが、住環境は抜群に良い。";
+        } else {
+            resultTitle = "🎨 地方文化都市";
+            resultDesc = "独自の文化が根付いた、味のある街。コアなファンが多い。";
+        }
+
+        title.innerText = resultTitle;
+        desc.innerText = resultDesc;
+        summary.innerText = `最終スコア: 経済${eco} / 自然${nature} / 文化${culture}`;
+        
+        modal.style.display = 'flex';
+    }
+</script>
+
+</body>
+</html>

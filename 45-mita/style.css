@@ -1,0 +1,173 @@
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { height:100%; }
+body {
+  font-family: "Shippori Mincho", "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", "MS Mincho", serif;
+  background:#0b0e11; color:#e9eef5; overflow:hidden;
+}
+
+#gameContainer { position:relative; width:100vw; height:100vh; }
+
+/* 背景（実画像＋薄いグラデ） */
+#background{
+  position:absolute; inset:0; z-index:1;
+  background: linear-gradient(180deg,#0f141a 0%, #0b0e11 60%, #080a0c 100%);
+  background-size:60%; background-position:center; background-repeat:no-repeat;
+  transition:opacity .35s ease;
+}
+
+/* テキストUI */
+#textArea{
+  position:absolute; left:0; right:0; bottom:0; z-index:5;
+  background:rgba(3,6,9,.82); border-top:2px solid rgba(255,255,255,.06);
+  min-height:28vh; padding:22px 22px 28px; backdrop-filter: blur(2px);
+}
+#speakerName{ font-size:16.8px; color:#93b4ff; margin-bottom:8px; min-height:18px; letter-spacing:.04em; }
+#mainText{ font-size:19.2px; line-height:1.9; letter-spacing:.02em; }
+.fade { animation: fade .35s ease; }
+@keyframes fade { from{opacity:0} to{opacity:1} }
+
+/* 選択肢 */
+#choiceArea{
+  position:absolute; left:50%; transform:translateX(-50%);
+  bottom:32vh; z-index:6; display:flex; flex-direction:column; gap:12px; max-width:86vw;
+}
+.choice-button{
+  padding:12px 16px; font-size:18px; border-radius:10px; cursor:pointer;
+  background:rgba(16,32,64,.72); color:#eaf2ff; border:1px solid rgba(108,163,255,.35);
+  transition:.18s ease; box-shadow: 0 6px 16px rgba(0,0,0,.35) inset;
+  line-height:1.5; white-space:pre-line;
+}
+.choice-button:hover{ background:rgba(28,52,92,.85); transform: translateY(-1px); }
+
+/* コントロール */
+#controls{
+  position:absolute; top:16px; right:16px; z-index:8; display:flex; gap:8px;
+}
+#controls button{
+  padding:8px 12px; font-size:12px; border-radius:8px; cursor:pointer;
+  background:rgba(24,24,28,.8); color:#dfe7ff; border:1px solid rgba(255,255,255,.1);
+}
+#controls button:hover{ background:rgba(40,44,52,.9); }
+
+/* デバッグパネル */
+.hidden{ display:none; }
+#debugPanel{
+  position:absolute; top:16px; left:16px; z-index:8;
+  background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.08);
+  padding:10px 12px; border-radius:8px; font-size:12px; color:#b6c7ff;
+}
+#debugPanel div{ margin:2px 0; }
+
+/* パラメータ表示パネル（簡易版・常時表示） */
+#paramPanel{
+  position:absolute; top:16px; left:50%; transform:translateX(-50%);
+  z-index:7; display:flex; gap:16px; padding:8px 16px;
+  background:rgba(0,0,0,.65); border:1px solid rgba(255,255,255,.1);
+  border-radius:12px; backdrop-filter: blur(4px);
+}
+#paramPanel.hidden{ display:none; }
+.param-item{
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  min-width:50px;
+}
+.param-label{
+  font-size:11px; color:#93b4ff; letter-spacing:.05em;
+  opacity:0.8;
+}
+.param-value{
+  font-size:16px; font-weight:bold; color:#eaf2ff;
+  text-shadow: 0 0 8px rgba(234,242,255,0.3);
+}
+
+/* ログ（案②：初期は非表示、.show で表示） */
+#logPanel{
+  position:absolute; inset:0; z-index:9; background:rgba(6,9,12,.95);
+  display:none;                         /* ← ここを none に固定 */
+  flex-direction:column;
+}
+#logPanel.show{ display:flex; }         /* ← 表示トグル用クラス */
+#logHeader{
+  display:flex; justify-content:space-between; align-items:center; padding:14px 16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+#logHeader h3{ font-size:16px; color:#bcd1ff; }
+#logContent{ padding:14px 16px; overflow:auto; }
+.log-entry{ margin-bottom:10px; padding-bottom:8px; border-bottom:1px dashed rgba(255,255,255,.06); }
+.log-speaker{ font-weight:bold; color:#93b4ff; margin-bottom:4px; }
+
+/* ===== 恐怖演出（フラッシュ点滅なし） ===== */
+
+/* 画面揺れ */
+.shake-screen {
+  animation: shake 0.6s ease;
+}
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0); }
+  10%, 30%, 50%, 70%, 90% { transform: translate(-3px, 2px) rotate(-0.5deg); }
+  20%, 40%, 60%, 80% { transform: translate(3px, -2px) rotate(0.5deg); }
+}
+
+/* 暗転オーバーレイ（ゆっくりフェード、点滅なし） */
+#darkOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: rgba(0, 0, 0, 0);
+  pointer-events: none;
+  transition: background 0.8s ease;
+}
+#darkOverlay.active {
+  background: rgba(0, 0, 0, 0.6);
+}
+#darkOverlay.intense {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+/* テキスト揺れ */
+.text-shake {
+  animation: textShake 0.5s ease;
+}
+@keyframes textShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* テキスト色変化（恐怖シーン時） */
+#mainText.fear-text {
+  color: #ffaaaa;
+  text-shadow: 0 0 8px rgba(255, 170, 170, 0.3);
+}
+#mainText.intense-fear {
+  color: #ff8888;
+  text-shadow: 0 0 12px rgba(255, 136, 136, 0.5);
+}
+
+/* 背景色調変化（セピア/モノクロ、ゆっくり） */
+#background.desaturate {
+  filter: grayscale(40%) brightness(0.7);
+  transition: filter 1.2s ease;
+}
+#background.intense-desaturate {
+  filter: grayscale(70%) brightness(0.5);
+  transition: filter 1.2s ease;
+}
+#background.normal {
+  filter: none;
+  transition: filter 1.5s ease;
+}
+
+/* テキスト表示速度変化（恐怖シーン時は遅く） */
+#mainText.slow-reveal {
+  animation: slowReveal 1.2s ease;
+}
+@keyframes slowReveal {
+  from { opacity: 0; letter-spacing: 0.1em; }
+  to { opacity: 1; letter-spacing: 0.02em; }
+}
+
+/* 背景画像の不気味な変化 */
+#background.distort {
+  filter: contrast(1.2) brightness(0.8);
+  transition: filter 0.8s ease;
+}

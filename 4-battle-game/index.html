@@ -4,7 +4,631 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>戦闘ゲーム</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+/* style.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Press Start 2P', cursive, 'Arial', sans-serif; /* ピクセルフォントを優先 */
+  background: #2a2a3a; /* 全体を暗めの背景に */
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #f0f0f0;
+  position: relative;
+  overflow: hidden; /* 背景の擬似要素がはみ出さないように */
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxyY3Qgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMmYyZjNmIi8+CiAgICA8Y2lyY2xlIGN4PSIxMCIgY3k9IjEwIiByPSIwLjUiIGZpbGw9IiMzOTM5NDkiLz4KPC9zdmc+') repeat, /* ドットパターン */
+    linear-gradient(135deg, #1e1e2e, #1a1a2a, #161626); /* 暗いグラデーション */
+  background-size: 10px 10px, cover; /* ドットのサイズ調整 */
+  z-index: -1;
+  opacity: 0.8; /* 背景の透明度 */
+}
+
+.game-container {
+  max-width: 960px; /* UI画像に合わせて最大幅を広げる */
+  width: 95%;
+  background: #0d0d1a; /* UI画像のような非常に暗い背景 */
+  border-radius: 8px; /* 角を少し丸く */
+  padding: 20px 30px; /* パディング調整 */
+  box-shadow:
+    0 0 0 2px #4a3c3c, /* 外側の細い枠 */
+    0 0 0 4px #2a2a2a, /* その外側の濃い枠 */
+    0 0 0 6px #1a1a1a, /* 最外枠 */
+    0 10px 30px rgba(0, 0, 0, 0.7); /* 影 */
+  max-height: 98vh; /* 画面の高さによりフィットさせるため、95vhから98vhに調整 */
+  overflow-y: auto; /* 必要に応じてスクロールバーを表示 */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* 要素を上下に均等配置 */
+  align-items: center;
+  border: 1px solid #4a3c3c; /* 最も内側の枠 */
+  image-rendering: pixelated; /* ピクセルアートがぼやけないように */
+  gap: 15px; /* 各主要セクション間のスペースを制御 */
+}
+
+/* スクロールバーのスタイル（UIに合わせるため） */
+.game-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+.game-container::-webkit-scrollbar-track {
+  background: #1a1a2a;
+  border-radius: 5px;
+}
+
+.game-container::-webkit-scrollbar-thumb {
+  background: #5a5a6a;
+  border-radius: 5px;
+}
+
+.game-container::-webkit-scrollbar-thumb:hover {
+  background: #7a7a8a;
+}
+
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px; /* 少し縮小 */
+  font-size: 2.2em; /* UI画像に合わせて大きく */
+  color: #c0c0d0; /* UI画像のような少し青みがかった白 */
+  font-weight: normal; /* 太さをなくす */
+  text-shadow:
+    1px 1px 0 #000,
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    2px 2px 5px rgba(0, 0, 0, 0.7); /* ピクセルフォントのような影 */
+  letter-spacing: 2px; /* 文字間隔 */
+}
+
+#start-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  text-align: center;
+  padding: 30px 20px; /* パディング調整 */
+}
+
+#start-screen h1 {
+  font-size: 3.5em; /* さらに大きく */
+  margin-bottom: 25px; /* 少し縮小 */
+  background: none; /* グラデーション背景を削除 */
+  -webkit-text-fill-color: inherit; /* 透明なテキスト色を解除 */
+  color: #e0e0f0; /* 白に近い色に */
+  text-shadow:
+    2px 2px 0 #000,
+    -2px -2px 0 #000,
+    2px -2px 0 #000,
+    -2px 2px 0 #000,
+    4px 4px 10px rgba(0, 0, 0, 0.8); /* 強めの影 */
+  letter-spacing: 4px;
+}
+
+#start-screen p {
+  font-size: 1.3em; /* 少し縮小 */
+  margin-bottom: 30px; /* 少し縮小 */
+  color: #a0a0a0;
+  text-shadow: 1px 1px 0 #000;
+}
+
+#start-button {
+  padding: 18px 45px; /* 少し縮小 */
+  font-size: 1.6em; /* 少し縮小 */
+  font-weight: bold;
+  background: linear-gradient(180deg, #606070, #404050); /* 暗めのメタリック調 */
+  color: #e0e0e0;
+  border: 2px solid #9090a0; /* 明るい枠線 */
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 5px 15px rgba(0, 0, 0, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 1px 1px 0 #000;
+}
+
+#start-button:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, #707080, #505060);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 7px 20px rgba(0, 0, 0, 0.6);
+}
+
+#game-content {
+  width: 100%;
+  display: flex; /* Flexbox を使用 */
+  flex-direction: column; /* 縦方向に並べる */
+  justify-content: space-between; /* 要素を均等に配置 */
+  flex-grow: 1; /* 親要素の高さを埋める */
+}
+
+.character-info {
+  display: flex;
+  align-items: center;
+  margin: 15px 0; /* マージンを削減 */
+  padding: 12px 18px; /* パディングを削減 */
+  background: #1a1a2a; /* UI画像のような濃い背景 */
+  border-radius: 6px;
+  border: 1px solid #4a3c3c; /* 細い枠線 */
+  box-shadow:
+    inset 0 0 0 1px #5a4c4c, /* 内側の細い線 */
+    0 5px 15px rgba(0, 0, 0, 0.4);
+}
+
+.player-info {
+  justify-content: flex-start;
+  border-color: #4a3c3c; /* 共通の枠線色 */
+}
+
+.enemy-info {
+  justify-content: flex-end;
+  flex-direction: row-reverse;
+  border-color: #4a3c3c; /* 共通の枠線色 */
+}
+
+h2 {
+  font-size: 1.6em; /* 少し縮小 */
+  color: #d0d0e0;
+  text-shadow: 1px 1px 0 #000;
+  margin: 0 10px; /* スペース調整 */
+}
+
+.character-sprite {
+  font-size: 4em; /* スプライトを少し縮小 */
+  margin: 0 15px; /* スペース調整 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px; /* 一貫したサイズに調整 */
+  height: 80px; /* 一貫したサイズに調整 */
+  background: #0a0a1a; /* スプライトの背景 */
+  border: 1px solid #3a3a4a;
+  border-radius: 4px;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0; /* 縮まないようにする */
+}
+
+.character-sprite img.pixel-art {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* アスペクト比を維持して収める */
+    image-rendering: pixelated; /* 画像がぼやけないように */
+}
+
+.character-sprite .emoji-fallback {
+    font-size: 0.8em; /* 絵文字もピクセルアートに合わせる */
+    image-rendering: pixelated;
+}
+
+.status {
+  flex-grow: 1;
+  font-size: 1em; /* 少し縮小 */
+  color: #c0c0d0;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.hp-bar, .mp-bar, .exp-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px; /* マージンを削減 */
+}
+
+.hp-bar span, .mp-bar span, .exp-bar span {
+  width: 45px; /* ラベルの幅を固定 */
+  flex-shrink: 0;
+}
+
+.bar {
+  flex-grow: 1;
+  height: 12px; /* バーの高さ */
+  background: #3a3a4a; /* バーの背景色 */
+  border: 1px solid #5a5a6a;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-right: 8px; /* マージンを削減 */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.bar-fill {
+  height: 100%;
+  transition: width 0.3s ease-out;
+  border-radius: 2px;
+}
+
+.player-hp-fill {
+  background: linear-gradient(to right, #4CAF50, #8BC34A); /* 緑系のグラデーション */
+}
+
+.player-mp-fill {
+  background: linear-gradient(to right, #2196F3, #64B5F6); /* 青系のグラデーション */
+}
+
+.player-exp-fill {
+  background: linear-gradient(to right, #FFEB3B, #FFC107); /* 黄色系のグラデーション */
+}
+
+.enemy-hp-fill {
+  background: linear-gradient(to right, #F44336, #FF7043); /* 赤系のグラデーション */
+}
+
+.hp-text, .mp-text, .exp-text {
+  min-width: 70px; /* テキストの幅を確保 */
+  text-align: right;
+  color: #e0e0e0;
+}
+
+.status p {
+  margin-top: 8px; /* マージンを削減 */
+  font-size: 1.1em; /* 少し縮小 */
+  color: #d0d0e0;
+}
+
+.battle-log {
+  width: 100%;
+  background: #1a1a2a;
+  border: 1px solid #4a3c3c;
+  border-radius: 6px;
+  padding: 12px; /* パディングを削減 */
+  margin-top: 15px; /* マージンを削減 */
+  min-height: 80px; /* ログ表示エリアの最小高さを調整 */
+  max-height: 120px; /* 最大高さを設定して、ログが多すぎてもはみ出さないように */
+  overflow-y: hidden; /* ログが多くなった場合はスクロール */
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+#log-messages p {
+  color: #e0e0e0;
+  margin-bottom: 4px; /* マージンを削減 */
+  font-size: 1em; /* 少し縮小 */
+  line-height: 1.3;
+  text-shadow: 1px 1px 0 #000;
+}
+
+#log-messages p:last-child {
+  margin-bottom: 0;
+  color: #fff; /* 最新のログを強調 */
+  font-weight: bold;
+}
+
+#log-messages p.damage {
+    color: #ff6060; /* ダメージ色 */
+}
+
+#log-messages p.heal {
+    color: #60ff60; /* 回復色 */
+}
+
+
+.battle-commands {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2列 */
+  gap: 12px; /* ボタン間の隙間を削減 */
+  width: 100%;
+  margin-top: 15px; /* マージンを削減 */
+}
+
+.command-btn {
+  padding: 15px 20px; /* パディングを削減 */
+  font-size: 1.3em; /* フォントサイズを調整 */
+  font-weight: bold;
+  background: linear-gradient(180deg, #404050, #202030); /* 暗めのメタリック調 */
+  color: #e0e0e0;
+  border: 2px solid #707080;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 4px 10px rgba(0, 0, 0, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.command-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, #505060, #303040);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 6px 15px rgba(0, 0, 0, 0.5);
+}
+
+.command-btn:disabled {
+  background: #2a2a3a;
+  border-color: #4a4a5a;
+  color: #808080;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.game-over {
+  text-align: center;
+  margin-top: 25px; /* マージンを削減 */
+}
+
+.game-over h2 {
+  font-size: 2.2em; /* フォントサイズを調整 */
+  color: #ffd700; /* 勝利はゴールド */
+  margin-bottom: 25px; /* マージンを削減 */
+  text-shadow:
+    2px 2px 0 #000,
+    -2px -2px 0 #000,
+    2px -2px 0 #000,
+    -2px 2px 0 #000,
+    3px 3px 8px rgba(0, 0, 0, 0.7);
+}
+
+.game-over h2:contains("あなたは倒れた") { /* 敗北は赤 */
+  color: #ff4500;
+}
+
+.game-over button {
+  padding: 12px 25px; /* パディングを削減 */
+  font-size: 1.2em; /* フォントサイズを調整 */
+  background: linear-gradient(135deg, #FFD700, #FFA500); /* ゴールド系のボタン */
+  color: #303030;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+  font-weight: bold;
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.game-over button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 20px rgba(255, 215, 0, 0.6);
+}
+
+.audio-controls {
+  position: fixed;
+  bottom: 15px; /* 位置を少し上げる */
+  right: 15px; /* 位置を少し内側にする */
+  display: flex;
+  align-items: center;
+  gap: 8px; /* 隙間を削減 */
+  background: rgba(0, 0, 0, 0.7);
+  padding: 8px 12px; /* パディングを削減 */
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}
+
+.audio-controls button {
+  background: none;
+  border: none;
+  font-size: 1.6em; /* フォントサイズを調整 */
+  cursor: pointer;
+  color: #f0f0f0;
+  transition: transform 0.2s ease;
+}
+
+.audio-controls button:hover {
+  transform: scale(1.1);
+}
+
+.audio-controls input[type="range"] {
+  -webkit-appearance: none;
+  width: 80px; /* 幅を削減 */
+  height: 6px; /* 高さを削減 */
+  background: #555;
+  border-radius: 5px;
+  outline: none;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.audio-controls input[type="range"]:hover {
+  opacity: 1;
+}
+
+.audio-controls input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px; /* サイズを削減 */
+  height: 16px; /* サイズを削減 */
+  background: #ffd700;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Magic Effects */
+.magic-effect {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px; /* サイズを削減 */
+    height: 180px; /* サイズを削減 */
+    border-radius: 50%;
+    opacity: 0;
+    animation: fadeOut 0.5s forwards;
+    z-index: 5;
+    pointer-events: none;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.7); /* 全体に輝き */
+}
+
+.magic-effect.fire-effect {
+    background: radial-gradient(circle at center, rgba(255, 100, 0, 0.8), rgba(255, 0, 0, 0.5), transparent);
+    box-shadow: 0 0 30px rgba(255, 100, 0, 0.9);
+}
+
+.magic-effect.ice-effect {
+    background: radial-gradient(circle at center, rgba(100, 200, 255, 0.8), rgba(0, 100, 255, 0.5), transparent);
+    box-shadow: 0 0 30px rgba(100, 200, 255, 0.9);
+}
+
+.magic-effect.thunder-effect {
+    background: radial-gradient(circle at center, rgba(255, 255, 0, 0.8), rgba(255, 150, 0, 0.5), transparent);
+    box-shadow: 0 0 30px rgba(255, 255, 0, 0.9);
+}
+
+.magic-effect.holy-effect {
+    background: radial-gradient(circle at center, rgba(255, 255, 200, 0.8), rgba(255, 255, 0, 0.5), transparent);
+    box-shadow: 0 0 30px rgba(255, 255, 200, 0.9);
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    to { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+}
+
+/* UI画像のようなドットフォントの読み込み */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .game-container {
+    padding: 10px 15px; /* パディングをさらに削減 */
+    gap: 10px; /* 隙間を削減 */
+  }
+
+  h1 {
+    font-size: 1.8em; /* フォントサイズを調整 */
+    margin-bottom: 15px;
+  }
+
+  #start-screen h1 {
+    font-size: 2.8em;
+  }
+
+  #start-screen p {
+    font-size: 1em;
+    margin-bottom: 25px;
+  }
+
+  #start-button {
+    padding: 12px 30px;
+    font-size: 1.2em;
+  }
+
+  .character-info {
+    flex-direction: column;
+    text-align: center;
+    margin: 10px 0; /* マージンをさらに削減 */
+    padding: 10px 15px;
+  }
+
+  .player-info, .enemy-info {
+    flex-direction: column; /* 常に縦並び */
+    align-items: center;
+    justify-content: center;
+  }
+
+  h2 {
+    font-size: 1.4em;
+    margin-bottom: 8px;
+  }
+
+  .character-sprite {
+    margin: 10px 0;
+    width: 70px;
+    height: 70px;
+  }
+
+  .status {
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .hp-bar, .mp-bar, .exp-bar {
+    margin-bottom: 4px;
+  }
+
+  .hp-bar span, .mp-bar span, .exp-bar span {
+    width: 40px;
+  }
+
+  .bar {
+    height: 10px;
+    margin-right: 5px;
+  }
+
+  .hp-text, .mp-text, .exp-text {
+    min-width: 60px;
+    font-size: 0.9em;
+  }
+
+  .status p {
+    margin-top: 5px;
+    font-size: 1em;
+  }
+
+  .battle-log {
+    margin-top: 10px;
+    padding: 10px;
+    min-height: 70px;
+    max-height: 100px;
+  }
+
+  #log-messages p {
+    font-size: 0.9em;
+    margin-bottom: 3px;
+  }
+
+  .battle-commands {
+    grid-template-columns: 1fr; /* 1列にする */
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .command-btn {
+    padding: 12px 15px;
+    font-size: 1.1em;
+  }
+
+  .game-over h2 {
+    font-size: 2em;
+    margin-bottom: 20px;
+  }
+
+  .game-over button {
+    padding: 10px 20px;
+    font-size: 1.1em;
+  }
+
+  .audio-controls {
+    flex-direction: column;
+    bottom: 5px;
+    right: 5px;
+    padding: 5px 10px;
+  }
+
+  .audio-controls input[type="range"] {
+    width: 70px;
+  }
+
+  .audio-controls button {
+    font-size: 1.4em;
+  }
+  .magic-effect {
+    width: 150px;
+    height: 150px;
+  }
+}
+  </style>
 </head>
 <body>
   <div class="game-container">
@@ -107,6 +731,770 @@
 
   <div id="magic-effect" class="magic-effect" style="display: none;"></div>
 
-  <script src="script.js"></script>
+  <script>
+// script.js
+
+// キャラクタークラス
+class Character {
+    constructor(name, maxHp, maxMp, attack, sprite, level = 1, exp = 0, nextLevelExp = 100) {
+        this.name = name;
+        this.maxHp = maxHp;
+        this.hp = maxHp;
+        this.maxMp = maxMp;
+        this.mp = maxMp;
+        this.attack = attack;
+        this.sprite = sprite;
+        this.level = level;
+        this.exp = exp;
+        this.nextLevelExp = nextLevelExp;
+        this.knownMagic = [];
+    }
+
+    takeDamage(damage) {
+        this.hp -= damage;
+        if (this.hp < 0) this.hp = 0;
+    }
+
+    heal(amount) {
+        this.hp += amount;
+        if (this.hp > this.maxHp) this.hp = this.maxHp;
+    }
+
+    useMp(amount) {
+        this.mp -= amount;
+        if (this.mp < 0) this.mp = 0;
+    }
+
+    isAlive() {
+        return this.hp > 0;
+    }
+
+    addExp(amount) {
+        this.exp += amount;
+        addLog(`経験値を${amount}獲得した！`);
+        this.checkLevelUp();
+    }
+
+    checkLevelUp() {
+        while (this.exp >= this.nextLevelExp) {
+            this.level++;
+            this.exp -= this.nextLevelExp;
+            this.nextLevelExp = Math.floor(this.nextLevelExp * 1.5);
+            this.maxHp += 15;
+            this.maxMp += 10;
+            this.attack += 5;
+            this.hp = this.maxHp;
+            this.mp = this.maxMp;
+            addLog(`勇者はレベル${this.level}に上がった！`, 'heal');
+            playSound(levelupSound);
+            this.learnNewMagic();
+        }
+    }
+
+    learnNewMagic() {
+        let newMagic = null;
+        switch (this.level) {
+            case 3:
+                newMagic = { name: 'アチチ', damage: 22, mpCost: 4, type: 'attack', element: 'fire' };
+                break;
+            case 6:
+                newMagic = { name: 'ヒヤリン', damage: 30, mpCost: 7, type: 'attack', element: 'ice' };
+                break;
+            case 9:
+                newMagic = { name: 'ドクモリ', damage: 16, mpCost: 8, type: 'poison', element: 'dark' };
+                break;
+            case 12:
+                newMagic = { name: 'ゴロピカ', damage: 40, mpCost: 12, type: 'attack', element: 'thunder' };
+                break;
+            case 15:
+                newMagic = { name: 'ミコモリ', healAmount: 35, mpCost: 10, type: 'heal', element: 'light' };
+                break;
+            case 18:
+                newMagic = { name: 'チカラダマ', buff: 'attack', buffAmount: 5, buffTurns: 3, mpCost: 10, type: 'buff', element: 'none' };
+                break;
+            case 20:
+                newMagic = { name: 'ホムラギ', damage: 65, mpCost: 20, type: 'attack', element: 'fire' };
+                break;
+        }
+        if (newMagic) {
+            this.knownMagic.push(newMagic);
+            addLog(`勇者は「${newMagic.name}」を覚えた！`, 'heal');
+        }
+    }
+}
+
+// 敵クラス
+class Enemy extends Character {
+    constructor(name, maxHp, attack, sprite, expReward, isBoss = false, actions = null, element = null, weakTo = null, specialAttack = null) {
+        super(name, maxHp, 0, attack, sprite);
+        this.expReward = expReward;
+        this.isBoss = isBoss;
+        this.actions = actions;
+        this.element = element;
+        this.weakTo = weakTo;
+        this.specialAttack = specialAttack;
+        this.turnCount = 0;
+    }
+    getAction() {
+        if (this.specialAttack && Math.random() < 0.1) {
+            return 'specialAttack';
+        }
+        if (this.actions) {
+            return this.actions[Math.floor(Math.random() * this.actions.length)];
+        }
+        if (this.isBoss) {
+            const actions = ['attack', 'strongAttack', 'magicAttack'];
+            return actions[Math.floor(Math.random() * actions.length)];
+        } else {
+            const actions = ['attack', 'attack', 'strongAttack'];
+            return actions[Math.floor(Math.random() * actions.length)];
+        }
+    }
+}
+
+// ゲーム状態変数
+let player;
+let currentEnemy;
+let gameState = 'battle';
+let isPlayerTurn = true;
+let actionQueue = [];
+let currentLogIndex = 0;
+let logMessages = [];
+let logTimer = null;
+let lastPlayerState = null;
+
+const enemyData = [
+    { name: 'おばけ大木', hp: 60, attack: 12, sprite: '', image: 'images/bajegi.png', exp: 25, actions: ['attack', 'strongAttack', 'attack'], element: 'wood', weakTo: 'fire', specialAttack: { name: 'つるのムチ', effect: '全体攻撃＋麻痺' } },
+    { name: 'ゴブリン', hp: 50, attack: 10, sprite: '', image: 'images/goburin.png', exp: 20, actions: ['attack', 'attack', 'strongAttack'], element: 'none', weakTo: null, specialAttack: { name: '盗賊の一撃', effect: '大ダメージ＋MP吸収' } },
+    { name: 'ゴースト', hp: 70, attack: 14, sprite: '', image: 'images/ghost.png', exp: 28, actions: ['attack', 'attack', 'strongAttack'], element: 'dark', weakTo: 'light', specialAttack: { name: '霊体化', effect: '1ターン物理無効' } },
+    { name: '魔女', hp: 80, attack: 18, sprite: '', image: 'images/majo.png', exp: 40, actions: ['attack', 'magicAttack', 'magicAttack'], element: 'dark', weakTo: 'light', specialAttack: { name: '闇の呪詛', effect: '継続ダメージ（毒）' } },
+    { name: 'メジェド', hp: 65, attack: 13, sprite: '', image: 'images/mejed.png', exp: 35, actions: ['attack', 'magicAttack', 'attack'], element: 'light', weakTo: 'dark', specialAttack: { name: '目からビーム', effect: '防御無視の高威力攻撃' } },
+    { name: 'ミミック', hp: 100, attack: 18, sprite: '', image: 'images/mimic.png', exp: 50, actions: ['attack', 'strongAttack', 'attack'], element: 'none', weakTo: null, specialAttack: { name: '擬態', effect: '1度だけ攻撃無効' } },
+    { name: 'ナイト', hp: 120, attack: 20, sprite: '', image: 'images/naito.png', exp: 45, actions: ['attack', 'strongAttack', 'attack'], element: 'none', weakTo: null, specialAttack: { name: 'シールドバッシュ', effect: '大ダメージ＋気絶' } },
+    { name: 'オーデン', hp: 90, attack: 15, sprite: '', image: 'images/oden.png', exp: 32, actions: ['attack', 'strongAttack', 'attack'], element: 'none', weakTo: null, specialAttack: { name: '雷撃', effect: '全体攻撃＋麻痺' } },
+    { name: '破壊ロボ', hp: 110, attack: 22, sprite: '', image: 'images/robo.png', exp: 50, actions: ['attack', 'magicAttack', 'strongAttack'], element: 'machine', weakTo: 'thunder', specialAttack: { name: 'レーザー砲', effect: '高威力単体攻撃' } },
+    { name: '逆立ち族', hp: 85, attack: 17, sprite: '', image: 'images/sakasazoku.png', exp: 36, actions: ['attack', 'strongAttack', 'attack'], element: 'none', weakTo: null, specialAttack: { name: '逆転パンチ', effect: '大ダメージ＋攻撃力UP' } },
+    { name: 'スケルトン', hp: 75, attack: 13, sprite: '', image: 'images/sukeruton.png', exp: 30, actions: ['attack', 'attack', 'strongAttack'], element: 'none', weakTo: null, specialAttack: { name: '骨投げ乱舞', effect: 'ランダム2〜4回攻撃' } },
+    { name: 'スライム', hp: 40, attack: 8, sprite: '', image: 'images/suraimu.png', exp: 15, actions: ['attack', 'attack', 'attack'], element: 'water', weakTo: 'fire', specialAttack: { name: '分裂', effect: 'HP半分以下で分身を呼ぶ' } },
+    { name: '火の鳥', hp: 60, attack: 12, sprite: '', image: 'images/summon_1.png', exp: 30, actions: ['attack', 'magicAttack', 'attack'], element: 'fire', weakTo: 'ice', specialAttack: { name: '炎の翼', effect: '全体火属性攻撃' } },
+    { name: 'ファイトウルフ', hp: 80, attack: 16, sprite: '', image: 'images/summon_2.png', exp: 35, actions: ['attack', 'strongAttack', 'attack'], element: 'beast', weakTo: 'ice', specialAttack: { name: '咆哮', effect: '敵全体の攻撃力UP' } },
+    { name: '海の化身', hp: 100, attack: 20, sprite: '', image: 'images/summon_3.png', exp: 45, actions: ['attack', 'magicAttack', 'strongAttack'], element: 'water', weakTo: 'thunder', specialAttack: { name: '津波', effect: '全体水属性攻撃' } },
+    { name: 'ロック', hp: 130, attack: 24, sprite: '', image: 'images/summon_4.png', exp: 55, actions: ['attack', 'strongAttack', 'attack'], element: 'rock', weakTo: 'thunder', specialAttack: { name: '岩石落とし', effect: '全体攻撃' } },
+    { name: 'みにどらご', hp: 150, attack: 28, sprite: '', image: 'images/summon_5.png', exp: 60, actions: ['attack', 'magicAttack', 'strongAttack'], element: 'fire', weakTo: 'ice', specialAttack: { name: '炎のブレス', effect: '高威力火属性攻撃＋やけど' } },
+    { name: 'ゾンビ', hp: 80, attack: 12, sprite: '', image: 'images/zonbi.png', exp: 25, actions: ['attack', 'attack', 'strongAttack'], element: 'dark', weakTo: 'fire', specialAttack: { name: '毒吐き', effect: '毒状態付与' } }
+];
+
+const bossData = {
+    name: '魔王', 
+    hp: 300, 
+    attack: 35, 
+    sprite: '👑', 
+    image: 'images/Gemini_Generated_Image_71sr7j71sr.png', // 修正: demonking.png -> Gemini_Generated_Image_71sr7j71sr.png
+    exp: 200
+};
+
+// 音声
+let bgm = null;
+let levelupSound = null;
+let attackPlayerSound = null;
+let attackEnemySound = null;
+let gameoverSound = null;
+let isMuted = false;
+
+// 初期化
+function initGame() {
+    if (!player) {
+        player = new Character('勇者', 100, 50, 20, '🛡️');
+    } else {
+        // プレイヤーのHPとMPは毎戦闘開始時に全回復
+        player.hp = player.maxHp;
+        player.mp = player.maxMp;
+    }
+
+    // レベル20で魔王登場
+    if (player.level >= 20) {
+        currentEnemy = new Enemy(bossData.name, bossData.hp, bossData.attack, bossData.sprite, bossData.exp, true);
+        currentEnemy.image = bossData.image;
+    } else {
+        const enemyTemplate = enemyData[Math.floor(Math.random() * enemyData.length)];
+        currentEnemy = new Enemy(
+            enemyTemplate.name,
+            enemyTemplate.hp,
+            enemyTemplate.attack,
+            enemyTemplate.sprite,
+            enemyTemplate.exp,
+            false,
+            enemyTemplate.actions,
+            enemyTemplate.element,
+            enemyTemplate.weakTo,
+            enemyTemplate.specialAttack
+        );
+        currentEnemy.image = enemyTemplate.image;
+    }
+
+    gameState = 'battle';
+    isPlayerTurn = true;
+    actionQueue = [];
+    logMessages = [];
+    currentLogIndex = 0;
+    clearLogTimer();
+
+    updateDisplay();
+    addLog(`${currentEnemy.name}が現れた！`);
+}
+
+function initAudio() {
+    if (!bgm) {
+        bgm = document.getElementById('bgm');
+        levelupSound = document.getElementById('levelup-sound');
+        // HTMLのidは player-attack-sound, enemy-attack-sound
+        attackPlayerSound = document.getElementById('player-attack-sound'); // 修正
+        attackEnemySound = document.getElementById('enemy-attack-sound'); // 修正
+        gameoverSound = document.getElementById('gameover-sound');
+    }
+    // ここではBGMの再生/停止は行わず、toggleMute()または startGame() で制御
+    const volume = document.getElementById('volume-slider').value / 100;
+    if (bgm) bgm.volume = volume * 0.3;
+    if (levelupSound) levelupSound.volume = volume;
+    if (attackPlayerSound) attackPlayerSound.volume = volume;
+    if (attackEnemySound) attackEnemySound.volume = volume;
+    if (gameoverSound) gameoverSound.volume = volume;
+    if (bgm && !isMuted && gameState === 'battle') { // BGMがすでに再生中でなければ再生
+        bgm.play().catch(e => console.log('BGM play failed:', e));
+    }
+}
+
+function stopAllSounds() {
+    if (bgm) { bgm.pause(); /* bgm.currentTime = 0; */ } // 戦闘継続のためcurrentTimeはリセットしない
+    if (levelupSound) { levelupSound.pause(); levelupSound.currentTime = 0; }
+    if (attackPlayerSound) { attackPlayerSound.pause(); attackPlayerSound.currentTime = 0; }
+    if (attackEnemySound) { attackEnemySound.pause(); attackEnemySound.currentTime = 0; }
+    if (gameoverSound) { gameoverSound.pause(); gameoverSound.currentTime = 0; }
+}
+
+// UI更新
+function updateDisplay() {
+    document.getElementById('player-hp').textContent = player.hp;
+    document.getElementById('player-mp').textContent = player.mp;
+    document.getElementById('player-level').textContent = player.level;
+    document.getElementById('player-exp').textContent = player.exp;
+    document.getElementById('player-next-exp').textContent = player.nextLevelExp;
+
+    document.querySelector('.player-hp-fill').style.width = (player.hp / player.maxHp * 100) + '%';
+    document.querySelector('.player-mp-fill').style.width = (player.mp / player.maxMp * 100) + '%';
+    document.querySelector('.player-exp-fill').style.width = (player.exp / player.nextLevelExp * 100) + '%';
+
+    document.getElementById('enemy-name').textContent = currentEnemy.name;
+    document.getElementById('enemy-hp').textContent = currentEnemy.hp;
+    document.getElementById('enemy-max-hp').textContent = currentEnemy.maxHp;
+
+    const enemyImage = document.getElementById('enemy-image');
+    const enemySprite = document.getElementById('enemy-sprite');
+    if (currentEnemy.image) {
+        enemyImage.src = currentEnemy.image;
+        enemyImage.alt = currentEnemy.name;
+        enemyImage.style.display = 'inline';
+        enemySprite.style.display = 'none';
+    } else {
+        enemyImage.style.display = 'none';
+        enemySprite.style.display = 'inline';
+        enemySprite.textContent = currentEnemy.sprite;
+    }
+
+    document.querySelector('.enemy-hp-fill').style.width = (currentEnemy.hp / currentEnemy.maxHp * 100) + '%';
+
+    const btns = document.querySelectorAll('.command-btn');
+    btns.forEach(btn => btn.disabled = !isPlayerTurn || gameState !== 'battle');
+
+    const magicBtn = btns[1];
+    const healBtn = btns[2];
+    
+    if (player.knownMagic.length > 0) {
+        const latestMagic = player.knownMagic[player.knownMagic.length - 1];
+        magicBtn.disabled = player.mp < latestMagic.mpCost || !isPlayerTurn || gameState !== 'battle';
+        magicBtn.textContent = latestMagic.name;
+    } else {
+        magicBtn.disabled = true;
+        magicBtn.textContent = 'まほう';
+    }
+    
+    healBtn.disabled = player.mp < 5 || !isPlayerTurn || gameState !== 'battle';
+
+    // ゲームオーバーまたは勝利時の表示制御
+    if (gameState !== 'battle') {
+        document.getElementById('battle-commands').style.display = 'none';
+        document.getElementById('game-over').style.display = 'block';
+        let gameOverText = '';
+        if (gameState === 'win') {
+            if (currentEnemy.isBoss) {
+                gameOverText = '魔王を倒した！世界に平和が戻った！';
+            } else {
+                // 通常の敵を倒した場合は、この画面は表示せず直接次の戦闘へ
+                // ここには到達しないはずだが、念のため
+                gameOverText = `${currentEnemy.name}を倒した！勝利！`; 
+            }
+            // BGMは止めない
+        } else { // gameState === 'lose' (プレイヤー敗北時)
+            gameOverText = 'あなたは倒れた...';
+            if (bgm) bgm.pause(); // プレイヤー敗北時はBGMを停止
+        }
+        document.getElementById('game-over-text').textContent = gameOverText;
+
+        // 勝利時の「最初から」ボタンは、魔王戦の勝利時のみ表示されるようにする
+        // または、特定の条件で非表示にするなどの調整が可能
+        // 現在のロジックでは、win/loseどちらでもボタンが表示されるので、
+        // winの場合は「続ける」などに変更するか、この表示自体をスキップする
+        if (gameState === 'win' && !currentEnemy.isBoss) {
+            document.getElementById('game-over').style.display = 'none';
+        }
+    } else {
+        document.getElementById('battle-commands').style.display = 'grid';
+        document.getElementById('game-over').style.display = 'none';
+    }
+}
+
+
+function startGame() {
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('game-content').style.display = 'flex';
+    initAudio();
+    initGame();
+    if (bgm && !isMuted) {
+        bgm.play().catch(e => console.log('BGM play failed:', e));
+    }
+    processActionQueue(); // ログ表示を開始
+}
+
+function restartGame() {
+    // プレイヤーを初期化し直す
+    player = new Character('勇者', 100, 50, 20, '🛡️');
+    // BGMを再開
+    if (bgm) {
+        bgm.currentTime = 0;
+        if (!isMuted) {
+             bgm.play().catch(e => console.log('BGM play failed:', e));
+        }
+    }
+    startNextBattle(); // 次の戦闘（事実上の最初）を開始
+}
+
+function startNextBattle() {
+    initGame();
+    addLog(`次の敵が現れた！`, 'heal');
+    updateDisplay();
+    processActionQueue(); // ログ表示を再開
+}
+
+// ログシステム
+function addLog(message, className = '') {
+    logMessages.push({ message: message, className: className });
+}
+
+function clearLogTimer() {
+    if (logTimer) {
+        clearInterval(logTimer);
+        logTimer = null;
+    }
+}
+
+function processActionQueue() {
+    clearLogTimer();
+    logTimer = setInterval(() => {
+        if (logMessages.length > currentLogIndex) {
+            const logContainer = document.getElementById('log-messages');
+            const logEntry = logMessages[currentLogIndex];
+
+            // 古いメッセージが多すぎる場合は削除（最大8メッセージ程度）
+            if (logContainer.children.length > 8) {
+                logContainer.removeChild(logContainer.firstChild);
+            }
+
+            const p = document.createElement('p');
+            p.textContent = logEntry.message;
+            if (logEntry.className) {
+                p.classList.add(logEntry.className);
+            }
+            logContainer.appendChild(p);
+            logContainer.scrollTop = logContainer.scrollHeight; // スクロールを一番下へ
+
+            currentLogIndex++;
+        } else {
+            clearLogTimer();
+            if (gameState === 'battle') {
+                isPlayerTurn = true;
+                updateDisplay();
+            } else if (gameState === 'win' && !currentEnemy.isBoss) {
+                // 通常勝利時はログが流れ終わったら次の戦闘へ
+                // ただし、ログの流れが途中で止まってしまう可能性を考慮し、
+                // enemyDefeated内のsetTimeoutで制御しているため、ここでは何もしない
+            } else if (gameState === 'lose') {
+                // 敗北時はログが流れ終わったらゲームオーバーサウンドを再生
+                playSound(gameoverSound);
+            }
+        }
+    }, 10); // 0.5秒ごとにログを表示
+}
+
+
+// --- バトルロジック ---
+
+function playerAttack() {
+    if (!isPlayerTurn || gameState !== 'battle') return;
+
+    isPlayerTurn = false;
+    updateDisplay();
+    addLog('勇者の攻撃！');
+    playSound(attackEnemySound);
+
+    const damage = player.attack + Math.floor(Math.random() * 5) - 2; // ダメージにばらつき
+    currentEnemy.takeDamage(damage);
+
+    addLog(`${currentEnemy.name}に${damage}のダメージ！`, 'damage');
+    
+    // アニメーション効果（もしあれば）
+
+    updateDisplay();
+    checkBattleEnd();
+    
+    if (gameState === 'battle') {
+        setTimeout(enemyTurn, 500); // 敵のターンへ
+    }
+    
+    processActionQueue();
+}
+
+function playerMagic() {
+    if (!isPlayerTurn || gameState !== 'battle') return;
+    
+    const latestMagic = player.knownMagic[player.knownMagic.length - 1];
+    if (!latestMagic) {
+        addLog('まだ魔法を覚えていない！');
+        isPlayerTurn = true; // ターンを消費しない
+        updateDisplay();
+        processActionQueue();
+        return;
+    }
+    
+    if (player.mp < latestMagic.mpCost) {
+        addLog('MPが足りない！');
+        isPlayerTurn = true; // ターンを消費しない
+        updateDisplay();
+        processActionQueue();
+        return;
+    }
+
+    isPlayerTurn = false;
+    updateDisplay();
+    player.useMp(latestMagic.mpCost);
+
+    addLog(`勇者は${latestMagic.name}を唱えた！`, 'heal');
+    playSound(attackEnemySound); // 魔法も仮で同じ音
+
+    // 魔法効果のアニメーション表示
+    let effectType = '';
+    switch(latestMagic.element) {
+        case 'fire': effectType = 'fire-effect'; break;
+        case 'ice': effectType = 'ice-effect'; break;
+        case 'thunder': effectType = 'thunder-effect'; break;
+        case 'light': effectType = 'holy-effect'; break;
+        default: break;
+    }
+    showMagicEffect(effectType);
+
+    if (latestMagic.type === 'attack') {
+        let damage = latestMagic.damage + Math.floor(Math.random() * 10) - 5;
+        
+        // 属性によるダメージ補正（シンプル版）
+        if (currentEnemy.weakTo === latestMagic.element) {
+            damage = Math.floor(damage * 1.5);
+            addLog(`効果は抜群だ！`, 'damage');
+        } else if (currentEnemy.element === latestMagic.element) {
+            damage = Math.floor(damage * 0.5);
+            addLog(`効果はいまひとつだ...`);
+        }
+        
+        currentEnemy.takeDamage(damage);
+        addLog(`${currentEnemy.name}に${damage}のダメージ！`, 'damage');
+    } else if (latestMagic.type === 'heal') {
+        player.heal(latestMagic.healAmount);
+        addLog(`${player.name}のHPが${latestMagic.healAmount}回復した！`, 'heal');
+    } else if (latestMagic.type === 'poison') {
+        addLog(`${currentEnemy.name}は毒にかかった！`);
+        // 毒などの状態異常処理は複雑になるためここではスキップ
+    }
+
+    updateDisplay();
+    checkBattleEnd();
+    
+    if (gameState === 'battle') {
+        setTimeout(enemyTurn, 1500);
+    }
+    
+    processActionQueue();
+}
+
+function playerHeal() {
+    if (!isPlayerTurn || gameState !== 'battle') return;
+    
+    const healCost = 5;
+    const healAmount = 50;
+
+    if (player.mp < healCost) {
+        addLog('MPが足りない！');
+        isPlayerTurn = true;
+        updateDisplay();
+        processActionQueue();
+        return;
+    }
+    
+    isPlayerTurn = false;
+    player.useMp(healCost);
+
+    addLog('薬草を使った！');
+    player.heal(healAmount);
+    addLog(`${player.name}のHPが${healAmount}回復した！`, 'heal');
+    
+    updateDisplay();
+    
+    setTimeout(enemyTurn, 10);
+    processActionQueue();
+}
+
+function runAway() {
+    if (!isPlayerTurn || gameState !== 'battle') return;
+
+    isPlayerTurn = false;
+    updateDisplay();
+    addLog('勇者は逃げ出した！');
+
+    if (Math.random() < 0.5) {
+        addLog('逃走成功！');
+        setTimeout(startNextBattle, 10);
+    } else {
+        addLog('逃走失敗！');
+        setTimeout(enemyTurn, 10);
+    }
+    
+    processActionQueue();
+}
+
+
+function enemyTurn() {
+    if (gameState !== 'battle') return;
+
+    const action = currentEnemy.getAction();
+    let damage = 0;
+    
+    switch (action) {
+        case 'attack':
+            addLog(`${currentEnemy.name}の攻撃！`);
+            damage = Math.floor(currentEnemy.attack * (0.9 + Math.random() * 0.2)); // ±10%
+            break;
+        case 'strongAttack':
+            addLog(`${currentEnemy.name}の渾身の一撃！`);
+            damage = Math.floor(currentEnemy.attack * (1.2 + Math.random() * 0.3));
+            break;
+        case 'magicAttack':
+            addLog(`${currentEnemy.name}は魔法を唱えた！`);
+            damage = Math.floor(currentEnemy.attack * (1.1 + Math.random() * 0.2));
+            showMagicEffect('fire-effect'); // 仮の魔法エフェクト
+            break;
+        case 'specialAttack':
+            addLog(`${currentEnemy.name}は「${currentEnemy.specialAttack.name}」を使った！`);
+            damage = Math.floor(currentEnemy.attack * (1.5 + Math.random() * 0.5));
+            // 特殊効果のログを出す (例: 麻痺、毒など)
+            break;
+    }
+    
+    playSound(attackPlayerSound);
+    player.takeDamage(damage);
+    addLog(`${player.name}に${damage}のダメージ！`, 'damage');
+    
+    updateDisplay();
+    checkBattleEnd();
+
+    if (gameState === 'battle') {
+        isPlayerTurn = true;
+        updateDisplay();
+        addLog(`勇者のターン！`); // ターン開始ログ
+    }
+    
+    processActionQueue();
+}
+
+
+function checkBattleEnd() {
+    if (!currentEnemy.isAlive()) {
+        gameState = 'win';
+        enemyDefeated();
+    } else if (!player.isAlive()) {
+        gameState = 'lose';
+        playerDefeated();
+    }
+}
+
+function enemyDefeated() {
+    // ボタンを無効化
+    document.querySelectorAll('.command-btn').forEach(btn => btn.disabled = true);
+    
+    // --- 【重要】辞世の句の演出をここに挿入 ---
+    // 命令順を変えない制約のため、経験値獲得の前にログが流れます。
+    const deathPoems = [
+        // 物理/戦士系
+        `「この一撃 受け止めろ 次の世代で」`,
+        `「防御力を 振り分けミス あばよ」`,
+        `「鉄の掟と 握り飯 夢のあと」`,
+        `「牙が折れては 意味がない 肉になれ」`,
+        `「シールドを 持たざる者に 愛はない」`,
+        `「腕立ての 回数だけは 負けぬ」`,
+        `「鎧のサビも 名誉の勲章 散る」`,
+        `「斧よ 呪いをかけろ 次は勝つ」`,
+        `「油が切れた 動きは鈍い さよなら」`,
+        `「忠義を 尽くすは 夢 いざ 自由へ」`,
+
+        // 魔法/異形系
+        `「世界は 虚構 呪いは 真実 知れ」`,
+        `「目からビームの 充電が 間に合わぬ」`,
+        `「計算結果は 敗北 再起動 不可」`,
+        `「炎は 不滅 氷を 連れて 来い」`,
+        `「幽霊に 質量が あると思うな」`,
+        `「闇の呪詛は 領収書 発行しない」`,
+        `「バッテリーは 単三だ 交換しろ」`,
+        `「炎のブレス 歯に 詰まった 肉」`,
+        `「視界は 良好 標的は 永遠に」`,
+        `「霊体は 寒がり 太陽が 欲しい」`,
+
+        // 自然/エレメント系
+        `「ツタは 地球に 根を張る 永久に」`,
+        `「水と 炎は 仲良し また 溶けよう」`,
+        `「津波で 流された 傘を 返せ」`,
+        `「分裂する 時間さえ 与えぬか」`,
+        `「岩石は 砕けても また 山となる」`,
+        `「全身が チキンだ 揚げるか 勇者」`,
+        `「樹液で ベタベタ 死ぬのも 悪くない」`,
+        `「海の化身は 実は カナヅチ 嘘」`,
+        `「羽が 焦げたぞ 修理に 出せ」`,
+        `「大地に 還る それだけが 救い」`,
+
+        // アンデッド/珍獣系
+        `「宝箱は 罠 中身は 空 ざまを見ろ」`,
+        `「骨は 拾って くれるな そのままで」`,
+        `「逆さまで 見る 世界も 同じ 闇」`,
+        `「毒の 吐き方 練習 不足 ちくしょう」`,
+        `「ミミックの 中に ミミック おっと 秘密」`,
+        `「腐敗は 芸術 匂いは 魂の 香水」`,
+        `「骨投げの 軌道が 少し ズレた」`,
+        `「パンチの 衝撃で 足が 元に」`,
+        `「金庫の 鍵は 歯の 裏に ある ぞ」`,
+        `「永遠は 長すぎる 一度で 十分」`,
+    ];
+    const poem = deathPoems[Math.floor(Math.random() * deathPoems.length)];
+    addLog(`${currentEnemy.name}：「${poem}」`, 'damage'); // 敵の最後のセリフを流す
+    // ----------------------------------------
+    
+    const expReward = currentEnemy.expReward;
+    
+    // 経験値獲得 (addExp内でログが追加される)
+    player.addExp(expReward);
+    
+    // BGMをフェードアウト（魔王戦勝利時を除く）
+    if (!currentEnemy.isBoss) {
+        // ... (BGMフェードアウト処理があればここに残す)
+    }
+
+    if (currentEnemy.isBoss) {
+        updateDisplay();
+        // 魔王戦勝利時はゲームオーバー画面へ移行
+        document.getElementById('game-over-text').textContent = "魔王を倒した！世界に平和が戻った！";
+        document.getElementById('game-over').style.display = 'block';
+        document.getElementById('battle-commands').style.display = 'none';
+        stopAllSounds();
+    } else {
+        // 通常戦闘はログ表示が終わった後に次の戦闘へ移行
+        
+        // ログキューの残りのメッセージ数に基づいてディレイを計算する
+        // (メッセージ数 + 1) * 500ms を待つことで、最後のログが表示されるのを保証
+        const delayTime = (logMessages.length - currentLogIndex) * 50 + 500;
+        
+        setTimeout(startNextBattle, delayTime); // 👈 ここが修正点
+    }
+} // enemyDefeated 関数の終了
+
+function playerDefeated() {
+    // プレイヤー敗北時の処理
+    document.querySelectorAll('.command-btn').forEach(btn => btn.disabled = true);
+    gameState = 'lose';
+    addLog(`${player.name}は力尽きた...`);
+    
+    // ログ表示が終わった後、ゲームオーバー音を鳴らすためsetTimeoutは不要
+    // processActionQueueがログ表示後にgameoverSoundを鳴らす
+    updateDisplay();
+}
+
+
+// --- ユーティリティ ---
+
+function playSound(audioElement) {
+    if (audioElement && !isMuted) {
+        audioElement.currentTime = 0;
+        audioElement.play().catch(e => console.log('Audio play failed:', e));
+    }
+}
+
+function toggleMute() {
+    isMuted = !isMuted;
+    const muteBtn = document.getElementById('mute-btn');
+    if (isMuted) {
+        muteBtn.textContent = '🔇';
+        stopAllSounds();
+    } else {
+        muteBtn.textContent = '🔊';
+        if (bgm && gameState === 'battle') {
+             bgm.play().catch(e => console.log('BGM play failed:', e));
+        }
+    }
+}
+
+function changeVolume() {
+    const volume = document.getElementById('volume-slider').value / 100;
+    if (bgm) bgm.volume = volume * 0.3;
+    if (levelupSound) levelupSound.volume = volume;
+    if (attackPlayerSound) attackPlayerSound.volume = volume;
+    if (attackEnemySound) attackEnemySound.volume = volume;
+    if (gameoverSound) gameoverSound.volume = volume;
+}
+
+function showMagicEffect(effectClass) {
+    const effectDiv = document.getElementById('magic-effect');
+    if (!effectDiv) return;
+
+    // 敵の位置にエフェクトを表示
+    const enemySprite = document.getElementById('enemy-image').parentElement;
+    const enemyRect = enemySprite.getBoundingClientRect();
+    const containerRect = document.querySelector('.game-container').getBoundingClientRect();
+    
+    effectDiv.style.top = `${enemyRect.top + enemyRect.height / 2 - containerRect.top}px`;
+    effectDiv.style.left = `${enemyRect.left + enemyRect.width / 2 - containerRect.left}px`;
+
+    effectDiv.className = `magic-effect ${effectClass}`;
+    effectDiv.style.display = 'block';
+
+    // アニメーションが終わったら非表示に戻す
+    setTimeout(() => {
+        effectDiv.style.display = 'none';
+        effectDiv.className = 'magic-effect';
+    }, 100);
+}
+
+// 初期起動
+document.getElementById('start-button').addEventListener('click', startGame);
+
+// 初期化時にボリュームを設定
+document.addEventListener('DOMContentLoaded', () => {
+    initAudio(); // audioタグが存在することを確認
+    changeVolume(); // ボリュームスライダーの値に基づいて音量を設定
+});
+
+  </script>
 </body>
 </html>

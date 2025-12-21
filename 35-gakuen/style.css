@@ -1,0 +1,431 @@
+/* リセットCSS */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Hiragino Sans', 'Meiryo', sans-serif;
+  background: #000;
+  color: #fff;
+  overflow: hidden;
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* 画面切り替え */
+.screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.screen.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* タイトル画面 */
+#titleScreen {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto; /* 小さい画面での見切れ防止 */
+}
+
+.title-container {
+  text-align: center;
+  animation: fadeInUp 1s ease-out;
+  width: 95%;
+  max-width: 800px;
+  padding: 20px 0;
+}
+
+.main-title {
+  /* ★修正ポイント：文字サイズを自動調整し、勝手な改行を防ぐ */
+  font-size: clamp(1.5rem, 4vw, 3.5rem);
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+  
+  /* グラデーション文字設定 */
+  background: linear-gradient(45deg, #fff, #87ceeb);
+  background-size: 200% 200%; /* 背景サイズを大きくして切れ防止 */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  
+  /* 改行設定 */
+  word-break: keep-all; /* 単語途中での改行禁止 */
+  white-space: nowrap;  /* PCなどでは1行を維持 */
+  display: inline-block; /* 描画バグ対策 */
+}
+
+/* タイトル画像 */
+.title-image {
+  max-width: 100%;
+  height: auto;
+  width: 280px;
+  margin: 0 auto 2rem auto;
+  display: block;
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+  transition: transform 0.3s ease;
+}
+
+.title-image:hover {
+  transform: scale(1.05);
+}
+
+.subtitle {
+  font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+  margin-bottom: 3rem;
+  opacity: 0.9;
+  letter-spacing: 0.1em;
+}
+
+.title-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  align-items: center;
+}
+
+.title-btn {
+  padding: 1rem 2rem;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  width: 220px;
+}
+
+.title-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: translateY(-2px);
+}
+
+.credits {
+  font-size: 0.8rem;
+  opacity: 0.6;
+  line-height: 1.4;
+  margin-top: 1rem;
+}
+
+/* ゲーム画面 */
+#gameScreen {
+  position: relative;
+}
+
+#backgroundContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#background {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 1s ease-in-out;
+}
+
+#backgroundOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  transition: opacity 0.5s ease;
+}
+
+/* テキストエリア */
+#textContainer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 20px;
+  z-index: 10;
+}
+
+#nameBox {
+  background: rgba(0, 0, 0, 0.8);
+  color: #87ceeb;
+  padding: 0.5rem 1rem;
+  border-radius: 10px 10px 0 0;
+  font-weight: bold;
+  display: none;
+  max-width: 200px;
+  border: 2px solid rgba(135, 206, 235, 0.5);
+}
+
+#textBox {
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 15px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+  position: relative;
+  min-height: 120px;
+}
+
+#gameText {
+  font-size: clamp(1rem, 2.5vw, 1.3rem);
+  line-height: 1.8;
+  margin: 0;
+  word-wrap: break-word;
+}
+
+#nextIndicator {
+  position: absolute;
+  bottom: 10px;
+  right: 20px;
+  font-size: 1.2rem;
+  color: #87ceeb;
+  animation: blink 1s infinite;
+}
+
+/* 選択肢 */
+#choicesContainer {
+  position: absolute;
+  bottom: 160px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 15;
+  width: 90%;
+  max-width: 500px;
+}
+
+.choice-btn {
+  padding: 1rem 1.5rem;
+  background: rgba(30, 60, 114, 0.9);
+  border: 2px solid rgba(135, 206, 235, 0.5);
+  color: #fff;
+  border-radius: 10px;
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  text-align: left;
+}
+
+.choice-btn:hover {
+  background: rgba(135, 206, 235, 0.3);
+  border-color: #87ceeb;
+  transform: translateX(10px);
+}
+
+/* UI */
+#gameUI {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 20;
+}
+
+.ui-btn {
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+}
+
+.ui-btn:hover {
+  background: rgba(135, 206, 235, 0.3);
+  border-color: #87ceeb;
+}
+
+/* 設定画面 */
+#configScreen {
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.config-container, .menu-container {
+  background: rgba(30, 60, 114, 0.9);
+  border: 2px solid rgba(135, 206, 235, 0.5);
+  border-radius: 20px;
+  padding: 2rem;
+  backdrop-filter: blur(20px);
+  min-width: 300px;
+}
+
+.config-container h2, .menu-container h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #87ceeb;
+}
+
+.config-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.config-item label {
+  min-width: 100px;
+  font-size: 1rem;
+}
+
+.config-item input[type="range"] {
+  flex: 1;
+  margin: 0 10px;
+}
+
+.config-item span {
+  min-width: 30px;
+  text-align: center;
+  color: #87ceeb;
+}
+
+/* メニュー画面 */
+#menuScreen {
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-btn {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.menu-btn:hover {
+  background: rgba(135, 206, 235, 0.3);
+  border-color: #87ceeb;
+}
+
+/* アニメーション */
+@keyframes fadeInUp {
+  from {
+      opacity: 0;
+      transform: translateY(30px);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.fade-out {
+  opacity: 0 !important;
+}
+
+.fade-in {
+  opacity: 1 !important;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  #gameUI {
+      top: 10px;
+      right: 10px;
+      flex-wrap: wrap;
+  }
+  
+  .ui-btn {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+  }
+  
+  #textContainer {
+      padding: 15px;
+  }
+  
+  #textBox {
+      padding: 1rem;
+      min-height: 100px;
+  }
+  
+  .choice-btn {
+      padding: 0.8rem 1rem;
+  }
+  
+  .config-container, .menu-container {
+      margin: 20px;
+      padding: 1.5rem;
+      min-width: auto;
+      width: calc(100% - 40px);
+  }
+}
+
+/* スマホなど極端に狭い画面用 */
+@media (max-width: 480px) {
+  .title-buttons {
+      gap: 0.8rem;
+  }
+  
+  .title-btn {
+      padding: 0.8rem 1.5rem;
+  }
+  
+  #gameUI {
+      gap: 5px;
+  }
+  
+  .config-item {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.5rem;
+  }
+  
+  .config-item label {
+      min-width: auto;
+      text-align: center;
+  }
+  
+  /* スマホでのタイトル表示崩れ対策 */
+  .main-title {
+      white-space: normal; /* 改行を許可 */
+      font-size: 2rem;
+      background: none; /* バグ回避のためグラデーション解除 */
+      color: #87ceeb;   /* 代わりに単色を指定 */
+      -webkit-text-fill-color: #87ceeb;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+  }
+}

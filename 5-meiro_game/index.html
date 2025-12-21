@@ -20,6 +20,7 @@
         <span>🌟 レベル: <span id="level">1</span></span>
         <span>🎯 宝物を探そう！</span>
         <span>🗝️ 残り宝箱: <span id="treasure-count"></span></span>
+        <span>⏱️ 残り時間: <span id="time">30</span>秒</span>
       </div>
     </div>
 
@@ -61,8 +62,19 @@
     </div>
   </div>
 
+   <!-- ローディング表示 -->
   <div id="loading">🎮 ゲームを準備中...</div>
 
-  <script src="main.js" defer></script>
+  <!-- スクリプトの読み込み順（順序保証付き） -->
+  <script src="./quizData.js" defer></script>
+　<script src="./main.js" defer></script>
+
+  <script>
+    // ページ読み込み完了後にローディングを非表示
+    window.addEventListener('load', () => {
+      const loading = document.getElementById('loading');
+      if (loading) loading.style.display = 'none';
+    });
+  </script>
 </body>
 </html>

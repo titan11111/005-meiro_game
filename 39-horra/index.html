@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    <title>深夜のコンビニ店員</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <!-- ゲーム開始画面 -->
+        <div id="startScreen" class="screen">
+            <h1>深夜の<br>コンビニ店員</h1>
+            <p>深夜0時から早朝6時まで<br>コンビニで働こう！</p>
+            <p class="objective">目的：6時早朝まで<br>正気でいられるか</p>
+            <button id="startBtn">ゲーム開始</button>
+        </div>
+
+        <!-- メインゲーム画面 -->
+        <div id="gameScreen" class="screen hidden">
+            <!-- ヘッダー情報 -->
+            <div id="gameHeader">
+                <div id="timeDisplay">00:00</div>
+                <div id="healthBar">
+                    <span>体力:</span>
+                    <div class="bar">
+                        <div id="healthFill" class="bar-fill"></div>
+                    </div>
+                </div>
+                <div id="sanityBar">
+                    <span>正気:</span>
+                    <div class="bar">
+                        <div id="sanityFill" class="bar-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ミッション表示 -->
+            <div id="missionPanel" class="mission-panel">
+                <div id="missionHeader">
+                    <span>📋 ミッション</span>
+                    <button id="missionToggle">▼</button>
+                </div>
+                <div id="missionList" class="mission-list">
+                    <div id="missionContent"></div>
+                </div>
+            </div>
+
+            <!-- メインエリア -->
+            <div id="mainArea">
+                <div id="storeView">
+                    <div id="customerArea">
+                        <div id="customer" class="hidden">
+                            <div class="customer-sprite">👤</div>
+                            <div id="customerSpeech" class="speech-bubble"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="registerArea">
+                        <div class="register">💻</div>
+                        <div id="registerScreen">ようこそ！</div>
+                    </div>
+
+                    <!-- イベント絵文字表示エリア -->
+                    <div id="eventEmojiArea"></div>
+                </div>
+
+                <!-- 作業エリア -->
+                <div id="workArea">
+                    <button class="work-btn" data-work="register">レジ対応</button>
+                    <button class="work-btn" data-work="restock">商品補充</button>
+                    <button class="work-btn" data-work="clean">清掃</button>
+                    <button class="work-btn" data-work="coffee">コーヒー休憩</button>
+                </div>
+            </div>
+
+            <!-- イベントメッセージ -->
+            <div id="eventMessage" class="hidden">
+                <div id="eventText"></div>
+                <button id="eventOk">OK</button>
+            </div>
+        </div>
+
+        <!-- ゲーム終了画面 -->
+        <div id="endScreen" class="screen hidden">
+            <h2 id="endTitle">お疲れ様でした！</h2>
+            <p id="endMessage">7時間のお仕事が終わりました</p>
+            <button id="restartBtn">もう一度プレイ</button>
+        </div>
+    </div>
+
+    <!-- 音声再生用（実際のファイルは使用せず、効果音をシミュレート） -->
+    <audio id="bgm" src="audio/konbini.mp3" loop preload="auto"></audio>
+    <audio id="sfx"></audio>
+
+    <script src="script.js"></script>
+</body>
+</html>

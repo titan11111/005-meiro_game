@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通勤クエスト：AM 8:55の勇者</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+        
+        body {
+            margin: 0;
+            background-color: #222;
+            color: #eee;
+            font-family: 'DotGothic16', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation; 
+        }
+        #game-container {
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            border: 4px solid #fff;
+            max-width: 100%;
+        }
+        canvas {
+            background-color: #333;
+            image-rendering: pixelated;
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            font-size: 24px;
+            text-shadow: 2px 2px 0 #000;
+        }
+        .message-box {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            background: rgba(0, 0, 0, 0.9);
+            border: 4px solid white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 24px;
+            display: none;
+            line-height: 1.6;
+            z-index: 20;
+        }
+        /* 糸井流メッセージ演出用 */
+        .lucky-message {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            color: #FF69B4; /* HotPink */
+            text-shadow: 3px 3px 0 #fff, -1px -1px 0 #000;
+            pointer-events: none;
+            animation: popUp 2s forwards;
+            white-space: nowrap;
+            display: none;
+            z-index: 15;
+        }
+        @keyframes popUp {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            20% { transform: translate(-50%, -60%) scale(1.2); opacity: 1; }
+            80% { transform: translate(-50%, -70%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -80%) scale(1); opacity: 0; }
+        }
+
+        #start-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+            cursor: pointer;
+            z-index: 10;
+        }
+        h1 { font-size: 48px; margin: 0 0 20px 0; color: #FFD700; text-shadow: 4px 4px 0 #000; text-align: center;}
+        .blink { animation: blink 1.5s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <canvas id="canvas" width="800" height="450"></canvas>
+    
+    <div id="ui-layer">
+        <div>TIME <span id="time-display">08:00</span></div>
+        <div>MENTAL <span id="hp-display">♥♥♥♥♥</span></div>
+    </div>
+
+    <div id="message-box" class="message-box"></div>
+    <div id="lucky-message" class="lucky-message"></div>
+
+    <div id="start-overlay">
+        <h1>通勤クエスト</h1>
+        <p style="font-size:24px; color:#ccc;">AM 8:55の勇者</p>
+        <p class="blink" style="margin-top:40px; font-size: 20px;">画面をクリックして出勤</p>
+        <div style="font-size:14px; margin-top:20px; color:#888;">
+            ENTER: ジャンプ・会話送り<br>
+            ← → : 左右移動<br>
+            <span style="color:#FF69B4;">★ 時々「小さな幸せ」が訪れます</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- コンフィグ & 素材パス ---
+    const ASSETS = {
+        player: 'images/salaryman.png',
+        boss: 'boss.png',
+        dog: 'dog.png',
+        trash: 'trash.png',
+        colleague: 'colleague.png',
+        bgmStage: 'bgm_stage.mp3',
+        bgmBoss: 'bgm_boss.mp3',
+        bgmOver: 'bgm_over.mp3',
+        bgmClear: 'Pixel Parade.mp3'
+    };
+
+    // --- ゲームエンジン初期化 ---
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const msgBox = document.getElementById('message-box');
+    const luckyMsgBox = document.getElementById('lucky-message');
+    
+    const images = {};
+    for(let key in ASSETS) {
+        if(key.startsWith('bgm')) continue;
+        const img = new Image();
+        img.src = ASSETS[key]; 
+        images[key] = img;
+    }
+
+    const audios = {};
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    function ensureAudioContext() {
+        if (audioCtx || !AudioContext) return;
+        try {
+            audioCtx = new AudioContext();
+        } catch (e) {
+            console.warn('AudioContext init failed', e);
+            audioCtx = null;
+        }
+    }
+    
+    // 状態管理
+    let gameState = 'TITLE'; 
+    let stagePhase = 0; 
+    let frame = 0;
+    let gameTime = 8 * 60; 
+    
+    // プレイヤー設定
+    const player = { x: 100, y: 300, w: 64, h: 64, dy: 0, grounded: false, hp: 5, maxHp: 5 };
+    
+    const groundY = 380;
+    let enemies = [];
+    let bonuses = []; // 新要素：ボーナスアイテム
+    let particles = [];
+    let distance = 0;
+    
+    const scenario = [
+        { phase: 0, text: "ジリリリリ！\n目覚ましが鳴った。\nまた戦い（平日）が始まるのだ..." },
+        { phase: 1, text: "家を出た。\nテレビの誘惑を振り切り、\n今はただ駅へと急ぐ！" },
+        { phase: 2, text: "バス停だ！\nあの高速バスに乗れれば、\n遅刻は回避できるはずだ！" },
+        { phase: 3, text: "バスには...乗れなかった。\n仕方ない、走ろう。\nカフェの香りが俺を誘惑する。" },
+        { phase: 4, text: "オフィスに到着。\n同僚たちが昨日のドラマの話で\n行く手を阻んでくる！" },
+        { phase: 5, text: "「遅いぞ！！！」\n部長の怒号が響く。\n言い訳をして、なんとか許してもらわねば。" }
+    ];
+    let currentMsgIndex = -1;
+
+    // 糸井流：小さな幸せメッセージ集
+    const happyWords = [
+        "今日の夕飯はカレーだ",
+        "好きな曲が流れてきた",
+        "信号が全部青だった",
+        "ふと、猫と目があった",
+        "新しいマンガの発売日",
+        "週末は晴れるらしい",
+        "ポケットに100円あった"
+    ];
+
+    // --- 入力管理 ---
+    const keys = {};
+
+    window.addEventListener('keydown', e => {
+        keys[e.code] = true;
+
+        // ★ エンターキーで会話送り & ジャンプ（ユーザー要望）
+        if(e.code === 'Enter') {
+            if(gameState === 'MESSAGE') nextMessage();
+            if(gameState === 'PLAY') doJump();
+            if(gameState === 'GAMEOVER' || gameState === 'ENDING') location.reload();
+        }
+    });
+    window.addEventListener('keyup', e => keys[e.code] = false);
+
+    // スタート画面のみクリック対応
+    document.getElementById('start-overlay').addEventListener('click', startGame);
+
+    function startGame() {
+        document.getElementById('start-overlay').style.display = 'none';
+        ensureAudioContext();
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        playBgm('bgmStage');
+        showMessage(0);
+    }
+
+    function doJump() {
+        if (player.grounded) {
+            player.dy = -16;
+            player.grounded = false;
+            playSound('jump');
+        }
+    }
+
+    // --- ゲームループ ---
+    function loop() {
+        update();
+        draw();
+        requestAnimationFrame(loop);
+    }
+
+    function update() {
+        if(gameState === 'TITLE' || gameState === 'MESSAGE' || gameState === 'GAMEOVER' || gameState === 'ENDING') return;
+
+        frame++;
+        if(frame % 30 === 0) gameTime++;
+        let h = Math.floor(gameTime / 60);
+        let m = gameTime % 60;
+        document.getElementById('time-display').innerText = `${h < 10 ? '0'+h : h}:${m < 10 ? '0'+m : m}`;
+        
+        if(gameTime >= 9 * 60) setGameOver(true);
+
+        // プレイヤー物理 & 左右移動
+        player.dy += 0.9;
+        player.y += player.dy;
+        
+        const moveSpeed = 5;
+        if ((keys['ArrowLeft'] || keys['KeyA']) && player.x > 0) {
+            player.x -= moveSpeed;
+        }
+        if ((keys['ArrowRight'] || keys['KeyD']) && player.x < canvas.width - player.w) {
+            player.x += moveSpeed;
+        }
+
+        if(player.y + player.h > groundY) {
+            player.y = groundY - player.h;
+            player.dy = 0;
+            player.grounded = true;
+        }
+
+        // 背景スクロール進行
+        if(gameState === 'PLAY') {
+            distance += 5;
+            
+            // ロングステージ設定
+            if(stagePhase === 0 && distance > 3000) changePhase(1); 
+            if(stagePhase === 1 && distance > 7500) changePhase(2); 
+            if(stagePhase === 2 && distance > 10500) changePhase(3); 
+            if(stagePhase === 3 && distance > 15000) changePhase(4); 
+            if(stagePhase === 4 && distance > 21000) changePhase(5); 
+        }
+
+        // 敵の出現
+        if(gameState === 'PLAY' && Math.random() < 0.02) spawnEnemy();
+        
+        // ★ 小さな幸せ（回復アイテム）の出現：低確率
+        if(gameState === 'PLAY' && Math.random() < 0.003) spawnBonus();
+
+        // 敵の更新
+        enemies.forEach((e, i) => {
+            e.x -= e.speed;
+            if(rectIntersect(player, e)) {
+                if(e.type === 'bus') {
+                    distance += 3000; 
+                    gameTime -= 10; 
+                    enemies.splice(i, 1);
+                    createParticle(player.x, player.y, 'NICE!', 'yellow');
+                } else {
+                    damagePlayer();
+                    enemies.splice(i, 1);
+                }
+            }
+            if(e.x < -200) enemies.splice(i, 1);
+        });
+
+        // ボーナスの更新
+        bonuses.forEach((b, i) => {
+            b.x -= b.speed;
+            // 揺らぎアニメーション
+            b.y = b.baseY + Math.sin(frame * 0.1) * 20; 
+
+            if(rectIntersect(player, b)) {
+                getHappy(b);
+                bonuses.splice(i, 1);
+            }
+            if(b.x < -100) bonuses.splice(i, 1);
+        });
+
+        if(gameState === 'BOSS') {
+            if(player.x < 600) player.x += 1; 
+            
+            if(frame % 60 === 0) {
+                enemies.push({x: 650, y: groundY - 80, w: 40, h: 40, speed: 6, type: 'shout', color: 'red'});
+            }
+            if(player.x > 600) {
+                gameClear();
+            }
+        }
+    }
+
+    function draw() {
+        let bgCol = '#333';
+        if(stagePhase === 1 || stagePhase === 3) bgCol = '#87CEEB'; 
+        if(stagePhase === 2) bgCol = '#FFD700'; 
+        if(stagePhase >= 4) bgCol = '#A9A9A9'; 
+        ctx.fillStyle = bgCol;
+        ctx.fillRect(0,0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#444';
+        ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
+
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        for(let i=0; i<10; i++) {
+            let x = (i * 200 - distance * 0.5) % canvas.width;
+            if(x<0) x += canvas.width;
+            ctx.fillRect(x, groundY - 100, 80, 100);
+        }
+
+        if(player.dy !== 0) ctx.translate(0, -5); 
+        drawSprite('player', player.x, player.y, player.w, player.h);
+        ctx.setTransform(1,0,0,1,0,0);
+
+        if(stagePhase === 5) {
+            drawSprite('boss', 600, groundY - 160, 160, 160);
+            ctx.fillStyle = 'white';
+            ctx.font = '20px DotGothic16';
+            ctx.fillText("遅いぞ!!!", 620, groundY - 170);
+        }
+
+        enemies.forEach(e => {
+            if(e.type === 'dog') drawSprite('dog', e.x, e.y, e.w, e.h);
+            else if(e.type === 'colleague') {
+                drawSprite('colleague', e.x, e.y, e.w, e.h);
+                // 同僚のセリフも配置に合わせて中央寄せ
+                ctx.fillStyle = 'black'; ctx.font = '16px DotGothic16'; ctx.textAlign = 'center';
+                ctx.fillText("昨日のさぁ", e.x + e.w/2, e.y-10);
+                ctx.textAlign = 'left';
+            }
+            else if(e.type === 'trash') drawSprite('trash', e.x, e.y, e.w, e.h);
+            else if(e.type === 'bus') {
+                ctx.fillStyle = 'orange'; ctx.fillRect(e.x, e.y, e.w, e.h);
+                ctx.fillStyle = 'white'; ctx.fillText("BUS", e.x+10, e.y+40);
+            }
+            else if(e.type === 'shout') {
+                ctx.fillStyle = 'red'; ctx.font = '30px Arial'; ctx.fillText("💢", e.x, e.y+30);
+            }
+            else { 
+                ctx.fillStyle = e.color || 'purple'; ctx.fillRect(e.x, e.y, e.w, e.h);
+                if(e.type==='tv') { ctx.fillStyle='white'; ctx.font='20px Arial'; ctx.fillText("📺", e.x+10, e.y+40); }
+                if(e.type==='cafe') { ctx.fillStyle='white'; ctx.font='20px Arial'; ctx.fillText("☕", e.x+10, e.y+40); }
+            }
+        });
+
+        // ボーナス（ハート）の描画
+        bonuses.forEach(b => {
+             ctx.fillStyle = 'pink';
+             ctx.font = '32px Arial';
+             ctx.fillText("♥", b.x, b.y + 30);
+             ctx.font = '12px DotGothic16';
+             ctx.fillStyle = 'white';
+             ctx.fillText("幸せ", b.x, b.y);
+        });
+
+        particles.forEach((p, i) => {
+            ctx.fillStyle = p.color;
+            ctx.font = '20px DotGothic16';
+            ctx.fillText(p.text, p.x, p.y--);
+            p.life--;
+            if(p.life<0) particles.splice(i,1);
+        });
+
+        if(gameState === 'GAMEOVER') {
+            ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = 'white'; ctx.textAlign = 'center';
+            ctx.font = '40px DotGothic16';
+            ctx.fillText("遅刻確定。", canvas.width/2, canvas.height/2);
+            ctx.font = '24px DotGothic16';
+            ctx.fillText("メンタルが持ちませんでした...", canvas.width/2, canvas.height/2+60);
+            ctx.font = '16px DotGothic16';
+            ctx.fillText("ENTERで再挑戦", canvas.width/2, canvas.height/2+100);
+        }
+        if(gameState === 'ENDING') {
+            ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = 'black'; ctx.textAlign = 'center';
+            ctx.font = '30px DotGothic16';
+            ctx.fillText("ようやく一日が始まった。", canvas.width/2, canvas.height/2 - 20);
+            ctx.font = '20px DotGothic16';
+            ctx.fillText("まだ戦いはこれからだが...", canvas.width/2, canvas.height/2 + 30);
+            ctx.fillText("CLEAR TIME: " + document.getElementById('time-display').innerText, canvas.width/2, canvas.height/2 + 70);
+            ctx.font = '16px DotGothic16';
+            ctx.fillText("ENTERでタイトルへ", canvas.width/2, canvas.height/2 + 120);
+        }
+        ctx.textAlign = 'left';
+    }
+
+    function changePhase(newPhase) {
+        stagePhase = newPhase;
+        showMessage(stagePhase);
+    }
+
+    function showMessage(index) {
+        gameState = 'MESSAGE';
+        currentMsgIndex = index;
+        const data = scenario.find(s => s.phase === index);
+        // メッセージをENTERキー誘導に変更
+        msgBox.innerHTML = data.text.replace(/\n/g, '<br>') + '<br><span style="font-size:16px; color:yellow; margin-top:10px; display:block;">▼ ENTERで進む</span>';
+        msgBox.style.display = 'block';
+    }
+
+    function nextMessage() {
+        msgBox.style.display = 'none';
+        
+        if(stagePhase === 5) {
+            gameState = 'BOSS';
+            playBgm('bgmBoss');
+        } else {
+            gameState = 'PLAY';
+            if(stagePhase === 2) distance += 1500; 
+        }
+    }
+
+    // ★ 修正点: 同僚x3、ゴミ箱x2の巨大化実装
+    function spawnEnemy() {
+        let type = 'trash';
+        let speed = 7; 
+        
+        // ゴミ箱: 横幅90の2倍 = 180！
+        let w=180, h=50; 
+        let y = groundY - 50;
+        let color = 'gray';
+
+        if(stagePhase === 0) { 
+            type='tv'; color='black'; 
+            w=64; h=50; y=groundY-50; 
+        }
+        if(stagePhase === 1) { 
+            type=Math.random()<0.5?'dog':'trash'; 
+            if(type==='dog') { 
+                speed=10; 
+                w=80; h=54; y=groundY-54;
+            } 
+            // trashはデフォルト(w=180)が適用
+        }
+        if(stagePhase === 2) { 
+            type='bus'; speed=16; 
+            w=160; h=80; y=groundY-80; 
+        } 
+        if(stagePhase === 3) { 
+            type=Math.random()<0.5?'dog':'cafe'; 
+            color='brown';
+            if(type==='dog') {
+                speed=10;
+                w=80; h=54; y=groundY-54;
+            } else {
+                w=64; h=60; y=groundY-60;
+            }
+        }
+        if(stagePhase === 4) { 
+            type='colleague'; speed=5; 
+            // 同僚: 横幅70の3倍 = 210！
+            w=210; h=80; y=groundY-80; 
+        }
+
+        enemies.push({ x: canvas.width, y: y, w: w, h: h, speed: speed, type: type, color: color });
+    }
+
+    // ★ 新機能：小さな幸せ出現
+    function spawnBonus() {
+        bonuses.push({
+            x: canvas.width,
+            y: groundY - 150,
+            baseY: groundY - 150,
+            w: 40, h: 40,
+            speed: 6,
+            type: 'heart'
+        });
+    }
+
+    // ★ 新機能：小さな幸せゲット時の処理
+    function getHappy(bonus) {
+        if(player.hp < player.maxHp) {
+            player.hp++;
+            updateHpDisplay();
+        }
+        playSound('bonus'); // ボーナス音（簡易）
+        
+        // ランダムなメッセージを表示
+        const msg = happyWords[Math.floor(Math.random() * happyWords.length)];
+        luckyMsgBox.innerText = msg;
+        
+        // アニメーションのリセット（再描画）
+        luckyMsgBox.style.display = 'none';
+        void luckyMsgBox.offsetWidth; 
+        luckyMsgBox.style.display = 'block';
+    }
+
+    function damagePlayer() {
+        player.hp--;
+        updateHpDisplay();
+        createParticle(player.x, player.y, "MENTAL DMG!", "red");
+        playSound('damage');
+        if(player.hp <= 0) setGameOver(false);
+    }
+
+    function updateHpDisplay() {
+        let hps = "";
+        for(let i=0; i<5; i++) hps += (i < player.hp ? "♥" : "♡");
+        document.getElementById('hp-display').innerText = hps;
+    }
+
+    function setGameOver(isTimeUp) {
+        gameState = 'GAMEOVER';
+        playBgm('bgmOver');
+    }
+
+    function gameClear() {
+        gameState = 'ENDING';
+        playBgm('bgmClear');
+    }
+
+    function createParticle(x, y, text, color) {
+        particles.push({x:x, y:y, text:text, color:color, life:30});
+    }
+
+    function rectIntersect(r1, r2) {
+        const pad = 10;
+        return !(r2.x + pad > r1.x + r1.w - pad || r2.x + r2.w - pad < r1.x + pad || r2.y + pad > r1.y + r1.h - pad || r2.y + r2.h - pad < r1.y + pad);
+    }
+
+    function drawSprite(key, x, y, w, h) {
+        if(images[key] && images[key].complete) {
+            ctx.drawImage(images[key], x, y, w, h);
+        } else {
+            ctx.fillStyle = 'magenta';
+            ctx.fillRect(x, y, w, h);
+        }
+    }
+
+    function playSound(type) {
+        ensureAudioContext();
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const t = audioCtx.currentTime;
+        
+        if(type==='jump') {
+            osc.frequency.setValueAtTime(150, t);
+            osc.frequency.linearRampToValueAtTime(300, t+0.1);
+            gain.gain.setValueAtTime(0.1, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t+0.1);
+            osc.start(t); osc.stop(t+0.1);
+        }
+        if(type==='damage') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(100, t);
+            osc.frequency.linearRampToValueAtTime(50, t+0.2);
+            gain.gain.setValueAtTime(0.1, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t+0.2);
+            osc.start(t); osc.stop(t+0.2);
+        }
+        if(type==='bonus') {
+            // キラキラ音
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, t);
+            osc.frequency.exponentialRampToValueAtTime(1200, t+0.2);
+            gain.gain.setValueAtTime(0.1, t);
+            gain.gain.linearRampToValueAtTime(0, t+0.3);
+            osc.start(t); osc.stop(t+0.3);
+        }
+    }
+
+    let bgmAudio = null;
+    function playBgm(key) {
+        if(bgmAudio) bgmAudio.pause();
+        bgmAudio = new Audio(ASSETS[key]); 
+        bgmAudio.loop = (key !== 'bgmOver');
+        bgmAudio.volume = 0.4;
+        bgmAudio.play().catch(e=>console.log("BGM play error",e));
+    }
+
+    loop();
+
+</script>
+</body>
+</html>

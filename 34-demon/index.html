@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魔王城と母</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="titleScreen" class="screen active">
+        <div class="title-content">
+            <img src="./images/palece.png" class="castle-bg" alt="背景">
+            <div class="title-text">
+                <h1 class="game-title">魔王城と母</h1>
+                <p class="subtitle">〜 狂気か、奇跡か 〜</p>
+                <button id="startBtn" class="start-button">物語を始める</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="gameScreen" class="screen hidden">
+        <div class="game-bg">
+            <img id="backgroundImage" class="scene-bg" src="./images/sick.png" alt="シーン背景">
+        </div>
+        
+        <div id="noiseOverlay" class="noise-overlay hidden"></div>
+        
+        <div id="textWindow" class="text-window">
+            <div id="speakerName" class="speaker-name">名前</div>
+            <div id="gameText" class="game-text">ここにテキストが表示されます。</div>
+            <div class="next-button">▼</div>
+        </div>
+
+        <div id="choicesContainer" class="choices-container hidden">
+            <div class="choices-wrapper">
+                </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 3Dあみだくじ - キャラクターを選んで進もう！</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 🌟 タイトル画面 -->
+    <div id="titleScreen" class="screen">
+        <div class="title-content">
+            <h1 class="title-glow">🎮 3Dあみだくじ</h1>
+            <p class="subtitle pulse">キャラクターを選んで進もう！</p>
+            <button id="startButton" class="big-button">
+                ✨ ゲームスタート ✨
+            </button>
+            <div class="instructions">
+                <h3>🎯 遊び方</h3>
+                <p>✨ 1. 好きなキャラクターを選ぶ</p>
+                <p>🎪 2. あみだくじが自動で進む</p>
+                <p>🎁 3. どのゴールに着くかな？</p>
+            </div>
+            <div class="fun-message">
+                <p>🌈 5人のかわいいなかまたちが待ってるよ！</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎨 キャラクター選択画面 -->
+    <div id="characterScreen" class="screen" style="display: none;">
+        <div class="character-content">
+            <h2 class="character-title">✨ キャラクターを選んでね！ ✨</h2>
+            <p class="character-subtitle">好きなキャラをタップしてね！</p>
+            <div id="characterCards" class="character-cards"></div>
+        </div>
+    </div>
+
+    <!-- 🎮 ゲーム画面 -->
+    <div id="gameScreen" class="screen" style="display: none;">
+        <div class="game-hud">
+            <div class="player-info">
+                <span id="playerEmoji" class="player-emoji bounce">🐰</span>
+                <div class="player-details">
+                    <span id="playerName" class="player-name">ホップ</span>
+                    <div class="start-info">
+                        🎯 スタート: <span id="startLane" class="lane-number">1</span>番
+                    </div>
+                </div>
+            </div>
+            <div class="progress-message">
+                <span class="blink">🌟 ゴールまでもうすぐ！ 🌟</span>
+            </div>
+        </div>
+        <div id="threeCanvas"></div>
+    </div>
+
+    <!-- 🎉 結果画面 -->
+    <div id="resultScreen" class="screen" style="display: none;">
+        <div class="result-content">
+            <div class="result-emoji bounce-big" id="resultEmoji">🐰</div>
+            <h2 class="result-title">🎉 ゴール！ 🎉</h2>
+            <div class="result-info">
+                <p>🎯 スタート: <span id="resultStart" class="result-number">1</span>番</p>
+                <p>🎁 ゴール: <span id="resultGoal" class="result-number">3</span>番</p>
+            </div>
+            <div class="result-comment" id="resultComment">
+                やったー！ぴょんぴょん！
+            </div>
+            <div class="confetti">🎊🎉🎊🎉🎊</div>
+            <button id="replayButton" class="big-button pulse">
+                🔄 もう一度遊ぶ
+            </button>
+        </div>
+    </div>
+
+    <!-- Three.js ライブラリ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- ゲームスクリプト -->
+    <script src="script.js"></script>
+</body>
+</html>

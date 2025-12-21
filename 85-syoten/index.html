@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>古書店クイズゲーム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="title-screen">
+            <h1>📚 古書店クイズ 📚</h1>
+            <p class="subtitle">書き出しの文章から作品を当てよう！</p>
+            <div class="title-description">
+                <p>あなたは古書店の店主です。</p>
+                <p>お客さんが覚えている書き出しから、</p>
+                <p>正しい作品を見つけてあげましょう！</p>
+                <p><strong>⭐ 5つ星でクリア！</strong></p>
+            </div>
+            <button class="main-button" onclick="startGame()">🎮 ゲームスタート</button>
+        </div>
+        
+        <div id="game-screen" style="display: none;">
+            <div id="score-area">
+                <div>🏆 連続正解: <span id="score">0</span>人</div>
+                <div class="stars" id="stars">
+                    <span class="star-empty">☆</span><span class="star-empty">☆</span><span class="star-empty">☆</span><span class="star-empty">☆</span><span class="star-empty">☆</span>
+                </div>
+            </div>
+            
+            <div id="bookstore-container">
+                <img src="images/bookstore.png" alt="古書店" id="bookstore-bg">
+                <img src="" alt="お客さん" id="customer-img" class="customer-walking">
+            </div>
+            
+            <div id="customer-speech" style="display: none;">
+                <div class="speech-bubble customer-bubble">
+                    <div class="bubble-header">
+                        <span class="customer-icon" id="customer-icon">👤</span>
+                        <span class="customer-name" id="customer-name">お客さん</span>
+                        <span class="persona-tag" id="persona-tag"></span>
+                    </div>
+                    <p id="opening-text" class="opening-content"></p>
+                    <p class="customer-question">💭 この書き出しの本、ありますか？</p>
+                    <button class="speak-button" onclick="speakText()">🔊 もう一度聞く</button>
+                </div>
+            </div>
+            
+            <div id="choices" style="display: none;"></div>
+            
+            <div id="result-screen" style="display: none;">
+                <div class="speech-bubble customer-bubble">
+                    <p id="result-text" class="result-content"></p>
+                    <button class="main-button" onclick="nextQuestion()">👉 次のお客さん</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="gameover-screen" style="display: none;">
+            <h2>😢 ゲームオーバー</h2>
+            <p>お客さんが怒って帰ってしまいました...</p>
+            <div class="final-score-box">
+                <p>最終スコア</p>
+                <p class="final-score-number"><span id="final-score">0</span>人</p>
+            </div>
+            <button class="main-button" onclick="location.reload()">🔄 もう一度挑戦</button>
+        </div>
+        
+        <div id="clear-screen" style="display: none;">
+            <h2>🎉 おめでとうございます！</h2>
+            <p style="font-size: 2em; color: #ffd700;">⭐⭐⭐⭐⭐</p>
+            <p>5つ星達成！</p>
+            <div class="final-score-box">
+                <p>連続正解数</p>
+                <p class="final-score-number"><span id="clear-score">5</span>人</p>
+            </div>
+            <button class="main-button" onclick="continueGame()">🎮 さらに続ける</button>
+            <button class="main-button" onclick="location.reload()">🔄 最初から</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

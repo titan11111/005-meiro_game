@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ひかりの子：光を取り戻す旅</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #gameContainer {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ========== キャンバス ========== */
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ========== オーバーレイUI ========== */
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* ========== 上部UI ========== */
+        #topUI {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 20px;
+            pointer-events: auto;
+        }
+
+        /* 左：子どもの状態 */
+        #childStatus {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            max-width: 250px;
+            line-height: 1.8;
+        }
+
+        #childStatus h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+
+        #childStatus p {
+            margin: 5px 0;
+            color: #e0e0e0;
+        }
+
+        /* 右：進行度 */
+        #progressInfo {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            text-align: right;
+            max-width: 200px;
+        }
+
+        #progressInfo h4 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+
+        /* ========== 中央のテキスト ========== */
+        #centerText {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #fff;
+            max-width: 80%;
+            pointer-events: auto;
+            z-index: 100;
+        }
+
+        #centerText h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        #centerText p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+
+        /* ========== 下部：選択肢ボタン ========== */
+        #buttonsContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 30px;
+            pointer-events: auto;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .choiceBtn {
+            padding: 18px 20px;
+            font-size: 16px;
+            border: 2px solid #ffd700;
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffd700;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            line-height: 1.5;
+        }
+
+        .choiceBtn:hover {
+            background: rgba(255, 215, 0, 0.2);
+            transform: translateX(10px);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        .choiceBtn:active {
+            transform: translateX(5px);
+        }
+
+        .choiceBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ========== タイトル画面 ========== */
+        #titleScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a0033 0%, #0a0015 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            pointer-events: auto;
+        }
+
+        #titleScreen.hidden {
+            display: none;
+            pointer-events: none;
+        }
+
+        #titleContent {
+            text-align: center;
+            color: #fff;
+        }
+
+        #titleContent h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+            animation: pulse 2s infinite;
+        }
+
+        #titleContent p {
+            font-size: 18px;
+            margin-bottom: 40px;
+            color: #e0e0e0;
+        }
+
+        #startBtn {
+            padding: 20px 50px;
+            font-size: 20px;
+            border: 2px solid #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+            color: #ffd700;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        #startBtn:hover {
+            background: rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+            transform: scale(1.05);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* ========== エンディング画面 ========== */
+        #endingScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #003366 0%, #000033 100%);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            pointer-events: auto;
+            color: #fff;
+            text-align: center;
+            padding: 40px;
+        }
+
+        #endingScreen.show {
+            display: flex;
+        }
+
+        #endingContent h2 {
+            font-size: 36px;
+            margin-bottom: 30px;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+        }
+
+        #endingContent p {
+            font-size: 18px;
+            line-height: 2;
+            margin-bottom: 30px;
+            color: #e0e0e0;
+            max-width: 600px;
+        }
+
+        #restartBtn {
+            padding: 20px 50px;
+            font-size: 18px;
+            border: 2px solid #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+            color: #ffd700;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        #restartBtn:hover {
+            background: rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+        }
+
+        /* ========== レスポンシブ ========== */
+        @media (max-width: 768px) {
+            #topUI {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            #childStatus, #progressInfo {
+                max-width: 100%;
+                font-size: 12px;
+                padding: 15px;
+            }
+
+            #centerText h2 {
+                font-size: 20px;
+            }
+
+            #centerText p {
+                font-size: 16px;
+            }
+
+            .choiceBtn {
+                padding: 15px;
+                font-size: 14px;
+            }
+
+            #titleContent h1 {
+                font-size: 32px;
+            }
+
+            #titleContent p {
+                font-size: 14px;
+            }
+
+            #startBtn {
+                padding: 15px 30px;
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #topUI {
+                padding: 10px;
+            }
+
+            #centerText {
+                max-width: 90%;
+            }
+
+            #centerText h2 {
+                font-size: 18px;
+            }
+
+            #centerText p {
+                font-size: 14px;
+            }
+
+            .choiceBtn {
+                padding: 12px;
+                font-size: 12px;
+            }
+
+            #buttonsContainer {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- タイトル画面 -->
+        <div id="titleScreen">
+            <div id="titleContent">
+                <h1>✨ ひかりの子 ✨</h1>
+                <p>光を取り戻す旅</p>
+                <p style="font-size: 14px; color: #aaa; margin-top: 20px;">
+                    過去の自分と向き合い、心を癒す体験
+                </p>
+                <button id="startBtn">旅を始める</button>
+            </div>
+        </div>
+
+        <!-- ゲームオーバーレイ -->
+        <div id="overlay">
+            <!-- 上部UI -->
+            <div id="topUI">
+                <div id="childStatus">
+                    <h3>👧 子どもの状態</h3>
+                    <p id="statusText">準備中...</p>
+                </div>
+                <div id="progressInfo">
+                    <h4>📍 進行状況</h4>
+                    <p id="locationName">-</p>
+                    <p id="progressPercent">0/10</p>
+                </div>
+            </div>
+
+            <!-- 中央テキスト -->
+            <div id="centerText">
+                <h2 id="dialogTitle">-</h2>
+                <p id="dialogText">-</p>
+            </div>
+
+            <!-- 下部ボタン -->
+            <div id="buttonsContainer">
+                <button class="choiceBtn" data-choice="0" disabled>①</button>
+                <button class="choiceBtn" data-choice="1" disabled>②</button>
+                <button class="choiceBtn" data-choice="2" disabled>③</button>
+            </div>
+        </div>
+
+        <!-- エンディング画面 -->
+        <div id="endingScreen">
+            <div id="endingContent">
+                <h2>🌅 旅の終わり 🌅</h2>
+                <p id="endingMessage">-</p>
+                <button id="restartBtn">もう一度旅する</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== ゲーム全体の状態管理 ==========
+        const gameState = {
+            started: false,
+            currentStage: 0,
+            totalStages: 10,
+            childLightAmount: 0, // 0-100: 子どもの光の量
+            playerChoice: null,
+            canChoose: false,
+            gameEnded: false
+        };
+
+        // ========== ステージデータ ==========
+        const stages = [
+            {
+                name: "霧の森",
+                emotion: "迷い",
+                childMessage: "ねえ... ねえ...\nどこにいるの？\n私を置き去りにしないで...",
+                question: "この子は何を求めていると思いますか？",
+                choices: [
+                    { text: "① 迷ってるんだ", response: "そう... 誰もいなくて怖かったんだ。でも、あなたが見つけてくれた。ありがとう。", impact: 15 },
+                    { text: "② 孤独を感じてるんだ", response: "うん... ずっと誰もいなくて。でも、あなたが一緒にいてくれるんだ。", impact: 20 },
+                    { text: "③ 自分の場所を探してるんだ", response: "そっか... 私の場所... どこにあるのかな。", impact: 10 }
+                ],
+                bgColor: "#2a1f4d",
+                lightColor: "#4a3f7d"
+            },
+            {
+                name: "石の橋",
+                emotion: "恐れ",
+                childMessage: "こ... 怖い...\n橋が壊れてる...\n落ちたらどうしよう...",
+                question: "この子は本当は何を怖れていますか？",
+                choices: [
+                    { text: "① 失敗することが怖いんだ", response: "失敗か... そっか。新しい場所へ進むのが怖かったんだ。", impact: 12 },
+                    { text: "② 一人で進むのが怖いんだ", response: "一人で... でも、今はあなたがいるんだ。手を握ってもらえる？", impact: 25 },
+                    { text: "③ 知らない場所へ進むのが怖いんだ", response: "知らない... でも、これからは一緒だから大丈夫。", impact: 18 }
+                ],
+                bgColor: "#3f3a2f",
+                lightColor: "#6f6a5f"
+            },
+            {
+                name: "冷たい湖",
+                emotion: "後悔",
+                childMessage: "これ... 私？\n醜い...\n誰も愛さない...",
+                question: "水に映った自分を、どう感じていますか？",
+                choices: [
+                    { text: "① そのままでいいんだ", response: "本当？ そのままで... いいんだ。", impact: 22 },
+                    { text: "② その子も素敵な一部なんだ", response: "素敵... 一部... 全部が私なんだ。", impact: 28 },
+                    { text: "③ 時間が全てを癒す", response: "時間が... そっか。少しずつ変わるんだ。", impact: 16 }
+                ],
+                bgColor: "#1a3a4a",
+                lightColor: "#3a5a7a"
+            },
+            {
+                name: "焦げた丘",
+                emotion: "怒り",
+                childMessage: "許さない！\nなぜこんなに...\n誰が悪い！",
+                question: "その怒りの正体は何だと思いますか？",
+                choices: [
+                    { text: "① 愛されたい気持ちなんだ", response: "愛されたい... そっか。愛してほしかったんだ。泣きたい。", impact: 30 },
+                    { text: "② 傷ついた心なんだ", response: "傷ついた... 泣きたくなった。でも、あなたがいてくれる。", impact: 24 },
+                    { text: "③ 自分を守ろうとしてたんだ", response: "守ろう... そっか。自分を守ろうとしてたんだ。", impact: 18 }
+                ],
+                bgColor: "#4a2a1a",
+                lightColor: "#8a5a3a"
+            },
+            {
+                name: "古い家",
+                emotion: "喪失",
+                childMessage: "ここにいたけど...\nもう誰もいない...\n全部なくなった...",
+                question: "失ったもので、大切だったのは何ですか？",
+                choices: [
+                    { text: "① 思い出そのもの", response: "思い出は... 心の中に残ってるんだ。光になって残ってる。", impact: 26 },
+                    { text: "② 愛されてた時間", response: "愛されてた時間... それは絶対になくならない。私の中に。", impact: 28 },
+                    { text: "③ 安心と居場所", response: "安心... でも、あなたと一緒にいると、安心する。", impact: 20 }
+                ],
+                bgColor: "#3a3a3a",
+                lightColor: "#5a5a5a"
+            },
+            {
+                name: "花の庭",
+                emotion: "懐かしさ",
+                childMessage: "綺麗だね...\n懐かしい...\nいつか見た花...",
+                question: "その懐かしさは何をあなたに教えてくれますか？",
+                choices: [
+                    { text: "① 優しさが存在してたこと", response: "優しさ... ああ。優しい時間があったんだ。", impact: 22 },
+                    { text: "② 自分は愛される存在だったこと", response: "愛される... そっか。昔の私は大切にされてたんだ。", impact: 29 },
+                    { text: "③ 全ては失われていないこと", response: "失われてない... そっか。心の中に全部ある。", impact: 24 }
+                ],
+                bgColor: "#2a4a2a",
+                lightColor: "#5a8a5a"
+            },
+            {
+                name: "風の坂道",
+                emotion: "受容",
+                childMessage: "感じるね...\n何かが変わった...\n怖くない...",
+                question: "その変化を、どう受け入れますか？",
+                choices: [
+                    { text: "① 全部が自分の一部だから", response: "全部... 私の一部。綺麗なのも、汚いのも、全部が私。", impact: 27 },
+                    { text: "② 時間が全て癒してくれるから", response: "時間が... そっか。歩んでいくだけでいいんだ。", impact: 20 },
+                    { text: "③ 今のあなたが完璧だから", response: "完璧... ああ。今のこの姿で、いいんだ。", impact: 25 }
+                ],
+                bgColor: "#2a3a1a",
+                lightColor: "#5a7a3a"
+            },
+            {
+                name: "星の平原",
+                emotion: "希望",
+                childMessage: "光だ...\n星だ...\n希望...",
+                question: "その希望は何が生み出しましたか？",
+                choices: [
+                    { text: "① あなたが一緒にいるから", response: "一緒... ああ。ずっと一緒なんだ。もう怖くない。", impact: 31 },
+                    { text: "② 過去を受け入れたから", response: "受け入れた... そっか。全部が光に変わった。", impact: 28 },
+                    { text: "③ 未来はまだ白紙だから", response: "白紙... これからは自分で描けるんだ。", impact: 26 }
+                ],
+                bgColor: "#1a1a3a",
+                lightColor: "#4a4a8a"
+            },
+            {
+                name: "光の塔",
+                emotion: "統合",
+                childMessage: "ここだ...\nここが私の場所...\n帰ってきた...",
+                question: "この瞬間、何が完成しましたか？",
+                choices: [
+                    { text: "① 自分自身の統合", response: "統合... 全ての私が、ここに。バラバラじゃない。", impact: 35 },
+                    { text: "② 自己受容の完成", response: "受け入れた... 全部を受け入れた。愛おしい。", impact: 33 },
+                    { text: "③ 新しい旅の始まり", response: "新しい旅... ああ。これからが本当の始まり。", impact: 32 }
+                ],
+                bgColor: "#3a2a1a",
+                lightColor: "#8a6a3a"
+            },
+            {
+                name: "朝焼けの丘",
+                emotion: "再生",
+                childMessage: "ありがとう...\nもう大丈夫...\nあなたと一緒なら...",
+                question: "この先、何をしますか？",
+                choices: [
+                    { text: "① あなたと一緒に歩んでいく", response: "一緒... ああ。ずっと一緒。もう離れない。", impact: 40 },
+                    { text: "② 新しい光を探し続ける", response: "新しい光... それはあなたの中にあるんだ。", impact: 38 },
+                    { text: "③ 今を大切に生きる", response: "今... ああ。この瞬間が全てなんだ。", impact: 36 }
+                ],
+                bgColor: "#4a1a0a",
+                lightColor: "#ff6a3a"
+            }
+        ];
+
+        // ========== UI更新関数 ==========
+        function updateUI() {
+            const stage = stages[gameState.currentStage];
+            const percent = Math.round((gameState.childLightAmount / 100) * 100);
+
+            // 子どもの状態
+            const statusTexts = [
+                "😢 泣いている",
+                "😟 不安を感じている",
+                "😐 落ち着き始めた",
+                "🙂 安心している",
+                "✨ 光に包まれている"
+            ];
+
+            let statusIndex = 0;
+            if (percent >= 80) statusIndex = 4;
+            else if (percent >= 60) statusIndex = 3;
+            else if (percent >= 40) statusIndex = 2;
+            else if (percent >= 20) statusIndex = 1;
+
+            document.getElementById("statusText").textContent = statusTexts[statusIndex];
+            document.getElementById("locationName").textContent = stage.name + " - " + stage.emotion;
+            document.getElementById("progressPercent").textContent = (gameState.currentStage + 1) + "/10";
+
+            // ダイアログ
+            document.getElementById("dialogTitle").textContent = "👧 " + stage.name;
+            document.getElementById("dialogText").textContent = stage.childMessage;
+
+            // 選択肢
+            const buttons = document.querySelectorAll(".choiceBtn");
+            buttons.forEach((btn, idx) => {
+                if (idx < stage.choices.length) {
+                    btn.textContent = stage.choices[idx].text;
+                    btn.disabled = false;
+                } else {
+                    btn.textContent = "";
+                    btn.disabled = true;
+                }
+            });
+        }
+
+        // ========== ステージ進行 ==========
+        function startStage() {
+            gameState.canChoose = true;
+            gameState.playerChoice = null;
+            updateUI();
+        }
+
+        function makeChoice(choiceIndex) {
+            if (!gameState.canChoose || gameState.playerChoice !== null) return;
+
+            gameState.canChoose = false;
+            gameState.playerChoice = choiceIndex;
+
+            const stage = stages[gameState.currentStage];
+            const choice = stage.choices[choiceIndex];
+
+            // 光を増やす
+            gameState.childLightAmount = Math.min(100, gameState.childLightAmount + choice.impact);
+
+            // 反応を表示
+            document.getElementById("dialogText").textContent = choice.response;
+
+            // ボタン無効化
+            document.querySelectorAll(".choiceBtn").forEach(btn => btn.disabled = true);
+
+            // 次のステージへ
+            setTimeout(() => {
+                gameState.currentStage++;
+                if (gameState.currentStage >= gameState.totalStages) {
+                    showEnding();
+                } else {
+                    startStage();
+                }
+            }, 2500);
+        }
+
+        // ========== エンディング ==========
+        function showEnding() {
+            gameState.gameEnded = true;
+            document.getElementById("overlay").style.display = "none";
+
+            const percent = Math.round((gameState.childLightAmount / 100) * 100);
+            let endingMessage = "";
+
+            if (percent >= 90) {
+                endingMessage = "✨ 光は、ついに完成した。\n\nあなたと、子どもの自分が、一つになった。\n\n全ての光が、あなたの中に溶けた。\n\n「もう、ひとりじゃない。」\n\n朝焼けに包まれて、あなたは微笑む。";
+            } else if (percent >= 70) {
+                endingMessage = "🌅 夜が明けた。\n\n過去の自分も、今の自分も、全部が大事だったんだ。\n\n「ありがとう。」\n\nその呟きが、風に乗る。";
+            } else if (percent >= 50) {
+                endingMessage = "🌫️ 霧が晴れ始めた。\n\n全部が分かったわけじゃない。でも、歩き続けることができる。\n\n「前に進もう。」";
+            } else if (percent >= 30) {
+                endingMessage = "⭐ 星が光ってる。\n\n何も変わらなかったのかもしれない。\n\nでも、ここから始まるんだ。";
+            } else {
+                endingMessage = "💧 涙がこぼれた。\n\nまだ痛い。まだ苦しい。\n\nでも、その感情も、全部が自分なんだ。";
+            }
+
+            document.getElementById("endingMessage").textContent = endingMessage;
+            document.getElementById("endingScreen").classList.add("show");
+        }
+
+        // ========== キャンバス描画 ==========
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function drawScene() {
+            const stage = stages[gameState.currentStage];
+
+            // 背景
+            ctx.fillStyle = stage.bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // グラデーション背景
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, stage.bgColor);
+            gradient.addColorStop(1, "#000");
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 子どものシルエット描画
+            drawChildSilhouette();
+
+            // 光エフェクト
+            drawLightEffect();
+        }
+
+        function drawChildSilhouette() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            const stage = stages[gameState.currentStage];
+            const lightAmount = gameState.childLightAmount;
+
+            // シルエット：影
+            ctx.fillStyle = `rgba(0, 0, 0, ${0.6 + lightAmount / 500})`;
+
+            // 子どもの形：シンプルな円形
+            // 頭
+            ctx.beginPath();
+            ctx.arc(centerX, centerY - 40, 25, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 体
+            ctx.fillRect(centerX - 20, centerY - 15, 40, 50);
+
+            // 腕
+            ctx.fillRect(centerX - 35, centerY - 5, 15, 30);
+            ctx.fillRect(centerX + 20, centerY - 5, 15, 30);
+
+            // 脚
+            ctx.fillRect(centerX - 12, centerY + 35, 10, 25);
+            ctx.fillRect(centerX + 2, centerY + 35, 10, 25);
+
+            // 光の輪郭
+            if (lightAmount > 20) {
+                ctx.strokeStyle = `rgba(255, 215, 0, ${lightAmount / 200})`;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, 70 + lightAmount / 2, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        }
+
+        function drawLightEffect() {
+            const stage = stages[gameState.currentStage];
+            const lightAmount = gameState.childLightAmount;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            // 光の粒子
+            const particleCount = Math.floor(lightAmount / 10);
+            for (let i = 0; i < particleCount; i++) {
+                const angle = (i / particleCount) * Math.PI * 2;
+                const distance = 100 + Math.sin(Date.now() / 500 + i) * 30;
+                const x = centerX + Math.cos(angle) * distance;
+                const y = centerY + Math.sin(angle) * distance;
+
+                ctx.fillStyle = `rgba(255, 215, 0, ${lightAmount / 300})`;
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 中央の光の円
+            const radialGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 150);
+            radialGradient.addColorStop(0, `rgba(255, 215, 0, ${lightAmount / 300})`);
+            radialGradient.addColorStop(1, `rgba(255, 215, 0, 0)`);
+            ctx.fillStyle = radialGradient;
+            ctx.fillRect(centerX - 150, centerY - 150, 300, 300);
+        }
+
+        function animationLoop() {
+            drawScene();
+            requestAnimationFrame(animationLoop);
+        }
+
+        // ========== イベントリスナー ==========
+        document.getElementById("startBtn").addEventListener("click", () => {
+            document.getElementById("titleScreen").classList.add("hidden");
+            gameState.started = true;
+            document.getElementById("overlay").style.display = "flex";
+            startStage();
+        });
+
+        document.querySelectorAll(".choiceBtn").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const choiceIndex = parseInt(e.target.dataset.choice);
+                makeChoice(choiceIndex);
+            });
+        });
+
+        document.getElementById("restartBtn").addEventListener("click", () => {
+            location.reload();
+        });
+
+        window.addEventListener("resize", resizeCanvas);
+
+        // ========== 初期化 ==========
+        resizeCanvas();
+        animationLoop();
+
+        // オーバーレイを最初は非表示
+        document.getElementById("overlay").style.display = "none";
+        document.getElementById("endingScreen").classList.remove("show");
+    </script>
+</body>
+</html>

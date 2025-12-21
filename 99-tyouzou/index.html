@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>悠久の彫像</title>
+    <!-- Tailwind CSSの読み込み -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Interフォントを使用 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* ファミコン風のフォントと雰囲気 */
+        :root {
+            --retro-blue: #00008b;
+            --retro-white: #f0f0f0;
+            --retro-red: #ff0000;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #3b82f6; /* Tailwind blue-500 */
+            color: var(--retro-white);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .retro-panel {
+            background-color: var(--retro-blue);
+            border: 4px solid var(--retro-white);
+            box-shadow: 8px 8px 0px 0px #000;
+        }
+        .retro-button {
+            background-color: #ffcc00; /* 黄色 */
+            color: #000;
+            border: 2px solid #000;
+            padding: 0.5rem 1rem;
+            font-weight: bold;
+            transition: transform 0.1s;
+        }
+        .retro-button:hover {
+            background-color: #ff9900;
+            transform: translateY(-2px);
+        }
+        .material-select {
+            background-color: #00aaff;
+            color: #000;
+            border: 2px solid #000;
+            padding: 0.25rem 0.5rem;
+            font-weight: bold;
+        }
+        .durability-bar {
+            height: 10px;
+            background-color: #8b0000; /* Dark Red for empty */
+            border: 1px solid #000;
+            position: relative;
+        }
+        .durability-fill {
+            height: 100%;
+            background-color: #00ff00; /* Green for health */
+            transition: width 0.5s ease-out;
+        }
+
+        /* 彫像のSVG表現 */
+        #statue-svg {
+            margin: 0 auto;
+            display: block;
+        }
+        .statue-part-svg {
+            transition: fill 0.5s, filter 0.5s, stroke 0.5s;
+        }
+        
+        /* 素材ごとの色定義（SVG Fill Classes） */
+        .material-stone-fill { fill: #a8a8a8; }
+        .material-iron-fill { fill: #808080; }
+        .material-copper-fill { fill: #b87333; }
+        .material-wood-fill { fill: #8b4513; }
+        .material-concrete-fill { fill: #666; }
+        .material-titanium-fill { fill: #4682b4; }
+        .material-none-fill { fill: #444; }
+
+    </style>
+    <script>
+        // ゲームの状態管理
+        let gameState = {
+            phase: 'creation', // 'creation' or 'simulation'
+            year: 0,
+            budget: 100, // 初期予算ポイント
+            isRunning: false,
+            statue: {
+                base: { material: 'none', durability: 0, maxDurability: 0, damageHistory: [] }, // 初期耐久度を0に変更
+                body: { material: 'none', durability: 0, maxDurability: 0, damageHistory: [] }, // 初期耐久度を0に変更
+                surface: { material: 'none', durability: 0, maxDurability: 0, damageHistory: [] }, // 初期耐久度を0に変更
+            },
+            statusMessage: "素材を選び、悠久の彫像を設計せよ。",
+            collapseStatus: null // 'collapsed', 'destroyed', null
+        };
+
+        // --- 素材データ（バリエーション追加） ---
+        // res配列のインデックス: [風耐性(0), 構造/地震耐性(1), 酸/水耐性(2), 熱耐性(3), 低温耐性(4), 生物耐性(5)]
+        const MATERIALS = {
+            none: { name: "未選択", cost: 0, baseDur: 0, res: [1, 1, 1, 1, 1, 1], color: '#333' },
+            stone: { name: "石材", cost: 25, baseDur: 150, res: [0.8, 1.2, 1.1, 1.0, 1.0, 1.0], color: 'material-stone' },
+            iron: { name: "鉄材", cost: 35, baseDur: 180, res: [1.2, 0.6, 1.5, 0.9, 1.1, 1.0], color: 'material-iron' }, 
+            copper: { name: "銅材", cost: 30, baseDur: 140, res: [1.0, 1.1, 0.9, 1.2, 0.9, 1.0], color: 'material-copper' }, 
+            wood: { name: "木材", cost: 10, baseDur: 80, res: [0.5, 1.5, 1.0, 0.2, 0.8, 0.2], color: 'material-wood' }, 
+            concrete: { name: "コンクリート", cost: 40, baseDur: 200, res: [1.1, 1.5, 0.7, 0.8, 1.0, 1.0], color: 'material-concrete' }, 
+            titanium: { name: "チタン合金", cost: 60, baseDur: 250, res: [1.5, 1.3, 1.5, 1.0, 1.5, 1.0], color: 'material-titanium' }, 
+        };
+
+        // --- 試練（災害）データ（バリエーション追加） ---
+        // resIndex: 試練が影響を与える耐性インデックス
+        const TRIALS = [
+            { name: "風雪による摩耗", resIndex: 0, severity: 0.02, annual: true }, // 風耐性 (年間固定)
+            { name: "酸性雨の到来", resIndex: 2, severity: 0.15, probability: 80 }, // 酸/水耐性
+            { name: "大地震発生", resIndex: 1, severity: 0.30, probability: 30 }, // 構造/地震耐性
+            { name: "大熱波の襲来", resIndex: 3, severity: 0.20, probability: 50 }, // 熱耐性
+            { name: "観光客による落書き", resIndex: 0, severity: 0.05, probability: 100 }, // 風耐性（表面劣化）
+
+            // 新規追加
+            { name: "寒波による凍結・ひび割れ", resIndex: 4, severity: 0.25, probability: 40 }, // 低温耐性
+            { name: "塩害（沿岸部）", resIndex: 2, severity: 0.20, probability: 60 }, // 酸/水耐性
+            { name: "シロアリ/虫害の発生", resIndex: 5, severity: 0.40, probability: 50 }, // 生物耐性 (木材に特効)
+        ];
+
+        // --- UI 更新関数 ---
+
+        function updateUI() {
+            const totalCost = calculateTotalCost();
+            document.getElementById('game-title').textContent = gameState.collapseStatus ? "【失敗】悠久の終焉" : "悠久の彫像";
+            document.getElementById('current-phase').textContent = gameState.phase === 'creation' ? "制作フェーズ" : `耐久フェーズ (経過年数: ${gameState.year}年)`;
+            document.getElementById('budget-display').textContent = gameState.budget;
+            document.getElementById('cost-display').textContent = totalCost;
+            document.getElementById('status-message').textContent = gameState.statusMessage;
+
+            // コストオーバー、または未選択の部位があるかチェック
+            const isCostOver = totalCost > gameState.budget;
+            const allPartsSelected = gameState.statue.base.material !== 'none' && 
+                                     gameState.statue.body.material !== 'none' && 
+                                     gameState.statue.surface.material !== 'none';
+
+            // フェーズ切り替え
+            document.getElementById('creation-ui').style.display = gameState.phase === 'creation' ? 'block' : 'none';
+            document.getElementById('simulation-ui').style.display = gameState.phase === 'simulation' ? 'block' : 'none';
+            
+            // 開始ボタンの無効化/有効化
+            document.getElementById('start-button').disabled = isCostOver || !allPartsSelected;
+            
+            // 耐久情報の更新
+            updateDurabilityDisplay('base', gameState.statue.base);
+            updateDurabilityDisplay('body', gameState.statue.body);
+            updateDurabilityDisplay('surface', gameState.statue.surface);
+
+            // 銅像の見た目を更新
+            updateStatueAppearance();
+        }
+
+        function updateDurabilityDisplay(partName, part) {
+            const partEl = document.getElementById(`part-${partName}`);
+            const durabilityFill = partEl.querySelector('.durability-fill');
+            // maxDurabilityが0の場合はエラーを避けるため100%とする
+            const percent = (part.maxDurability > 0) ? (part.durability / part.maxDurability) * 100 : 100;
+
+            durabilityFill.style.width = `${Math.max(0, percent)}%`;
+            partEl.querySelector('.durability-text').textContent = `${part.material !== 'none' ? MATERIALS[part.material].name : '未選択'} (${Math.floor(percent)}%)`;
+        }
+
+        function updateStatueAppearance() {
+            const RETRO_RED = '#ff0000'; // 統一された赤色
+
+            ['base', 'body', 'surface'].forEach(partName => {
+                // 'surface'の場合、IDが 'statue-surface-figure' のパス要素をターゲットにする
+                const partElement = document.getElementById(partName === 'surface' ? 'statue-surface-figure' : `statue-${partName}`);
+                
+                if (!partElement) return; // 要素がない場合はスキップ
+
+                const part = gameState.statue[partName];
+                const materialId = part.material;
+                const percent = (part.maxDurability > 0) ? (part.durability / part.maxDurability) : 1;
+                
+                // 1. マテリアルカラーを適用 (SVG Fill)
+                const fillClass = materialId !== 'none' 
+                    ? `material-${materialId}-fill` 
+                    : 'material-none-fill';
+
+                // 既存のフィルクラスをクリアし、新しいクラスを追加
+                partElement.className.baseVal = ''; 
+                partElement.classList.add('statue-part-svg');
+                partElement.classList.add(fillClass);
+
+                // 2. 崩壊・劣化表現の適用 (SVG Filter & Stroke)
+                let strokeColor = '#000';
+                let filterValue = 'none';
+
+                if (percent <= 0) {
+                    // 完全に崩壊: 灰色になり、大きく透明化
+                    filterValue = 'grayscale(100%) opacity(20%)';
+                    strokeColor = RETRO_RED;
+                } else if (percent < 0.2) {
+                    // 重大な損傷: セピア調＋暗く、赤枠
+                    filterValue = 'sepia(100%) brightness(0.7)';
+                    strokeColor = RETRO_RED;
+                } else if (percent < 0.5) {
+                    // 中程度の損傷: グレースケールで色あせ、オレンジ枠
+                    filterValue = 'grayscale(50%) brightness(0.9)';
+                    strokeColor = '#f59e0b'; // Tailwind amber-500
+                } else {
+                    // 健康な状態
+                    filterValue = 'none';
+                    strokeColor = '#000';
+                }
+
+                partElement.style.filter = filterValue;
+                partElement.setAttribute('stroke', strokeColor);
+            });
+        }
+
+        // --- 制作フェーズのロジック ---
+
+        function calculateTotalCost() {
+            let total = 0;
+            ['base', 'body', 'surface'].forEach(partName => {
+                const material = gameState.statue[partName].material;
+                if (material in MATERIALS) {
+                    total += MATERIALS[material].cost;
+                }
+            });
+            return total;
+        }
+
+        window.selectMaterial = function(partName, materialId) {
+            if (gameState.phase !== 'creation') return;
+            
+            const part = gameState.statue[partName];
+            const newMaterial = MATERIALS[materialId];
+            
+            // コスト計算
+            const currentCost = calculateTotalCost() - MATERIALS[part.material].cost;
+            if (currentCost + newMaterial.cost > gameState.budget && materialId !== part.material) {
+                gameState.statusMessage = "【警告】予算オーバーです！素材を見直してください。";
+                updateUI();
+                return;
+            }
+
+            // 素材の適用
+            part.material = materialId;
+            part.maxDurability = newMaterial.baseDur;
+            // 制作フェーズでは耐久度は常にMAX
+            part.durability = part.maxDurability;
+            
+            gameState.statusMessage = `${newMaterial.name}を${partName === 'base' ? '土台' : partName === 'body' ? '胴体' : '表面'}に適用しました。`;
+            updateUI();
+        }
+
+        // --- シミュレーションフェーズのロジック ---
+
+        async function startGame() {
+            const totalCost = calculateTotalCost();
+            const allPartsSelected = gameState.statue.base.material !== 'none' && 
+                                     gameState.statue.body.material !== 'none' && 
+                                     gameState.statue.surface.material !== 'none';
+
+            if (totalCost > gameState.budget) {
+                gameState.statusMessage = "【警告】予算オーバーのため開始できません！";
+                updateUI();
+                return;
+            }
+            // 修正点2: 全部位選択チェックの追加
+            if (!allPartsSelected) {
+                gameState.statusMessage = "【警告】全ての部位の素材を選択してください。";
+                updateUI();
+                return;
+            }
+
+            gameState.phase = 'simulation';
+            gameState.isRunning = true;
+            gameState.year = 0;
+            gameState.collapseStatus = null;
+            updateUI();
+
+            // 1秒ごとに1年経過させるゲームループ
+            while (gameState.isRunning && !gameState.collapseStatus) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                if (!gameState.isRunning) break;
+                
+                gameState.year++;
+                applyAnnualDamage();
+                checkRandomTrial();
+                checkCollapse();
+                updateUI();
+            }
+            if (gameState.collapseStatus) {
+                 gameState.statusMessage = gameState.collapseStatus === 'destroyed' ? 
+                    `【大崩壊】${gameState.year}年で彫像は完全に破壊されました！` :
+                    `【倒壊】${gameState.year}年で彫像の一部が崩れ落ちました！`;
+            } else {
+                gameState.statusMessage = `シミュレーションを一時停止しました。（${gameState.year}年目）`;
+            }
+            // 最終年数に応じてタイトルを更新
+            document.getElementById('game-title').textContent = gameState.collapseStatus ? `【${gameState.year}年で終焉】悠久の彫像` : `【継続中】悠久の彫像`;
+            updateUI();
+        }
+        
+        // 年間固定ダメージ（風雪による摩耗）
+        function applyAnnualDamage() {
+            const annualTrial = TRIALS.find(t => t.annual);
+            if (!annualTrial) return;
+
+            // 全ての部位に摩耗ダメージを適用
+            ['base', 'body', 'surface'].forEach(partName => {
+                const part = gameState.statue[partName];
+                // 未選択(none)の場合はダメージ計算をスキップ
+                if (part.material === 'none' || part.maxDurability === 0) return; 
+
+                const materialRes = MATERIALS[part.material].res[annualTrial.resIndex];
+                
+                // ダメージ計算: 基本ダメージ * 耐久係数
+                const damage = annualTrial.severity * materialRes * (part.maxDurability / 100); 
+                
+                part.durability -= damage;
+            });
+        }
+
+        // ランダムな試練（災害）の発生
+        function checkRandomTrial() {
+            let trialOccurred = false;
+            
+            // 年間固定試練以外のランダム試練をチェック
+            TRIALS.filter(t => !t.annual).forEach(trial => {
+                // 1000分の確率で試練発生を判定
+                if (Math.random() * 1000 < trial.probability) {
+                    trialOccurred = true;
+                    let totalDamage = 0;
+
+                    ['base', 'body', 'surface'].forEach(partName => {
+                        const part = gameState.statue[partName];
+                        
+                        // 未選択(none)の場合はダメージ計算をスキップ
+                        if (part.material === 'none' || part.maxDurability === 0) return; 
+                        
+                        // 生物耐性（シロアリ）の試練は、木材以外にはダメージを与えない
+                        if (trial.resIndex === 5 && part.material !== 'wood') {
+                             return; 
+                        }
+
+                        const materialRes = MATERIALS[part.material].res[trial.resIndex];
+                        
+                        // ダメージ計算: 試練の深刻度 * 耐性係数 * 基本耐久力補正
+                        const damage = trial.severity * materialRes * (part.maxDurability / 100) * (Math.random() * 0.5 + 0.75); // 乱数で揺らぎを持たせる
+
+                        part.durability -= damage;
+                        totalDamage += damage;
+                        
+                        // ダメージ履歴を記録 (簡略化)
+                        part.damageHistory.push({ year: gameState.year, trial: trial.name, damage: damage });
+                    });
+                    
+                    if (totalDamage > 0) {
+                        // ログメッセージの更新
+                        gameState.statusMessage = `【${gameState.year}年】${trial.name}が発生！彫像全体に${totalDamage.toFixed(1)}のダメージ。`;
+                    } else if (trial.resIndex === 5) {
+                        gameState.statusMessage = `【${gameState.year}年】${trial.name}が発生しましたが、木材がなかったため被害はありませんでした。`;
+                    }
+                }
+            });
+            
+            if (!trialOccurred) {
+                gameState.statusMessage = `【${gameState.year}年】平穏な一年が過ぎました...`;
+            }
+        }
+
+        // 崩壊判定
+        function checkCollapse() {
+            let partsDestroyed = 0;
+
+            ['base', 'body', 'surface'].forEach(partName => {
+                const part = gameState.statue[partName];
+                // 耐久度がマイナスにならないようにクリップ
+                part.durability = Math.max(0, part.durability); 
+                
+                if (part.durability <= 0 && part.maxDurability > 0) { // maxDurabilityが0(未選択)のものはカウントしない
+                    partsDestroyed++;
+                }
+            });
+
+            // 3つの部位全てが崩壊したらゲームオーバー
+            if (partsDestroyed >= 3) {
+                gameState.isRunning = false;
+                gameState.collapseStatus = 'destroyed';
+            } 
+            // 1つでも部位が崩壊したら「倒壊」と見なす
+            else if (partsDestroyed > 0 && gameState.collapseStatus === null) {
+                gameState.collapseStatus = 'collapsed';
+                // 崩壊しても破壊されるまでゲームは続ける
+            }
+        }
+
+        window.toggleSimulation = function() {
+            if (gameState.isRunning) {
+                gameState.isRunning = false;
+            } else if (!gameState.collapseStatus) {
+                if (gameState.phase === 'creation') {
+                    startGame();
+                } else {
+                    gameState.isRunning = true;
+                    startGame(); // ループを再開
+                }
+            } else {
+                // リセット処理
+                window.location.reload(); // ページリロードでリセット
+            }
+        }
+        
+        // selectタグの内容を動的に生成し、初期値を設定するヘルパー関数
+        function setupSelects() {
+            const parts = ['base', 'body', 'surface'];
+            const defaultMaterials = ['stone', 'copper', 'concrete']; // デフォルト設定
+
+            parts.forEach((partName, index) => {
+                const selectEl = document.getElementById(`select-${partName}`);
+                let optionsHtml = '<option value="none">-- 選択 --</option>';
+                const defaultMaterialId = defaultMaterials[index];
+
+                Object.keys(MATERIALS).filter(key => key !== 'none').forEach(materialId => {
+                    const material = MATERIALS[materialId];
+                    // ユーザーに分かりやすい特徴を追加
+                    let characteristic = '';
+                    if (materialId === 'stone') characteristic = 'バランス型';
+                    else if (materialId === 'iron') characteristic = '構造強度';
+                    else if (materialId === 'copper') characteristic = '熱に強い';
+                    else if (materialId === 'wood') characteristic = '安価・高リスク';
+                    else if (materialId === 'concrete') characteristic = '高耐久・酸に弱い';
+                    else if (materialId === 'titanium') characteristic = '超高耐性・高コスト';
+                    
+                    const selected = materialId === defaultMaterialId ? 'selected' : '';
+                    optionsHtml += `<option value="${materialId}" ${selected}>${material.name} (${material.cost}P) - ${characteristic}</option>`;
+                });
+                
+                selectEl.innerHTML = optionsHtml;
+                
+                // 修正点1: 初期値を設定し、selectMaterialを呼び出してゲーム状態を更新
+                selectMaterial(partName, defaultMaterialId);
+            });
+        }
+
+
+        // 初期化
+        window.onload = function() {
+            setupSelects();
+            updateUI();
+        };
+
+    </script>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div id="game-container" class="retro-panel w-full max-w-lg p-6 space-y-4">
+        <h1 id="game-title" class="text-3xl font-bold text-center border-b-4 border-yellow-300 pb-2">悠久の彫像</h1>
+        
+        <!-- ステータスエリア -->
+        <div class="bg-gray-800 p-3 rounded-md border-2 border-gray-600">
+            <p id="current-phase" class="text-xl font-mono text-yellow-300 mb-2">制作フェーズ</p>
+            <div class="flex justify-between text-sm font-mono">
+                <p>予算 (MAX 100)：<span id="budget-display" class="text-green-400 font-bold">100</span> P</p>
+                <p>現在コスト：<span id="cost-display" class="text-red-400 font-bold">0</span> P</p>
+            </div>
+        </div>
+
+        <!-- 彫像プレビューエリア - SVGに更新 (人の形に変更) -->
+        <div class="flex flex-col items-center p-4 bg-gray-700 rounded-lg">
+            <h2 class="text-lg font-bold mb-2">彫像の姿</h2>
+            <svg id="statue-svg" width="150" height="150" viewBox="0 0 150 150" class="shadow-2xl">
+                <!-- 土台 (Base) - 幅広 -->
+                <rect id="statue-base" x="15" y="120" width="120" height="30" rx="5" ry="5" stroke="#000" stroke-width="2" class="statue-part-svg"/>
+                
+                <!-- 胴体 (Body) - 胴体部分 (中央の四角) -->
+                <!-- x, y, width, heightを調整し、土台の上に配置 -->
+                <rect id="statue-body" x="40" y="65" width="70" height="55" rx="3" ry="3" stroke="#000" stroke-width="2" class="statue-part-svg"/>
+                
+                <!-- 表面 (Surface) - 頭部と肩 (人型の輪郭) -->
+                <!-- 胴体の上に重なり、人の上半身を形成するパスに修正 -->
+                <path id="statue-surface-figure" 
+                    d="M 75 10  
+                       C 95 10, 100 30, 100 45  
+                       L 105 45 
+                       C 110 55, 105 65, 100 65 
+                       L 50 65  
+                       C 45 65, 40 55, 45 45  
+                       L 50 45 
+                       C 50 30, 55 10, 75 10 Z"
+                    stroke="#000" stroke-width="2" class="statue-part-svg"/>
+            </svg>
+        </div>
+
+        <!-- 制作フェーズUI -->
+        <div id="creation-ui" class="space-y-4">
+            <h2 class="text-xl font-bold text-yellow-300">素材選択</h2>
+            <!-- 部位選択インターフェース -->
+            <div id="part-selection" class="space-y-3">
+                
+                <!-- 土台 (Base) -->
+                <div id="part-base" class="bg-gray-800 p-3 rounded-md">
+                    <p class="font-bold">土台 (Base)</p>
+                    <div class="durability-bar mb-2"><div class="durability-fill"></div></div>
+                    <p class="durability-text text-xs mb-2">未選択 (0%)</p>
+                    <select id="select-base" onchange="selectMaterial('base', this.value)" class="material-select w-full">
+                        <!-- JSで動的に生成されます -->
+                    </select>
+                </div>
+
+                <!-- 胴体 (Body) -->
+                <div id="part-body" class="bg-gray-800 p-3 rounded-md">
+                    <p class="font-bold">胴体 (Body)</p>
+                    <div class="durability-bar mb-2"><div class="durability-fill"></div></div>
+                    <p class="durability-text text-xs mb-2">未選択 (0%)</p>
+                    <select id="select-body" onchange="selectMaterial('body', this.value)" class="material-select w-full">
+                        <!-- JSで動的に生成されます -->
+                    </select>
+                </div>
+
+                <!-- 表面 (Surface) -->
+                <div id="part-surface" class="bg-gray-800 p-3 rounded-md">
+                    <p class="font-bold">表面 (Surface)</p>
+                    <div class="durability-bar mb-2"><div class="durability-fill"></div></div>
+                    <p class="durability-text text-xs mb-2">未選択 (0%)</p>
+                    <select id="select-surface" onchange="selectMaterial('surface', this.value)" class="material-select w-full">
+                        <!-- JSで動的に生成されます -->
+                    </select>
+                </div>
+            </div>
+
+            <button id="start-button" onclick="startGame()" class="retro-button w-full">
+                シミュレーション開始
+            </button>
+        </div>
+
+        <!-- シミュレーションフェーズUI (初期は非表示) -->
+        <div id="simulation-ui" class="space-y-4 hidden">
+            <h2 class="text-xl font-bold text-yellow-300">シミュレーション進行中...</h2>
+            
+            <div id="status-display" class="bg-red-900 border-2 border-red-500 p-3 rounded-md min-h-[50px]">
+                <p id="status-message" class="font-mono text-sm text-yellow-100">現在、シミュレーションを実行中...</p>
+            </div>
+            
+            <button id="pause-button" onclick="toggleSimulation()" class="retro-button w-full bg-red-500 hover:bg-red-700">
+                一時停止/再開
+            </button>
+            <button id="reset-button" onclick="window.location.reload()" class="retro-button w-full bg-gray-500 hover:bg-gray-700">
+                リセット（最初から）
+            </button>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,684 +1,583 @@
-// ゲームの状態管理
-let gameState = {
-    screen: 'title', // title, playing, gameOver
-    score: 0,
-    level: 1,
-    lives: 3,
-    bossActive: false
-};
+// 対称ゲーム JavaScript（Neon Ignite オーディオリアクティブ版 + 拡張機能）
 
-// プレイヤー設定
-let player = {
-    x: 0,
-    y: 0,
-    width: 40,
-    height: 40,
-    speed: 5,
-    lastShot: 0,
-    shotCooldown: 700, // 0.7秒
-    powerLevel: 1,
-    hasRapidFire: false,
-    hasYShot: false
-};
-
-// 弾の配列
-let playerBullets = [];
-let enemyBullets = [];
-let enemies = [];
-let items = [];
-let particles = [];
-let boss = null;
-
-// キャンバスとコンテキスト
-let canvas, ctx;
-let gameLoop;
-let lastTime = 0;
-
-// 入力管理
-let keys = {};
-let touchInput = {
-    left: false,
-    right: false,
-    fire: false
-};
-
-// 弾の設定
-const bulletConfig = {
-    player: {
-        width: 4,
-        height: 10,
-        speed: 8,
-        color: '#00ff00'
-    },
-    enemy: {
-        width: 4,
-        height: 8,
-        speed: 4,
-        color: '#ff0000'
-    }
-};
-
-// 初期化
-document.addEventListener('DOMContentLoaded', function() {
-    initGame();
-    setupEventListeners();
-});
-
-function initGame() {
-    console.log('ゲーム初期化開始');
-    
-    // キャンバスの取得
-    canvas = document.getElementById('gameCanvas');
-    if (!canvas) {
-        console.error('キャンバスが見つかりません');
-        return;
-    }
-    
-    ctx = canvas.getContext('2d');
-    
-    // キャンバスサイズを設定
-    resizeCanvas();
-    
-    // ゲーム状態をリセット
-    resetGameState();
-    
-    console.log('ゲーム初期化完了');
-}
-
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    player.x = canvas.width / 2 - player.width / 2;
-    player.y = canvas.height - 100;
-    console.log('キャンバスサイズ:', canvas.width, 'x', canvas.height);
-}
-
-function resetGameState() {
-    gameState.screen = 'title';
-    gameState.score = 0;
-    gameState.level = 1;
-    gameState.lives = 3;
-    gameState.bossActive = false;
-    
-    player.x = canvas.width / 2 - player.width / 2;
-    player.y = canvas.height - 100;
-    player.lastShot = 0;
-    player.powerLevel = 1;
-    player.hasRapidFire = false;
-    player.hasYShot = false;
-    
-    playerBullets = [];
-    enemyBullets = [];
-    enemies = [];
-    items = [];
-    particles = [];
-    boss = null;
-}
-
-function setupEventListeners() {
-    console.log('イベントリスナー設定開始');
-    
-    // スタートボタン
-    const startBtn = document.getElementById('startBtn');
-    if (startBtn) {
-        startBtn.addEventListener('click', startGame);
-        console.log('スタートボタンにイベント追加');
-    }
-    
-    // リスタートボタン
-    const restartBtn = document.getElementById('restartBtn');
-    if (restartBtn) {
-        restartBtn.addEventListener('click', restartGame);
-        console.log('リスタートボタンにイベント追加');
-    }
-    
-    // キーボード操作
-    document.addEventListener('keydown', function(e) {
-        keys[e.key] = true;
-        console.log('キー押下:', e.key);
+// ▼▼▼ エフェクト用パーティクル（発光仕様） ▼▼▼
+class Particle {
+    constructor(x, y, colors, speedMultiplier = 1) {
+        this.x = x;
+        this.y = y;
+        this.size = Math.random() * 10 + 2;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 15 * speedMultiplier;
+        this.speedX = Math.cos(angle) * speed;
+        this.speedY = Math.sin(angle) * speed;
         
-        if (e.key === ' ' || e.key === 'Spacebar') {
-            e.preventDefault();
-            if (gameState.screen === 'playing') {
-                fireBullet();
-            }
-        }
-    });
-    
-    document.addEventListener('keyup', function(e) {
-        keys[e.key] = false;
-    });
-    
-    // タッチ操作
-    const leftBtn = document.getElementById('leftBtn');
-    const rightBtn = document.getElementById('rightBtn');
-    const fireBtn = document.getElementById('fireBtn');
-    
-    if (leftBtn) {
-        leftBtn.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            touchInput.left = true;
-        });
-        leftBtn.addEventListener('touchend', function(e) {
-            e.preventDefault();
-            touchInput.left = false;
-        });
+        this.color = colors[Math.floor(Math.random() * colors.length)];
+        this.life = 1.0;
+        this.decay = Math.random() * 0.03 + 0.01;
     }
-    
-    if (rightBtn) {
-        rightBtn.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            touchInput.right = true;
-        });
-        rightBtn.addEventListener('touchend', function(e) {
-            e.preventDefault();
-            touchInput.right = false;
-        });
+    update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.speedX *= 0.95;
+        this.speedY *= 0.95;
+        this.life -= this.decay;
     }
-    
-    if (fireBtn) {
-        fireBtn.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            touchInput.fire = true;
-            if (gameState.screen === 'playing') {
-                fireBullet();
-            }
-        });
-        fireBtn.addEventListener('touchend', function(e) {
-            e.preventDefault();
-            touchInput.fire = false;
-        });
+    draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = this.life;
+        ctx.fillStyle = this.color;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
     }
-    
-    // ウィンドウリサイズ
-    window.addEventListener('resize', resizeCanvas);
-    
-    console.log('イベントリスナー設定完了');
 }
 
-function startGame() {
-    console.log('ゲーム開始');
-    gameState.screen = 'playing';
-    document.getElementById('titleScreen').classList.add('hidden');
-    document.getElementById('gameScreen').classList.remove('hidden');
-    document.getElementById('gameOverScreen').classList.add('hidden');
-    
-    resetGameState();
-    gameLoop = requestAnimationFrame(gameUpdate);
-}
-
-function restartGame() {
-    console.log('ゲームリスタート');
-    startGame();
-}
-
-function gameUpdate(currentTime) {
-    if (gameState.screen !== 'playing') return;
-    
-    const deltaTime = currentTime - lastTime;
-    lastTime = currentTime;
-    
-    handleInput();
-    updatePlayer(deltaTime);
-    updateBullets(deltaTime);
-    updateEnemies(deltaTime);
-    updateItems(deltaTime);
-    updateParticles(deltaTime);
-    updateBoss(deltaTime);
-    checkCollisions();
-    generateEnemies();
-    generateItems();
-    updateScore();
-    
-    render();
-    
-    gameLoop = requestAnimationFrame(gameUpdate);
-}
-
-function handleInput() {
-    // キーボード入力
-    if (keys['ArrowLeft'] || keys['a'] || keys['A'] || touchInput.left) {
-        player.x -= player.speed;
-    }
-    if (keys['ArrowRight'] || keys['d'] || keys['D'] || touchInput.right) {
-        player.x += player.speed;
-    }
-    if (keys[' '] || keys['Spacebar'] || touchInput.fire) {
-        fireBullet();
-    }
-    
-    // プレイヤーの移動範囲制限
-    if (player.x < 0) player.x = 0;
-    if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
-}
-
-function updatePlayer(deltaTime) {
-    // プレイヤーの更新処理
-}
-
-function fireBullet() {
-    const currentTime = Date.now();
-    if (currentTime - player.lastShot < player.shotCooldown) return;
-    
-    player.lastShot = currentTime;
-    
-    if (player.hasYShot) {
-        // Y字弾
-        createPlayerBullet(player.x + player.width / 2, player.y, -1);
-        createPlayerBullet(player.x + player.width / 2, player.y, 1);
-    } else {
-        // 通常弾
-        createPlayerBullet(player.x + player.width / 2, player.y, 0);
-    }
-    
-    console.log('弾を発射しました');
-}
-
-function createPlayerBullet(x, y, angleOffset) {
-    const bullet = {
-        x: x,
-        y: y,
-        width: bulletConfig.player.width,
-        height: bulletConfig.player.height,
-        speedX: angleOffset * 2,
-        speedY: -bulletConfig.player.speed,
-        color: bulletConfig.player.color
-    };
-    playerBullets.push(bullet);
-}
-
-function updateBullets(deltaTime) {
-    // プレイヤーの弾を更新
-    for (let i = playerBullets.length - 1; i >= 0; i--) {
-        const bullet = playerBullets[i];
-        bullet.x += bullet.speedX;
-        bullet.y += bullet.speedY;
+class SymmetryGame {
+    constructor() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.isDrawing = false;
         
-        // 画面外に出た弾を削除
-        if (bullet.y < -bullet.height) {
-            playerBullets.splice(i, 1);
+        // 基本設定
+        this.colors = ['#ff0055', '#00ffcc', '#0099ff', '#ccff00', '#ffcc00', '#ff00cc', '#ffffff'];
+        this.colorEmojis = ['🔴', '🔵', '💧', '🟢', '🟡', '🟣', '⚪'];
+        this.currentColorIndex = 0;
+        
+        this.brushSizes = [3, 8, 20]; 
+        this.brushSizeNames = ['小', '中', '大'];
+        this.currentSizeIndex = 1;
+        
+        this.symmetryModes = [2, 3, 4, 6, 8, 12]; // 3角形を作るために3を追加
+        this.currentSymmetryIndex = 0;
+
+        // ▼ 新機能：ブラシスタイルとツール ▼
+        this.brushStyles = ['neon', 'spray', 'ribbon'];
+        this.brushStyleNames = ['通常', 'スプレー', 'リボン'];
+        this.currentStyleIndex = 0;
+
+        this.drawTools = ['freehand', 'polygon'];
+        this.drawToolNames = ['フリー', '多角形'];
+        this.currentToolIndex = 0;
+        
+        this.drawingHistory = [];
+        this.currentStrokePoints = [];
+        this.startPos = {x: 0, y: 0}; // シェイプ描画の始点用
+        
+        this.isPlaying = false;
+        this.animationId = null;
+        this.playBtn = document.getElementById('playBtn');
+        this.audioElement = document.getElementById('bgm');
+        this.audioElement.volume = 0.6;
+
+        this.audioCtx = null;
+        this.analyser = null;
+        this.dataArray = null;
+        this.source = null;
+
+        this.baseRotation = 0;
+        this.beatScale = 1;
+        this.particles = [];
+        
+        this.initCanvas();
+        this.bindEvents();
+        this.updateUI();
+        
+        this.drawAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    initCanvas() {
+        const container = document.querySelector('.canvas-container');
+        const maxWidth = Math.min(600, container.clientWidth - 20);
+        const maxHeight = Math.min(600, window.innerHeight * 0.6);
+        this.canvas.width = maxWidth;
+        this.canvas.height = maxHeight;
+        
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        this.centerX = this.canvas.width / 2;
+        this.centerY = this.canvas.height / 2;
+        
+        if (this.drawingHistory.length > 0 && !this.isPlaying) {
+             this.redrawHistory();
         }
     }
     
-    // 敵の弾を更新
-    for (let i = enemyBullets.length - 1; i >= 0; i--) {
-        const bullet = enemyBullets[i];
-        bullet.x += bullet.speedX;
-        bullet.y += bullet.speedY;
+    bindEvents() {
+        document.getElementById('clearBtn').addEventListener('click', () => this.clearCanvas());
+        document.getElementById('colorBtn').addEventListener('click', () => this.changeColor());
+        document.getElementById('modeBtn').addEventListener('click', () => this.changeSymmetryMode());
+        document.getElementById('sizeBtn').addEventListener('click', () => this.changeBrushSize());
         
-        // 画面外に出た弾を削除
-        if (bullet.y > canvas.height) {
-            enemyBullets.splice(i, 1);
+        // 新しいボタンイベント
+        document.getElementById('styleBtn').addEventListener('click', () => this.changeBrushStyle());
+        document.getElementById('toolBtn').addEventListener('click', () => this.changeDrawTool());
+        
+        this.canvas.addEventListener('mousedown', (e) => this.startDrawing(e));
+        this.canvas.addEventListener('mousemove', (e) => this.draw(e));
+        this.canvas.addEventListener('mouseup', () => this.stopDrawing());
+        this.canvas.addEventListener('mouseout', () => this.stopDrawing());
+        
+        this.canvas.addEventListener('touchstart', (e) => { e.preventDefault(); this.startDrawing(e.touches[0]); });
+        this.canvas.addEventListener('touchmove', (e) => { e.preventDefault(); this.draw(e.touches[0]); });
+        this.canvas.addEventListener('touchend', (e) => { e.preventDefault(); this.stopDrawing(); });
+        
+        window.addEventListener('resize', () => { setTimeout(() => this.initCanvas(), 100); });
+
+        this.playBtn.addEventListener('click', () => this.toggleAnimation());
+        this.audioElement.addEventListener('ended', () => { if (this.isPlaying) this.toggleAnimation(); });
+    }
+
+    setupAudioAnalyzer() {
+        if (!this.audioCtx) {
+            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            this.analyser = this.audioCtx.createAnalyser();
+            this.analyser.fftSize = 256;
+            this.source = this.audioCtx.createMediaElementSource(this.audioElement);
+            this.source.connect(this.analyser);
+            this.analyser.connect(this.audioCtx.destination);
+            this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+        }
+        if (this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume();
         }
     }
-}
 
-function updateEnemies(deltaTime) {
-    for (let i = enemies.length - 1; i >= 0; i--) {
-        const enemy = enemies[i];
-        enemy.y += enemy.speed;
+    toggleAnimation() {
+        this.isPlaying = !this.isPlaying;
         
-        // 画面外に出た敵を削除
-        if (enemy.y > canvas.height) {
-            enemies.splice(i, 1);
-        }
-        
-        // 敵の弾を発射
-        if (Math.random() < 0.01) {
-            createEnemyBullet(enemy.x + enemy.width / 2, enemy.y + enemy.height);
-        }
-    }
-}
-
-function updateItems(deltaTime) {
-    for (let i = items.length - 1; i >= 0; i--) {
-        const item = items[i];
-        item.y += 2;
-        
-        // 画面外に出たアイテムを削除
-        if (item.y > canvas.height) {
-            items.splice(i, 1);
-        }
-    }
-}
-
-function updateParticles(deltaTime) {
-    for (let i = particles.length - 1; i >= 0; i--) {
-        const particle = particles[i];
-        particle.x += particle.speedX;
-        particle.y += particle.speedY;
-        particle.life -= 1;
-        
-        if (particle.life <= 0) {
-            particles.splice(i, 1);
-        }
-    }
-}
-
-function updateBoss(deltaTime) {
-    if (!boss) return;
-    
-    // ボスの移動
-    boss.x += boss.speedX;
-    if (boss.x <= 0 || boss.x >= canvas.width - boss.width) {
-        boss.speedX *= -1;
-    }
-    
-    // ボスの弾を発射
-    if (Math.random() < 0.05) {
-        createBossBullet();
-    }
-}
-
-function createEnemyBullet(x, y) {
-    const bullet = {
-        x: x,
-        y: y,
-        width: bulletConfig.enemy.width,
-        height: bulletConfig.enemy.height,
-        speedX: 0,
-        speedY: bulletConfig.enemy.speed,
-        color: bulletConfig.enemy.color
-    };
-    enemyBullets.push(bullet);
-}
-
-function createBossBullet() {
-    if (!boss) return;
-    
-    const bullet = {
-        x: boss.x + boss.width / 2,
-        y: boss.y + boss.height,
-        width: 6,
-        height: 12,
-        speedX: 0,
-        speedY: 6,
-        color: '#ff6600'
-    };
-    enemyBullets.push(bullet);
-}
-
-function generateEnemies() {
-    if (Math.random() < 0.02) {
-        const enemy = {
-            x: Math.random() * (canvas.width - 30),
-            y: -30,
-            width: 30,
-            height: 30,
-            speed: 2 + Math.random() * 2,
-            hp: 1
-        };
-        enemies.push(enemy);
-    }
-}
-
-function generateItems() {
-    if (Math.random() < 0.005) {
-        const item = {
-            x: Math.random() * (canvas.width - 20),
-            y: -20,
-            width: 20,
-            height: 20,
-            type: Math.random() < 0.5 ? 'rapidFire' : 'yShot'
-        };
-        items.push(item);
-    }
-}
-
-function checkCollisions() {
-    // プレイヤーの弾と敵の衝突
-    for (let i = playerBullets.length - 1; i >= 0; i--) {
-        const bullet = playerBullets[i];
-        
-        // 通常の敵との衝突
-        for (let j = enemies.length - 1; j >= 0; j--) {
-            const enemy = enemies[j];
-            if (isColliding(bullet, enemy)) {
-                enemy.hp--;
-                playerBullets.splice(i, 1);
-                createParticles(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, '#ff0000');
-                
-                if (enemy.hp <= 0) {
-                    enemies.splice(j, 1);
-                    gameState.score += 100;
-                }
-                break;
-            }
-        }
-        
-        // ボスとの衝突
-        if (boss && isColliding(bullet, boss)) {
-            boss.hp--;
-            playerBullets.splice(i, 1);
-            createParticles(bullet.x, bullet.y, '#ff6600');
+        if (this.isPlaying) {
+            this.setupAudioAnalyzer();
+            this.playBtn.textContent = '■ STOP';
+            this.playBtn.classList.add('playing');
+            document.body.classList.add('neon-mode');
             
-            if (boss.hp <= 0) {
-                boss = null;
-                gameState.bossActive = false;
-                gameState.score += 1000;
-                gameState.level++;
-                document.getElementById('bossHp').style.display = 'none';
-            }
-            break;
-        }
-    }
-    
-    // 敵の弾とプレイヤーの衝突
-    for (let i = enemyBullets.length - 1; i >= 0; i--) {
-        const bullet = enemyBullets[i];
-        if (isColliding(bullet, player)) {
-            enemyBullets.splice(i, 1);
-            takeDamage();
-            createParticles(player.x + player.width / 2, player.y + player.height / 2, '#ffffff');
-        }
-    }
-    
-    // 敵とプレイヤーの衝突
-    for (let i = enemies.length - 1; i >= 0; i--) {
-        const enemy = enemies[i];
-        if (isColliding(enemy, player)) {
-            enemies.splice(i, 1);
-            takeDamage();
-            createParticles(player.x + player.width / 2, player.y + player.height / 2, '#ffffff');
-        }
-    }
-    
-    // アイテムとプレイヤーの衝突
-    for (let i = items.length - 1; i >= 0; i--) {
-        const item = items[i];
-        if (isColliding(item, player)) {
-            collectItem(item);
-            items.splice(i, 1);
-        }
-    }
-}
-
-function isColliding(obj1, obj2) {
-    return obj1.x < obj2.x + obj2.width &&
-           obj1.x + obj1.width > obj2.x &&
-           obj1.y < obj2.y + obj2.height &&
-           obj1.y + obj1.height > obj2.y;
-}
-
-function takeDamage() {
-    gameState.lives--;
-    if (gameState.lives <= 0) {
-        gameOver();
-    }
-}
-
-function collectItem(item) {
-    if (item.type === 'rapidFire') {
-        player.hasRapidFire = true;
-        player.shotCooldown = 200; // 0.2秒
-        setTimeout(() => {
-            player.hasRapidFire = false;
-            player.shotCooldown = 700;
-        }, 10000); // 10秒間
-    } else if (item.type === 'yShot') {
-        player.hasYShot = true;
-        setTimeout(() => {
-            player.hasYShot = false;
-        }, 15000); // 15秒間
-    }
-}
-
-function createParticles(x, y, color) {
-    for (let i = 0; i < 5; i++) {
-        const particle = {
-            x: x,
-            y: y,
-            speedX: (Math.random() - 0.5) * 4,
-            speedY: (Math.random() - 0.5) * 4,
-            color: color,
-            life: 30
-        };
-        particles.push(particle);
-    }
-}
-
-function updateScore() {
-    document.getElementById('score').textContent = `スコア: ${gameState.score}`;
-    document.getElementById('lives').textContent = `ライフ: ${gameState.lives}`;
-    document.getElementById('level').textContent = `レベル: ${gameState.level}`;
-    
-    if (boss) {
-        document.getElementById('bossHp').textContent = `ボスHP: ${boss.hp}`;
-    }
-    
-    // ボス出現判定
-    if (gameState.score > 0 && gameState.score % 5000 === 0 && !gameState.bossActive && !boss) {
-        spawnBoss();
-    }
-}
-
-function spawnBoss() {
-    boss = {
-        x: canvas.width / 2 - 50,
-        y: 50,
-        width: 100,
-        height: 80,
-        hp: 100,
-        speedX: 2
-    };
-    gameState.bossActive = true;
-    document.getElementById('bossHp').style.display = 'block';
-}
-
-function gameOver() {
-    gameState.screen = 'gameOver';
-    document.getElementById('gameScreen').classList.add('hidden');
-    document.getElementById('gameOverScreen').classList.remove('hidden');
-    
-    document.getElementById('finalScore').textContent = `最終スコア: ${gameState.score}`;
-    document.getElementById('finalLevel').textContent = `到達レベル: ${gameState.level}`;
-    
-    const resultMessage = document.getElementById('result-message');
-    if (gameState.score > 10000) {
-        resultMessage.textContent = '素晴らしい戦いでした！';
-    } else if (gameState.score > 5000) {
-        resultMessage.textContent = 'よく頑張りました！';
-    } else {
-        resultMessage.textContent = '次回はもっと頑張ろう！';
-    }
-    
-    cancelAnimationFrame(gameLoop);
-}
-
-function render() {
-    // 背景をクリア
-    ctx.fillStyle = '#000033';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // 星の背景
-    drawStars();
-    
-    // プレイヤーを描画
-    drawPlayer();
-    
-    // 弾を描画
-    drawBullets();
-    
-    // 敵を描画
-    drawEnemies();
-    
-    // アイテムを描画
-    drawItems();
-    
-    // パーティクルを描画
-    drawParticles();
-    
-    // ボスを描画
-    if (boss) {
-        drawBoss();
-    }
-}
-
-function drawStars() {
-    ctx.fillStyle = '#ffffff';
-    for (let i = 0; i < 50; i++) {
-        const x = (i * 37) % canvas.width;
-        const y = (i * 73) % canvas.height;
-        ctx.fillRect(x, y, 1, 1);
-    }
-}
-
-function drawPlayer() {
-    ctx.fillStyle = '#00ff00';
-    ctx.fillRect(player.x, player.y, player.width, player.height);
-    
-    // プレイヤーの装飾
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(player.x + 5, player.y + 5, 10, 10);
-}
-
-function drawBullets() {
-    // プレイヤーの弾
-    ctx.fillStyle = bulletConfig.player.color;
-    playerBullets.forEach(bullet => {
-        ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
-    });
-    
-    // 敵の弾
-    ctx.fillStyle = bulletConfig.enemy.color;
-    enemyBullets.forEach(bullet => {
-        ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
-    });
-}
-
-function drawEnemies() {
-    ctx.fillStyle = '#ff0000';
-    enemies.forEach(enemy => {
-        ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
-    });
-}
-
-function drawItems() {
-    items.forEach(item => {
-        if (item.type === 'rapidFire') {
-            ctx.fillStyle = '#ffff00';
+            this.audioElement.currentTime = 0;
+            this.audioElement.play().catch(e => console.log("Audio play failed:", e));
+            this.animate();
         } else {
-            ctx.fillStyle = '#00ffff';
+            this.playBtn.textContent = '▶ MUSIC START';
+            this.playBtn.classList.remove('playing');
+            document.body.classList.remove('neon-mode');
+            this.canvas.classList.remove('beat-hit');
+            this.audioElement.pause();
+            cancelAnimationFrame(this.animationId);
+            
+            this.baseRotation = 0;
+            this.beatScale = 1;
+            this.particles = [];
+            this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+            this.redrawHistory();
         }
-        ctx.fillRect(item.x, item.y, item.width, item.height);
-    });
-}
+    }
 
-function drawParticles() {
-    particles.forEach(particle => {
-        ctx.fillStyle = particle.color;
-        ctx.globalAlpha = particle.life / 30;
-        ctx.fillRect(particle.x, particle.y, 2, 2);
-    });
-    ctx.globalAlpha = 1;
-}
+    animate() {
+        if (!this.isPlaying) return;
+        this.analyser.getByteFrequencyData(this.dataArray);
+        
+        let bassSum = 0;
+        for(let i=0; i<10; i++) bassSum += this.dataArray[i];
+        const bassLevel = bassSum / 10;
+        
+        let midSum = 0;
+        for(let i=20; i<100; i++) midSum += this.dataArray[i];
+        const midLevel = midSum / 80;
 
-function drawBoss() {
-    ctx.fillStyle = '#ff6600';
-    ctx.fillRect(boss.x, boss.y, boss.width, boss.height);
+        const scaleEffect = (bassLevel / 255) * 0.4; 
+        this.beatScale = 1.0 + scaleEffect;
+        this.baseRotation += 0.002 + (midLevel / 255) * 0.02;
+
+        if (bassLevel > 200) {
+            document.body.style.background = `radial-gradient(circle, #4a00e0, #000)`;
+            this.canvas.classList.add('beat-hit');
+        } else {
+            this.canvas.classList.remove('beat-hit');
+        }
+
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.drawStoredPaths(bassLevel, midLevel);
+
+        if (midLevel > 150 || Math.random() < 0.1) {
+             const pCount = Math.floor(midLevel / 40);
+             for(let i=0; i<pCount; i++) {
+                 this.particles.push(new Particle(this.centerX, this.centerY, this.colors, 1 + (bassLevel/100)));
+             }
+        }
+        
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            this.particles[i].update();
+            this.particles[i].draw(this.ctx);
+            if (this.particles[i].life <= 0) this.particles.splice(i, 1);
+        }
+
+        this.animationId = requestAnimationFrame(() => this.animate());
+    }
+
+    drawStoredPaths(bassLevel, midLevel) {
+        this.ctx.shadowBlur = 15 + (bassLevel / 10);
+        
+        this.drawingHistory.forEach((stroke) => {
+            const symmetryCount = stroke.symmetryCount;
+            const angleStep = (2 * Math.PI) / symmetryCount;
+            
+            const colorShift = Math.floor(midLevel / 30);
+            const originalColorIndex = this.colors.indexOf(stroke.color);
+            const dynamicColor = this.colors[(originalColorIndex + colorShift) % this.colors.length];
+            
+            this.ctx.strokeStyle = dynamicColor;
+            this.ctx.fillStyle = dynamicColor; // スプレー用
+            this.ctx.shadowColor = dynamicColor;
+            this.ctx.lineWidth = stroke.size * (1 + bassLevel/300);
+
+            // スタイル適用
+            this.ctx.lineCap = stroke.style === 'ribbon' ? 'butt' : 'round';
+            if (stroke.style === 'ribbon') this.ctx.lineWidth = stroke.size * (1 + bassLevel/300) * 0.5;
+
+            // スプレーの場合はアニメーション中は点線のように描画して処理落ちを防ぐ
+            if (stroke.style === 'spray') {
+                this.ctx.setLineDash([1, stroke.size * 2]);
+            } else {
+                this.ctx.setLineDash([]);
+            }
+
+            for (let i = 0; i < symmetryCount; i++) {
+                const angle = i * angleStep + this.baseRotation;
+                
+                this.ctx.save();
+                this.ctx.translate(this.centerX, this.centerY);
+                this.ctx.rotate(angle);
+                this.ctx.scale(this.beatScale, this.beatScale);
+                this.ctx.translate(-this.centerX, -this.centerY);
+
+                if (stroke.points.length > 1) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+                    for (let j = 1; j < stroke.points.length; j++) {
+                        this.ctx.lineTo(stroke.points[j].x, stroke.points[j].y);
+                    }
+                    this.ctx.stroke();
+
+                    // ミラー
+                    if (symmetryCount > 2) {
+                         this.ctx.beginPath();
+                         let startRefX = this.centerX - (stroke.points[0].x - this.centerX);
+                         this.ctx.moveTo(startRefX, stroke.points[0].y);
+                         for (let j = 1; j < stroke.points.length; j++) {
+                             let refX = this.centerX - (stroke.points[j].x - this.centerX);
+                             this.ctx.lineTo(refX, stroke.points[j].y);
+                         }
+                         this.ctx.stroke();
+                    }
+                }
+                this.ctx.restore();
+            }
+        });
+        
+        this.ctx.shadowBlur = 0;
+        this.ctx.setLineDash([]); // リセット
+    }
+
+    // ▼▼▼ 描画ロジック（拡張版） ▼▼▼
+    getMousePos(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        return {
+            x: (e.clientX - rect.left) * (this.canvas.width / rect.width),
+            y: (e.clientY - rect.top) * (this.canvas.height / rect.height)
+        };
+    }
     
-    // ボスの装飾
-    ctx.fillStyle = '#ff0000';
-    ctx.fillRect(boss.x + 10, boss.y + 10, 20, 20);
-    ctx.fillRect(boss.x + 70, boss.y + 10, 20, 20);
+    startDrawing(e) {
+        if (this.isPlaying) return;
+        if (this.drawAudioCtx.state === 'suspended') this.drawAudioCtx.resume();
+        
+        this.isDrawing = true;
+        const pos = this.getMousePos(e);
+        this.lastX = pos.x;
+        this.lastY = pos.y;
+        this.startPos = { x: pos.x, y: pos.y }; // 多角形用
+        
+        if (this.drawTools[this.currentToolIndex] === 'freehand') {
+            this.currentStrokePoints = [{x: pos.x, y: pos.y}];
+            // クリックした瞬間も点を打つ
+            this.drawSymmetric(pos.x, pos.y, pos.x, pos.y);
+        } else {
+            // 多角形モード開始
+            this.currentStrokePoints = []; 
+        }
+    }
+    
+    draw(e) {
+        if (!this.isDrawing || this.isPlaying) return;
+        const pos = this.getMousePos(e);
+
+        if (this.drawTools[this.currentToolIndex] === 'freehand') {
+            // フリーハンド描画
+            this.drawSymmetric(this.lastX, this.lastY, pos.x, pos.y);
+            this.currentStrokePoints.push({x: pos.x, y: pos.y});
+            this.lastX = pos.x;
+            this.lastY = pos.y;
+            this.playDrawSound(pos.x, pos.y);
+        } else {
+            // 多角形プレビュー描画（一度消して再描画することでアニメーションさせる）
+            // 注意: 重くなりすぎないように履歴が多すぎる場合は制限が必要だが、今回は簡易実装
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.redrawHistory(); // 確定済みの線を描画
+            
+            // 現在の多角形プレビューを計算して描画
+            const polygonPoints = this.calculatePolygonPoints(this.startPos, pos);
+            this.drawSymmetricPolyPreview(polygonPoints);
+        }
+    }
+
+    // 正多角形の頂点を計算（中心は startPos, 半径はマウス距離）
+    calculatePolygonPoints(center, mousePos) {
+        const radius = Math.hypot(mousePos.x - center.x, mousePos.y - center.y);
+        const startAngle = Math.atan2(mousePos.y - center.y, mousePos.x - center.x);
+        const sides = this.symmetryModes[this.currentSymmetryIndex];
+        const points = [];
+        
+        for (let i = 0; i <= sides; i++) { // 閉じるために一周する
+            const angle = startAngle + (i * 2 * Math.PI / sides);
+            points.push({
+                x: center.x + Math.cos(angle) * radius,
+                y: center.y + Math.sin(angle) * radius
+            });
+        }
+        return points;
+    }
+    
+    playDrawSound(x, y) {
+        // 音声処理（省略）
+    }
+    
+    stopDrawing() {
+        if (!this.isDrawing) return;
+        this.isDrawing = false;
+        
+        const currentTool = this.drawTools[this.currentToolIndex];
+        
+        if (currentTool === 'polygon') {
+            // マウスアップ時点で多角形を確定
+            // 最後のマウス位置を取得する必要があるが、mousemoveの最後の状態を使う
+            // 簡易的に：mousemoveが一度も発火してない場合は何もしない
+             // 多角形モードの場合、currentStrokePoints は空なので、ここで生成して保存する
+             // ただし、draw内で計算していないため、イベントオブジェクトがない...
+             // 修正: draw内で保存しておくか、ここでもう一度計算するか。
+             // 簡易ハック: 直前のプレビューが残っているので、それを確定させたいが、
+             // ここでは「startPos」と「lastX/Y」を使って計算し直す。
+             const points = this.calculatePolygonPoints(this.startPos, {x: this.lastX, y: this.lastY});
+             // 半径が小さすぎる場合は無視
+             if (Math.hypot(this.lastX - this.startPos.x, this.lastY - this.startPos.y) > 5) {
+                 this.drawingHistory.push({
+                    points: points,
+                    color: this.colors[this.currentColorIndex],
+                    size: this.brushSizes[this.currentSizeIndex],
+                    symmetryCount: this.symmetryModes[this.currentSymmetryIndex],
+                    style: this.brushStyles[this.currentStyleIndex] // スタイル保存
+                });
+             }
+             this.redrawHistory(); // プレビュー用の線を確定線として再描画
+        } else {
+            // フリーハンド
+            if (this.currentStrokePoints.length > 0) {
+                this.drawingHistory.push({
+                    points: this.currentStrokePoints,
+                    color: this.colors[this.currentColorIndex],
+                    size: this.brushSizes[this.currentSizeIndex],
+                    symmetryCount: this.symmetryModes[this.currentSymmetryIndex],
+                    style: this.brushStyles[this.currentStyleIndex] // スタイル保存
+                });
+            }
+        }
+        this.currentStrokePoints = [];
+    }
+
+    clearCanvas() {
+        if (this.isPlaying) return;
+        this.drawingHistory = [];
+        this.particles = [];
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    redrawHistory() {
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.drawingHistory.forEach(stroke => {
+            this.renderStroke(stroke);
+        });
+    }
+
+    // 保存されたストロークを描画する共通関数（静止画用）
+    renderStroke(stroke) {
+        const symmetryCount = stroke.symmetryCount;
+        const angleStep = (2 * Math.PI) / symmetryCount;
+        this.ctx.strokeStyle = stroke.color;
+        this.ctx.fillStyle = stroke.color; // スプレー用
+        this.ctx.lineWidth = stroke.size;
+        this.ctx.shadowBlur = 0;
+        
+        // ブラシスタイル設定
+        const style = stroke.style || 'neon'; // 古いデータ互換
+        this.ctx.lineCap = style === 'ribbon' ? 'butt' : 'round';
+        this.ctx.lineJoin = style === 'ribbon' ? 'bevel' : 'round';
+
+        for (let i = 0; i < symmetryCount; i++) {
+            const angle = i * angleStep;
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            
+            const drawPath = (points, isRef) => {
+                if (style === 'spray') {
+                    // スプレー描画（点の集合として描画）
+                    points.forEach(pt => {
+                        let rx = pt.x - this.centerX;
+                        let ry = pt.y - this.centerY;
+                        if(isRef) rx = -rx;
+                        const finalX = rx * cos - ry * sin + this.centerX;
+                        const finalY = rx * sin + ry * cos + this.centerY;
+                        
+                        // 1ポイントにつき数個のドットを散らす
+                        for(let k=0; k<3; k++) {
+                            const offsetX = (Math.random() - 0.5) * stroke.size * 2;
+                            const offsetY = (Math.random() - 0.5) * stroke.size * 2;
+                            this.ctx.fillRect(finalX + offsetX, finalY + offsetY, 1, 1);
+                        }
+                    });
+                } else {
+                    // 通常線 or リボン
+                    this.ctx.beginPath();
+                    points.forEach((pt, idx) => {
+                        let rx = pt.x - this.centerX;
+                        let ry = pt.y - this.centerY;
+                        if(isRef) rx = -rx;
+                        const finalX = rx * cos - ry * sin + this.centerX;
+                        const finalY = rx * sin + ry * cos + this.centerY;
+                        if(idx===0) this.ctx.moveTo(finalX, finalY);
+                        else this.ctx.lineTo(finalX, finalY);
+                    });
+                    this.ctx.stroke();
+                }
+            };
+            drawPath(stroke.points, false);
+            if (symmetryCount > 2) drawPath(stroke.points, true);
+        }
+    }
+
+    // フリーハンド描画時のリアルタイムレンダリング
+    drawSymmetric(x1, y1, x2, y2) {
+        const symmetryCount = this.symmetryModes[this.currentSymmetryIndex];
+        const angleStep = (2 * Math.PI) / symmetryCount;
+        const style = this.brushStyles[this.currentStyleIndex];
+        const size = this.brushSizes[this.currentSizeIndex];
+
+        this.ctx.strokeStyle = this.colors[this.currentColorIndex];
+        this.ctx.fillStyle = this.colors[this.currentColorIndex];
+        this.ctx.lineWidth = size;
+        this.ctx.lineCap = style === 'ribbon' ? 'butt' : 'round';
+        
+        for (let i = 0; i < symmetryCount; i++) {
+            const angle = i * angleStep;
+            const cos = Math.cos(angle), sin = Math.sin(angle);
+            
+            // 座標変換関数
+            const transform = (x, y, mirror) => {
+                let rx = x - this.centerX;
+                let ry = y - this.centerY;
+                if (mirror) rx = -rx;
+                return {
+                    x: rx * cos - ry * sin + this.centerX,
+                    y: rx * sin + ry * cos + this.centerY
+                };
+            };
+
+            const drawSegment = (p1, p2) => {
+                if (style === 'spray') {
+                    // スプレー: 線を引く代わりに点を散らす
+                    const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+                    const steps = Math.max(1, Math.floor(dist / 2));
+                    for (let s = 0; s < steps; s++) {
+                        const t = s / steps;
+                        const tx = p1.x + (p2.x - p1.x) * t;
+                        const ty = p1.y + (p2.y - p1.y) * t;
+                        
+                        for (let d = 0; d < 5; d++) { // 密度
+                            const r = Math.random() * size;
+                            const a = Math.random() * Math.PI * 2;
+                            this.ctx.fillRect(tx + Math.cos(a)*r, ty + Math.sin(a)*r, 1.5, 1.5);
+                        }
+                    }
+                } else {
+                    // 通常・リボン
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(p1.x, p1.y);
+                    this.ctx.lineTo(p2.x, p2.y);
+                    this.ctx.stroke();
+                }
+            };
+
+            // 通常描画
+            drawSegment(transform(x1, y1, false), transform(x2, y2, false));
+
+            // ミラー描画
+            if (symmetryCount > 2) {
+                drawSegment(transform(x1, y1, true), transform(x2, y2, true));
+            }
+        }
+    }
+
+    // 多角形プレビュー用の描画（履歴に残す前の表示用）
+    drawSymmetricPolyPreview(points) {
+        // 現在の設定で仮のストロークデータを作成して renderStroke を使う
+        const tempStroke = {
+            points: points,
+            color: this.colors[this.currentColorIndex],
+            size: this.brushSizes[this.currentSizeIndex],
+            symmetryCount: this.symmetryModes[this.currentSymmetryIndex],
+            style: this.brushStyles[this.currentStyleIndex]
+        };
+        this.renderStroke(tempStroke);
+    }
+
+    changeColor() {
+        this.currentColorIndex = (this.currentColorIndex + 1) % this.colors.length;
+        this.updateUI();
+    }
+    changeSymmetryMode() {
+        this.currentSymmetryIndex = (this.currentSymmetryIndex + 1) % this.symmetryModes.length;
+        this.updateUI();
+    }
+    changeBrushSize() {
+        this.currentSizeIndex = (this.currentSizeIndex + 1) % this.brushSizes.length;
+        this.updateUI();
+    }
+    // 新機能用UI更新
+    changeBrushStyle() {
+        this.currentStyleIndex = (this.currentStyleIndex + 1) % this.brushStyles.length;
+        this.updateUI();
+    }
+    changeDrawTool() {
+        this.currentToolIndex = (this.currentToolIndex + 1) % this.drawTools.length;
+        this.updateUI();
+    }
+    
+    updateUI() {
+        document.getElementById('currentColor').textContent = this.colorEmojis[this.currentColorIndex];
+        document.getElementById('symmetryCount').textContent = this.symmetryModes[this.currentSymmetryIndex];
+        document.getElementById('modeBtn').textContent = `対称モード: ${this.symmetryModes[this.currentSymmetryIndex]}方向`;
+        document.getElementById('sizeBtn').textContent = `筆のサイズ: ${this.brushSizeNames[this.currentSizeIndex]}`;
+        
+        // 新しいボタンの表示更新
+        document.getElementById('styleBtn').textContent = `ペン: ${this.brushStyleNames[this.currentStyleIndex]}`;
+        document.getElementById('toolBtn').textContent = `ツール: ${this.drawToolNames[this.currentToolIndex]}`;
+    }
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+    new SymmetryGame();
+});

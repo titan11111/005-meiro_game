@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Planet - 創生と終末の100年</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* ========== START SCREEN ========== */
+        .start-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .start-screen h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .dna-input-group {
+            margin: 30px 0;
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .dna-input-group label {
+            display: block;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .dna-input-group input {
+            width: 100%;
+            max-width: 200px;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            text-transform: uppercase;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .dna-info {
+            margin: 20px 0;
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .dna-meanings {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+            font-size: 12px;
+        }
+
+        .dna-meanings div {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .dna-meanings strong {
+            display: block;
+            color: #667eea;
+            margin-bottom: 3px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        /* ========== GAME SCREEN ========== */
+        .game-screen {
+            padding: 20px;
+        }
+
+        .info-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .info-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .info-item-label {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+
+        .info-item-value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .visualization-area {
+            background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .creature-display {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .creature-pixel {
+            width: 50px;
+            height: 50px;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        .disaster-alert {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .status-display {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        .status-display strong {
+            color: #667eea;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .action-buttons button {
+            padding: 15px;
+            font-size: 14px;
+        }
+
+        /* ========== END SCREEN ========== */
+        .end-screen {
+            padding: 40px 20px;
+        }
+
+        .end-screen h2 {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .record-display {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.8;
+            margin: 20px 0;
+            overflow-x: auto;
+            border-left: 5px solid #667eea;
+        }
+
+        .record-line {
+            word-break: break-all;
+        }
+
+        .record-highlight {
+            color: #3498db;
+        }
+
+        .end-screen-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .random-button {
+            background: #f39c12;
+            color: white;
+        }
+
+        .random-button:hover {
+            background: #e67e22;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 600px) {
+            .container {
+                border-radius: 15px;
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .info-bar {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .creature-pixel {
+                width: 40px;
+                height: 40px;
+            }
+
+            .dna-meanings {
+                grid-template-columns: 1fr;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .record-display {
+                font-size: 11px;
+            }
+        }
+
+        .status-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+
+        .status-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 100%;
+            transition: width 0.3s;
+        }
+
+        .year-indicator {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧬 DNA Planet 🌍</h1>
+            <p>創生と終末の100年記録</p>
+        </div>
+
+        <!-- START SCREEN -->
+        <div class="screen start-screen active">
+            <h2>あなたの生物を創造しよう</h2>
+            
+            <div class="dna-input-group">
+                <label for="dnaInput">DNA配列を入力（4文字 A/T/C/Gのみ）:</label>
+                <input type="text" id="dnaInput" placeholder="例：ATCG" maxlength="4">
+                <div class="dna-info">
+                    💡 ヒント：4文字の組み合わせで、全部で256種類の生物が作れます！
+                </div>
+            </div>
+
+            <div class="dna-meanings">
+                <div><strong>🔴 A</strong>熱・エネルギー<br>耐性アップ</div>
+                <div><strong>🟢 T</strong>繁殖・増殖<br>スペシャル</div>
+                <div><strong>⚫ C</strong>防御・硬質<br>ダメージ対策</div>
+                <div><strong>🔵 G</strong>適応・変異<br>進化しやすい</div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" onclick="startGame()">ゲーム開始</button>
+                <button class="btn-secondary" onclick="randomDNA()">ランダム選択</button>
+            </div>
+        </div>
+
+        <!-- GAME SCREEN -->
+        <div class="screen game-screen">
+            <div class="info-bar">
+                <div class="info-item">
+                    <div class="info-item-label">🗓️ 経過年数</div>
+                    <div class="info-item-value"><span id="yearDisplay">0</span>/100</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-item-label">👥 個体数</div>
+                    <div class="info-item-value" id="populationDisplay">0</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-item-label">💪 適応度</div>
+                    <div class="info-item-value" id="adaptDisplay">0%</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-item-label">🧬 DNA</div>
+                    <div class="info-item-value" id="dnaDisplay">----</div>
+                </div>
+            </div>
+
+            <div class="visualization-area">
+                <div class="year-indicator">
+                    <span id="phaseText">序盤：学習期</span> 🌱
+                </div>
+                <div class="creature-display" id="creatureDisplay">
+                    <!-- Creatures will be drawn here -->
+                </div>
+            </div>
+
+            <div class="status-display" id="statusDisplay">
+                <!-- Status text -->
+            </div>
+
+            <div id="disasterAlert"></div>
+
+            <div class="action-buttons">
+                <button class="btn-primary" id="pausePlayBtn" onclick="togglePausePlay()">⏸️ 一時停止</button>
+                <button class="btn-secondary" onclick="gameOver()">⏹️ ゲーム終了</button>
+            </div>
+        </div>
+
+        <!-- END SCREEN -->
+        <div class="screen end-screen">
+            <h2>🏁 ゲーム終了 - 生物進化記録</h2>
+            <div class="record-display" id="recordDisplay">
+                <!-- Record will be displayed here -->
+            </div>
+            <div class="end-screen-buttons">
+                <button class="btn-primary" onclick="backToStart()">🔄 別の生物を作る</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== GAME STATE =====
+        let gameState = {
+            dna: 'ATCG',
+            year: 0,
+            population: 100,
+            maxPopulation: 100,
+            healthPoints: 100,
+            adaptationScore: 50,
+            disasterHappened: false,
+            evolutionLog: []
+        };
+
+        let gameLoopInterval = null;
+        let gameSpeed = 500; // ミリ秒（デフォルト0.5秒ごと）
+        let isGameRunning = false;
+
+        // DNA Statistics
+        function calculateDNAStats(dna) {
+            const stats = {
+                A: (dna.match(/A/g) || []).length,
+                T: (dna.match(/T/g) || []).length,
+                C: (dna.match(/C/g) || []).length,
+                G: (dna.match(/G/g) || []).length
+            };
+            return stats;
+        }
+
+        function getDNAColor(dna) {
+            const stats = calculateDNAStats(dna);
+            const max = Math.max(stats.A, stats.T, stats.C, stats.G);
+            
+            if (stats.A === max) return { r: 255, g: 100, b: 100 }; // Red - Heat
+            if (stats.T === max) return { r: 100, g: 255, b: 100 }; // Green - Repro
+            if (stats.C === max) return { r: 150, g: 150, b: 150 }; // Gray - Impact
+            if (stats.G === max) return { r: 100, g: 150, b: 255 }; // Blue - Adapt
+            return { r: 200, g: 200, b: 200 };
+        }
+
+        function generateCreatureImage(dna, size = 50) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            const color = getDNAColor(dna);
+            const stats = calculateDNAStats(dna);
+            
+            ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
+            
+            // Silhouette based on DNA
+            const maxStat = Math.max(stats.A, stats.T, stats.C, stats.G);
+            const scale = 0.8 + (maxStat * 0.1);
+            const centerX = size / 2;
+            const centerY = size / 2;
+            
+            // Body shape
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, (size / 3) * scale, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Head
+            if (stats.A > 0) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY - size / 4, (size / 6), 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Tail
+            if (stats.T > 0) {
+                ctx.fillRect(centerX + (size / 3) * scale, centerY - size / 10, size / 4, size / 5);
+            }
+            
+            // Armor (C)
+            if (stats.C > 1) {
+                ctx.strokeStyle = `rgb(${color.r - 50}, ${color.g - 50}, ${color.b - 50})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, (size / 3) * scale + 3, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // Eyes (G)
+            if (stats.G > 0) {
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(centerX - size / 8, centerY - size / 6, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(centerX + size / 8, centerY - size / 6, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            return canvas.toDataURL();
+        }
+
+        function getPhaseText(year) {
+            if (year <= 10) return '序盤：学習期 🌱';
+            if (year <= 20) return '予兆期：変化の予感 ⚠️';
+            if (year <= 50) return '試練期：試験開始 💥';
+            if (year <= 80) return '適応競争期：生存競争 🔥';
+            return '終末期：最終試験 ⚫';
+        }
+
+        function getDisaster(year) {
+            const random = Math.random();
+            
+            if (year <= 10) {
+                if (random < 0.1) return { name: '小隕石群', damage: 10 };
+                if (random < 0.2) return { name: '熱波', damage: 5 };
+                return null;
+            }
+            
+            if (year <= 20) {
+                if (random < 0.15) return { name: '太陽期（高温）', damage: 15 };
+                if (random < 0.3) return { name: '寒冷期（低温）', damage: 15 };
+                return null;
+            }
+            
+            if (year <= 50) {
+                if (random < 0.2) return { name: '大隕石群', damage: 30 };
+                if (random < 0.3) return { name: '超台風', damage: 25 };
+                if (random < 0.4) return { name: '大地震', damage: 20 };
+                return null;
+            }
+            
+            if (year <= 80) {
+                if (random < 0.3) return { name: '大規模火山噴火', damage: 40 };
+                if (random < 0.4) return { name: '津波', damage: 35 };
+                if (random < 0.5) return { name: '極地現象', damage: 30 };
+                return null;
+            }
+            
+            // 終末期
+            if (random < 0.3) return { name: '黒星落下', damage: 50 };
+            if (random < 0.5) return { name: '磁場消失', damage: 45 };
+            if (random < 0.7) return { name: 'カタストロフ', damage: 60 };
+            return { name: '極限カタストロフ', damage: 70 };
+        }
+
+        function mutateGene(dna) {
+            const genes = dna.split('');
+            const index = Math.floor(Math.random() * 4);
+            const options = ['A', 'T', 'C', 'G'];
+            genes[index] = options[Math.floor(Math.random() * 4)];
+            return genes.join('');
+        }
+
+        function evolveGene(dna, advantageStat) {
+            const genes = dna.split('');
+            const randomIndex = Math.floor(Math.random() * 4);
+            genes[randomIndex] = advantageStat;
+            return genes.join('');
+        }
+
+        function updateGameDisplay() {
+            const stats = calculateDNAStats(gameState.dna);
+            
+            document.getElementById('yearDisplay').textContent = gameState.year;
+            document.getElementById('populationDisplay').textContent = gameState.population;
+            document.getElementById('adaptDisplay').textContent = gameState.adaptationScore;
+            document.getElementById('dnaDisplay').textContent = gameState.dna;
+            document.getElementById('phaseText').textContent = getPhaseText(gameState.year);
+            
+            // Draw creatures
+            const display = document.getElementById('creatureDisplay');
+            display.innerHTML = '';
+            
+            const maxShow = Math.min(gameState.population, 20);
+            for (let i = 0; i < maxShow; i++) {
+                const img = document.createElement('img');
+                img.src = generateCreatureImage(gameState.dna, 50);
+                img.className = 'creature-pixel';
+                display.appendChild(img);
+            }
+            
+            // Status text
+            const statusText = `
+                <strong>📊 現在の状態：</strong><br>
+                DNA: ${gameState.dna} (A:${stats.A} T:${stats.T} C:${stats.C} G:${stats.G})<br>
+                個体数: ${gameState.population}/${gameState.maxPopulation}<br>
+                適応度: ${gameState.adaptationScore}%<br>
+                健康度: ${gameState.healthPoints}/100
+            `;
+            document.getElementById('statusDisplay').innerHTML = statusText;
+        }
+
+        function startAutoGame() {
+            if (gameLoopInterval) clearInterval(gameLoopInterval);
+            
+            gameLoopInterval = setInterval(() => {
+                if (isGameRunning && gameState.year < 100) {
+                    autoNextYear();
+                } else if (gameState.year >= 100) {
+                    clearInterval(gameLoopInterval);
+                    setTimeout(() => gameOver(), 1000);
+                }
+            }, gameSpeed);
+        }
+
+        function togglePausePlay() {
+            isGameRunning = !isGameRunning;
+            const btn = document.getElementById('pausePlayBtn');
+            
+            if (isGameRunning) {
+                btn.textContent = '⏸️ 一時停止';
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-primary');
+                startAutoGame();
+            } else {
+                btn.textContent = '▶️ 再開';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+                clearInterval(gameLoopInterval);
+            }
+        }
+
+        function autoNextYear() {
+            nextYear();
+        }
+
+        function nextYear() {
+            if (gameState.year >= 100) {
+                gameOver();
+                return;
+            }
+            
+            gameState.year++;
+            
+            // Check for disaster
+            const disaster = getDisaster(gameState.year);
+            const alertDiv = document.getElementById('disasterAlert');
+            alertDiv.innerHTML = '';
+            
+            if (disaster) {
+                const stats = calculateDNAStats(gameState.dna);
+                let damageFactor = 1;
+                
+                // Calculate damage reduction based on DNA
+                if (disaster.name.includes('熱') || disaster.name.includes('温')) damageFactor *= (1 - stats.A * 0.1);
+                if (disaster.name.includes('火') || disaster.name.includes('隕石')) damageFactor *= (1 - stats.C * 0.1);
+                
+                const actualDamage = Math.ceil(disaster.damage * damageFactor);
+                gameState.population -= Math.ceil(gameState.population * (actualDamage / 100));
+                gameState.healthPoints -= actualDamage;
+                gameState.adaptationScore = Math.max(0, gameState.adaptationScore - 10);
+                
+                alertDiv.innerHTML = `
+                    <div class="disaster-alert">
+                        ⚠️ 災害発生！<br>
+                        「${disaster.name}」<br>
+                        ダメージ: -${actualDamage}%
+                    </div>
+                `;
+                
+                // Mutation chance
+                if (Math.random() < 0.3) {
+                    gameState.dna = mutateGene(gameState.dna);
+                    gameState.evolutionLog.push({
+                        year: gameState.year,
+                        type: '変異',
+                        dna: gameState.dna
+                    });
+                }
+            } else {
+                // Normal year - reproduction
+                const reproRate = calculateDNAStats(gameState.dna).T * 5;
+                const increase = Math.ceil(gameState.population * (reproRate / 100));
+                gameState.population = Math.min(gameState.population + increase, gameState.maxPopulation * 2);
+                gameState.adaptationScore = Math.min(100, gameState.adaptationScore + 5);
+            }
+            
+            // Evolution chance
+            if (gameState.adaptationScore > 60 && Math.random() < 0.4) {
+                const options = ['A', 'T', 'C', 'G'];
+                const bestGene = options[Math.floor(Math.random() * 4)];
+                gameState.dna = evolveGene(gameState.dna, bestGene);
+                gameState.adaptationScore = Math.min(100, gameState.adaptationScore + 10);
+                
+                gameState.evolutionLog.push({
+                    year: gameState.year,
+                    type: '進化',
+                    dna: gameState.dna
+                });
+            }
+            
+            // Population extinction check
+            if (gameState.population <= 0) {
+                gameState.population = 0;
+                gameState.healthPoints = 0;
+            }
+            
+            updateGameDisplay();
+            
+            // Check for game over
+            if (gameState.year >= 100) {
+                setTimeout(() => gameOver(), 1000);
+            }
+        }
+
+        function startGame() {
+            const input = document.getElementById('dnaInput').value.toUpperCase().trim();
+            
+            if (input.length !== 4 || !/^[ATCG]{4}$/.test(input)) {
+                alert('❌ DNA配列は正確に4文字（A/T/C/Gのみ）で入力してください！');
+                return;
+            }
+            
+            gameState.dna = input;
+            gameState.year = 0;
+            gameState.population = 100;
+            gameState.maxPopulation = 100;
+            gameState.healthPoints = 100;
+            gameState.adaptationScore = 50;
+            gameState.evolutionLog = [];
+            
+            switchScreen('game-screen');
+            updateGameDisplay();
+            
+            // Start auto-progression
+            isGameRunning = true;
+            startAutoGame();
+        }
+
+        function randomDNA() {
+            const genes = ['A', 'T', 'C', 'G'];
+            let dna = '';
+            for (let i = 0; i < 4; i++) {
+                dna += genes[Math.floor(Math.random() * 4)];
+            }
+            document.getElementById('dnaInput').value = dna;
+        }
+
+        function gameOver() {
+            clearInterval(gameLoopInterval);
+            isGameRunning = false;
+            const stats = calculateDNAStats(gameState.dna);
+            let evaluation = '通常種';
+            
+            if (gameState.population > 500) evaluation = '繁殖主義種 🌟';
+            if (gameState.adaptationScore > 80) evaluation = '変転超越種 ⭐⭐';
+            if (stats.C > 2) evaluation = '要塞遺伝子 🛡️';
+            if (gameState.population <= 0) evaluation = '絶滅種 ☠️';
+            
+            const recordHTML = `
+                <div class="record-line">─────── 生物進化記録ファイル #${String(gameState.year).padStart(4, '0')} ───────</div><br>
+                <div class="record-line">◆ 種族名: <span class="record-highlight">${gameState.dna}-Type${gameState.year}</span></div>
+                <div class="record-line">◆ 最終形態: <span class="record-highlight">${evaluation}</span></div>
+                <div class="record-line">◆ 生存年数: <span class="record-highlight">${gameState.year}年</span></div>
+                <div class="record-line">◆ 最大個体数: <span class="record-highlight">${gameState.population}匹</span></div>
+                <div class="record-line">◆ DNA構成: <span class="record-highlight">A=${stats.A} / T=${stats.T} / C=${stats.C} / G=${stats.G}</span></div>
+                <div class="record-line">◆ 最終適応度: <span class="record-highlight">${gameState.adaptationScore}%</span></div>
+                <div class="record-line">◆ 災害耐久性: <span class="record-highlight">${gameState.healthPoints > 50 ? 'S' : gameState.healthPoints > 30 ? 'A' : gameState.healthPoints > 10 ? 'B' : gameState.healthPoints > 0 ? 'C' : 'E'}</span></div>
+                <div class="record-line">◆ 進化イベント数: <span class="record-highlight">${gameState.evolutionLog.length}回</span></div><br>
+                <div class="record-line">進化の履歴:</div>
+                ${gameState.evolutionLog.map((log, i) => `<div class="record-line">${i + 1}. 第${log.year}年 - ${log.type} → ${log.dna}</div>`).join('')}<br>
+                <div class="record-line">─────── END OF RECORD ───────</div>
+            `;
+            
+            document.getElementById('recordDisplay').innerHTML = recordHTML;
+            switchScreen('end-screen');
+        }
+
+        function backToStart() {
+            clearInterval(gameLoopInterval);
+            isGameRunning = false;
+            document.getElementById('dnaInput').value = '';
+            gameState = {
+                dna: 'ATCG',
+                year: 0,
+                population: 100,
+                maxPopulation: 100,
+                healthPoints: 100,
+                adaptationScore: 50,
+                disasterHappened: false,
+                evolutionLog: []
+            };
+            switchScreen('start-screen');
+        }
+
+        function switchScreen(screenName) {
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(s => s.classList.remove('active'));
+            document.querySelector('.' + screenName).classList.add('active');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUIZ//NEON：記憶都市の支配者</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="city-background">
+        <div class="neon-grid"></div>
+        <div class="data-stream"></div>
+        <div class="scanner-line"></div>
+        <div class="boss-overlay"></div> </div>
+
+    <audio id="bgm-menu" loop>
+        <source src="audio/Dust_city.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="bgm-game" loop>
+        <source src="audio/Songs_of_the_Soulless.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="main-container">
+        <div id="start-screen" class="screen active">
+            <div class="logo-container">
+                <h1 class="game-title">QUIZ<span class="neon-slash">//</span>NEON</h1>
+                <p class="subtitle">記憶都市の支配者</p>
+                <div class="city-status">
+                    <span class="status-text">SYSTEM STATUS: </span>
+                    <span class="status-online">ONLINE</span>
+                </div>
+            </div>
+            
+            <div class="start-menu">
+                <div class="name-input-container">
+                    <label for="player-name" class="input-label">管理者コード入力</label>
+                    <input type="text" id="player-name" class="neon-input" placeholder="ANONYMOUS" maxlength="10">
+                </div>
+                
+                <div class="mode-selection">
+                    <button class="mode-btn active" data-mode="standard">STANDARD</button>
+                    <button class="mode-btn" data-mode="survive">SURVIVE</button>
+                    <button class="mode-btn" data-mode="rank">RANK</button>
+                </div>
+                
+                <button id="start-game" class="start-btn">
+                    <span class="btn-text">記憶回復開始</span>
+                    <span class="btn-effect"></span>
+                </button>
+
+                <p style="font-size: 0.7rem; color: #666; margin-top: 10px;">※ BGMが再生されます</p>
+            </div>
+        </div>
+
+        <div id="game-screen" class="screen">
+            <div class="game-header">
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <span class="stat-label">TARGET</span>
+                        <span id="question-number" class="stat-value">1/10</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">MEMORY</span>
+                        <span id="memory-points" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">CHAIN</span>
+                        <span id="streak" class="stat-value">0</span>
+                    </div>
+                </div>
+                
+                <div class="timer-container">
+                    <div class="timer-bar">
+                        <div id="timer-fill" class="timer-fill"></div>
+                    </div>
+                    <span id="timer-text" class="timer-text">15</span>
+                </div>
+            </div>
+
+            <div id="boss-warning" class="boss-warning hidden">WARNING: FIREWALL DETECTED</div>
+
+            <div class="question-container">
+                <div id="question-text" class="question-text"></div>
+                
+                <div class="choices-container">
+                    <button class="choice-btn" data-choice="0">
+                        <span class="choice-number">A</span>
+                        <span class="choice-text"></span>
+                    </button>
+                    <button class="choice-btn" data-choice="1">
+                        <span class="choice-number">B</span>
+                        <span class="choice-text"></span>
+                    </button>
+                    <button class="choice-btn" data-choice="2">
+                        <span class="choice-number">C</span>
+                        <span class="choice-text"></span>
+                    </button>
+                    <button class="choice-btn" data-choice="3">
+                        <span class="choice-number">D</span>
+                        <span class="choice-text"></span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="feedback" class="feedback hidden">
+                <div class="feedback-content">
+                    <div class="feedback-result"></div>
+                    <div class="feedback-explanation"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <div class="result-container">
+                <h2 class="result-title">記憶解析完了</h2>
+                
+                <div class="memory-code">
+                    <span class="code-label">記憶コード: </span>
+                    <span id="memory-code" class="code-value"></span>
+                </div>
+                
+                <div class="result-stats">
+                    <div class="result-stat">
+                        <span class="result-label">正解数</span>
+                        <span id="correct-count" class="result-value">0/10</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-label">最高連続</span>
+                        <span id="max-streak" class="result-value">0</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-label">総記憶P</span>
+                        <span id="total-points" class="result-value">0</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-label">評価</span>
+                        <span id="rank" class="result-value rank">C</span>
+                    </div>
+                </div>
+                
+                <div class="memory-fragment">
+                    <p id="memory-text" class="memory-story"></p>
+                </div>
+                
+                <div class="result-actions">
+                    <button id="retry-btn" class="action-btn">
+                        <span>再挑戦</span>
+                    </button>
+                    <button id="share-btn" class="action-btn">
+                        <span>共有</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="audio-container">
+        <div id="se-correct" class="audio-se"></div>
+        <div id="se-wrong" class="audio-se"></div>
+        <div id="se-button" class="audio-se"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

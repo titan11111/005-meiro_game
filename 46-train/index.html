@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>暗闇の車両 - ダークノベルゲーム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <!-- メニュー画面 -->
+        <div id="menu" class="screen active">
+            <div class="title-container">
+                <h1 class="game-title">暗闇の車両</h1>
+                <p class="subtitle">- ダーク・サウンドノベル -</p>
+            </div>
+            <div class="menu-buttons">
+                <button id="startBtn" class="menu-btn">ゲーム開始</button>
+                <button id="aboutBtn" class="menu-btn">ゲームについて</button>
+            </div>
+        </div>
+
+        <!-- ゲーム画面 -->
+        <div id="game" class="screen">
+            <!-- 状態表示エリア -->
+            <div id="statusBar" class="status-bar">
+                <div id="statusItems" class="status-items"></div>
+                <div id="textHint" class="text-hint">テキストをタップして進む</div>
+            </div>
+            
+            <!-- テキスト表示エリア -->
+            <div id="textArea" class="text-area">
+                <div id="storyText" class="story-text"></div>
+            </div>
+            
+            <!-- 選択肢ボタンエリア -->
+            <div id="choicesArea" class="choices-area"></div>
+            
+            <!-- コントロールボタン -->
+            <div id="controls" class="controls">
+                <button id="nextBtn" class="control-btn">次へ</button>
+                <button id="backBtn" class="control-btn">戻る</button>
+                <button id="menuBtn" class="control-btn">メニュー</button>
+            </div>
+        </div>
+
+        <!-- About画面 -->
+        <div id="about" class="screen">
+            <div class="about-content">
+                <h2>ゲームについて</h2>
+                <p>あなたは夜の電車で目を覚ます。</p>
+                <p>車両には誰もおらず、窓の外は真っ暗。</p>
+                <p>この奇妙な状況から脱出できるでしょうか...？</p>
+                <p><strong>操作方法：</strong></p>
+                <p>・テキストエリアをタップして進める</p>
+                <p>・ボタンをタップして選択肢を選ぶ</p>
+                <p>・「次へ」でテキストを進める</p>
+                <p>・「戻る」で前のシーンに戻る</p>
+                <p>・キーボード: スペース/Enterで進む、Backspaceで戻る</p>
+                <button id="backToMenuBtn" class="menu-btn">メニューに戻る</button>
+            </div>
+        </div>
+
+        <!-- ゲームオーバー画面 -->
+        <div id="gameOver" class="screen">
+            <div class="gameover-content">
+                <h2 class="gameover-title">GAME OVER</h2>
+                <div id="gameOverText" class="gameover-text"></div>
+                <div class="gameover-buttons">
+                    <button id="retryBtn" class="menu-btn">最初から</button>
+                    <button id="backToMenuBtn2" class="menu-btn">メニューに戻る</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

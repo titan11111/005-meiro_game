@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>帰り道RPG〜街道版〜</title>
+<style>
+body{margin:0;background:#000;display:flex;justify-content:center;align-items:center;height:100vh}
+canvas{border:3px solid #fff;image-rendering:pixelated;background:#222}
+#ui{position:absolute;top:10px;left:50%;transform:translateX(-50%);color:#fff;font-family:monospace;font-size:18px;text-shadow:2px 2px 2px #000}
+</style>
+</head>
+<body>
+<canvas id="game" width="512" height="352"></canvas>
+<div id="ui"></div>
+<script>
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+const ui=document.getElementById("ui");
+
+const TILE=32;
+const SCREEN_W=16;
+const SCREEN_H=11;
+const WORLD_W=3;
+const WORLD_H=3;
+
+// 主人公画像（150%拡大）
+const playerImg=new Image();
+playerImg.src="images/ichinen.png";
+
+let player={
+ x:7,y:5,mapX:0,mapY:0,
+ hp:10,
+ attacking:false,dir:"down",
+ moving:false,moveFrame:0,moveFromX:7,moveFromY:5,moveToX:7,moveToY:5,
+ invuln:0
+};
+let enemies=[];
+let attackTimer=0;
+let enemyMoveTimer=0;
+
+const mapType=[
+ ["school","shop","park"],
+ ["road","residential","station"],
+ ["tunnel","village","home"]
+];
+
+// 背景タイル色
+const colors={
+ asphalt:"#444", building:"#777", grass:"#2d5016", house:"#555",
+ shop:"#8844cc", school:"#004488", park:"#1e8c3a", road:"#666",
+ tree:"#225522", crosswalk:"#ddd", tunnel:"#222", home:"#aa3333"
+};
+
+// --- マップ生成 ---
+function createMap(type){
+ let map=Array.from({length:SCREEN_H},()=>Array(SCREEN_W).fill(0));
+ if(type==="school"){ for(let x=0;x<16;x++) map[6][x]=1; map[3][5]=2; }
+ if(type==="shop"){ for(let y=0;y<11;y++) map[y][7]=3; map[5][4]=1; }
+ if(type==="park"){ for(let x=0;x<16;x++) for(let y=0;y<11;y++) if(Math.random()<0.15) map[y][x]=4; }
+ if(type==="road"){ for(let x=0;x<16;x++) map[5][x]=5; for(let x=0;x<16;x+=4) map[5][x]=9; }
+ if(type==="residential"){ for(let x=0;x<16;x++) map[7][x]=1; map[4][3]=6; map[4][10]=6; }
+ if(type==="station"){ for(let y=0;y<11;y++) map[y][8]=7; }
+ if(type==="tunnel"){ for(let x=0;x<16;x++) map[5][x]=8; }
+ if(type==="village"){ for(let x=0;x<16;x++) map[6][x]=1; map[3][2]=6; map[8][12]=6; }
+ if(type==="home"){ for(let x=0;x<16;x++) map[7][x]=1; map[6][8]=9; }
+ return map;
+}
+
+const world=[];
+for(let y=0;y<WORLD_H;y++){
+ let row=[];
+ for(let x=0;x<WORLD_W;x++){
+   row.push(createMap(mapType[y][x]));
+ }
+ world.push(row);
+}
+
+// --- 敵（車・犬・自転車） ---
+function spawnEnemies(mapX,mapY){
+ enemies=[];
+ let count=3+Math.floor(Math.random()*3);
+ for(let i=0;i<count;i++){
+   const types=["car","dog","bike"];
+   enemies.push({
+     x:Math.floor(Math.random()*SCREEN_W),
+     y:Math.floor(Math.random()*SCREEN_H),
+     alive:true,
+     type:types[Math.floor(Math.random()*types.length)]
+   });
+ }
+}
+
+// --- 攻撃 ---
+function attack(){
+ if(player.attacking) return;
+ player.attacking=true;
+ attackTimer=10;
+ let ax=Math.round(player.x), ay=Math.round(player.y);
+ if(player.dir==="up") ay--;
+ if(player.dir==="down") ay++;
+ if(player.dir==="left") ax--;
+ if(player.dir==="right") ax++;
+ for(const e of enemies){
+   if(e.alive && Math.round(e.x)===ax && Math.round(e.y)===ay){
+     e.alive=false;
+   }
+ }
+}
+
+// --- 被ダメ処理 ---
+function applyDamageToPlayer(){
+ if(player.invuln>0) return;
+ player.hp--;
+ player.invuln=60;
+ if(player.hp<=0){ alert("GAME OVER"); location.reload(); }
+}
+
+// --- 敵接触判定 ---
+function collideEnemy(){
+ for(const e of enemies){
+   if(!e.alive) continue;
+   if(Math.abs(e.x-player.x)<0.6 && Math.abs(e.y-player.y)<0.6){
+     applyDamageToPlayer();
+   }
+ }
+}
+
+// --- 敵移動 ---
+function moveEnemies(){
+ enemyMoveTimer++;
+ if(enemyMoveTimer<10) return;
+ enemyMoveTimer=0;
+ for(const e of enemies){
+   if(!e.alive) continue;
+   if(Math.random()<0.3){
+     let dx=Math.floor(Math.random()*3)-1;
+     let dy=Math.floor(Math.random()*3)-1;
+     e.x=Math.max(0,Math.min(SCREEN_W-1,e.x+dx));
+     e.y=Math.max(0,Math.min(SCREEN_H-1,e.y+dy));
+   }
+ }
+}
+
+// --- 移動開始 ---
+function startMove(dx,dy){
+ if(player.moving) return;
+ player.moveFromX=player.x;
+ player.moveFromY=player.y;
+ player.moveToX=player.x+dx;
+ player.moveToY=player.y+dy;
+ player.dir=dx>0?"right":dx<0?"left":dy>0?"down":"up";
+ player.moving=true;
+ player.moveFrame=0;
+}
+
+// --- 移動更新 ---
+function updatePlayerMove(){
+ if(!player.moving) return;
+ player.moveFrame++;
+ const t=player.moveFrame/10;
+ player.x=player.moveFromX+(player.moveToX-player.moveFromX)*t;
+ player.y=player.moveFromY+(player.moveToY-player.moveFromY)*t;
+ if(player.moveFrame>=10){
+   player.moving=false;
+   player.x=Math.round(player.moveToX);
+   player.y=Math.round(player.moveToY);
+   if(player.x<0){ player.x=SCREEN_W-1; player.mapX--; spawnEnemies(player.mapX,player.mapY);}
+   if(player.x>=SCREEN_W){ player.x=0; player.mapX++; spawnEnemies(player.mapX,player.mapY);}
+   if(player.y<0){ player.y=SCREEN_H-1; player.mapY--; spawnEnemies(player.mapX,player.mapY);}
+   if(player.y>=SCREEN_H){ player.y=0; player.mapY++; spawnEnemies(player.mapX,player.mapY);}
+   player.mapX=Math.max(0,Math.min(WORLD_W-1,player.mapX));
+   player.mapY=Math.max(0,Math.min(WORLD_H-1,player.mapY));
+   if(mapType[player.mapY][player.mapX]==="home" && player.x===8 && player.y===6){
+     alert("END：無事に家へ帰った。");
+     location.reload();
+   }
+ }
+}
+
+// --- 描画 ---
+function draw(){
+ const map=world[player.mapY][player.mapX];
+ ctx.clearRect(0,0,512,352);
+
+ // 背景
+ for(let y=0;y<SCREEN_H;y++){
+   for(let x=0;x<SCREEN_W;x++){
+     let tile=map[y][x];
+     ctx.fillStyle=colors.asphalt;
+     if(tile===1) ctx.fillStyle=colors.road;
+     if(tile===2) ctx.fillStyle=colors.school;
+     if(tile===3) ctx.fillStyle=colors.shop;
+     if(tile===4) ctx.fillStyle=colors.park;
+     if(tile===5) ctx.fillStyle=colors.asphalt;
+     if(tile===6) ctx.fillStyle=colors.house;
+     if(tile===7) ctx.fillStyle=colors.building;
+     if(tile===8) ctx.fillStyle=colors.tunnel;
+     if(tile===9) ctx.fillStyle=colors.crosswalk;
+     ctx.fillRect(x*TILE,y*TILE,TILE,TILE);
+   }
+ }
+
+ // 敵
+ for(const e of enemies){
+   if(!e.alive) continue;
+   if(e.type==="car"){
+     ctx.fillStyle="#cc0000";
+     ctx.fillRect(e.x*TILE+4,e.y*TILE+12,24,10);
+     ctx.fillStyle="#000";
+     ctx.fillRect(e.x*TILE+6,e.y*TILE+10,4,4);
+     ctx.fillRect(e.x*TILE+22,e.y*TILE+10,4,4);
+   }
+   if(e.type==="dog"){
+     ctx.fillStyle="#aa7744";
+     ctx.fillRect(e.x*TILE+10,e.y*TILE+14,14,8);
+     ctx.fillStyle="#552200";
+     ctx.fillRect(e.x*TILE+12,e.y*TILE+12,3,3);
+   }
+   if(e.type==="bike"){
+     ctx.strokeStyle="#00ccff";
+     ctx.lineWidth=2;
+     ctx.beginPath();
+     ctx.arc(e.x*TILE+10,e.y*TILE+22,4,0,Math.PI*2);
+     ctx.arc(e.x*TILE+22,e.y*TILE+22,4,0,Math.PI*2);
+     ctx.stroke();
+     ctx.fillStyle="#00ccff";
+     ctx.fillRect(e.x*TILE+14,e.y*TILE+14,4,8);
+   }
+ }
+
+ // プレイヤー点滅中は非表示
+ const flash=player.invuln>0 && (Math.floor(player.invuln/8)%2===0);
+ if(!flash){
+   const drawSize=TILE*1.5;
+   const offset=(TILE-drawSize)/2;
+   ctx.drawImage(playerImg,player.x*TILE+offset,player.y*TILE+offset,drawSize,drawSize);
+ }
+
+ if(player.attacking){
+   ctx.fillStyle="#ffff55";
+   let ax=Math.round(player.x),ay=Math.round(player.y);
+   if(player.dir==="up") ay--;
+   if(player.dir==="down") ay++;
+   if(player.dir==="left") ax--;
+   if(player.dir==="right") ax++;
+   ctx.fillRect(ax*TILE+14,ay*TILE+14,6,6);
+ }
+
+ ui.textContent=`HP: ${player.hp}　場所: ${mapType[player.mapY][player.mapX]}${player.invuln>0?'（無敵）':''}`;
+}
+
+// --- 入力 ---
+document.addEventListener("keydown",e=>{
+ if(e.key==="ArrowUp") startMove(0,-1);
+ if(e.key==="ArrowDown") startMove(0,1);
+ if(e.key==="ArrowLeft") startMove(-1,0);
+ if(e.key==="ArrowRight") startMove(1,0);
+ if(e.key===" ") attack();
+});
+
+// --- メインループ ---
+function loop(){
+ if(player.invuln>0) player.invuln--;
+ draw();
+ updatePlayerMove();
+ if(attackTimer>0){
+   attackTimer--;
+   if(attackTimer<=0) player.attacking=false;
+ }
+ moveEnemies();
+ collideEnemy();
+ requestAnimationFrame(loop);
+}
+
+spawnEnemies(0,0);
+loop();
+</script>
+</body>
+</html>

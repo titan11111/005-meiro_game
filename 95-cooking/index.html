@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍴 今日のごはん診断 🍚</title>
+<style>
+  body {
+    font-family: "Hiragino Sans", sans-serif;
+    background: #fff8e7;
+    color: #333;
+    text-align: center;
+    padding: 30px;
+  }
+  #question {
+    font-size: 1.6em;
+    margin: 20px 0;
+  }
+  .option {
+    display: inline-block;
+    margin: 10px;
+    padding: 12px 24px;
+    background: #ffe599;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 1.1em;
+  }
+  .option:hover {
+    background: #ffd966;
+  }
+  #result {
+    margin-top: 30px;
+    font-size: 1.2em;
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+  li {
+    background: #fff;
+    margin: 8px auto;
+    padding: 12px;
+    width: 70%;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 1.2em;
+  }
+</style>
+</head>
+<body>
+
+<h1>🍚 今日のごはん診断 🍜</h1>
+<div id="question"></div>
+<div id="options"></div>
+<div id="result"></div>
+
+<script>
+// ------------------------------
+// 🍙 絵文字付き料理データ（タグあり）
+// ------------------------------
+const dishes = [
+  { name: "🍛 カレーライス", tags: ["温かい", "ご飯", "こってり", "洋食", "肉"] },
+  { name: "🥩 ステーキ", tags: ["温かい", "肉", "こってり", "洋食", "メイン"] },
+  { name: "🍝 ミートソースパスタ", tags: ["温かい", "麺", "こってり", "洋食", "肉"] },
+  { name: "🍜 ラーメン", tags: ["温かい", "麺", "こってり", "中華", "肉"] },
+  { name: "🍥 担々麺", tags: ["温かい", "麺", "辛い", "中華", "肉"] },
+  { name: "🍣 寿司", tags: ["冷たい", "ご飯", "あっさり", "和食", "魚"] },
+  { name: "🥗 サラダ", tags: ["冷たい", "野菜", "あっさり", "洋食", "軽め"] },
+  { name: "🍱 焼き魚定食", tags: ["温かい", "ご飯", "あっさり", "和食", "魚"] },
+  { name: "🍙 おにぎり", tags: ["冷たい", "ご飯", "軽め", "和食", "軽食"] },
+  { name: "🍤 天ぷらうどん", tags: ["温かい", "麺", "こってり", "和食", "魚"] },
+  { name: "🍛 グリーンカレー", tags: ["温かい", "ご飯", "辛い", "アジア", "肉"] },
+  { name: "🍚 牛丼", tags: ["温かい", "ご飯", "こってり", "和食", "肉"] },
+  { name: "🍝 ナポリタン", tags: ["温かい", "麺", "甘い", "洋食", "軽め"] },
+  { name: "🥪 サンドイッチ", tags: ["冷たい", "パン", "軽め", "洋食", "野菜"] },
+  { name: "🍔 ハンバーガー", tags: ["温かい", "パン", "こってり", "洋食", "肉"] },
+  { name: "🍕 ピザ", tags: ["温かい", "パン", "こってり", "洋食", "チーズ"] },
+  { name: "🥣 おでん", tags: ["温かい", "スープ", "あっさり", "和食", "軽め"] },
+  { name: "🍢 すき焼き", tags: ["温かい", "鍋", "甘辛", "和食", "肉"] },
+  { name: "🍲 キムチ鍋", tags: ["温かい", "鍋", "辛い", "中華", "肉"] },
+  { name: "🍧 あんみつ", tags: ["冷たい", "甘味", "甘い", "和食", "スイーツ"] },
+  { name: "🍰 プリン", tags: ["冷たい", "甘味", "甘い", "洋食", "スイーツ"] },
+  { name: "🧇 ホットケーキ", tags: ["温かい", "甘味", "甘い", "洋食", "スイーツ"] },
+  { name: "🍡 たい焼き", tags: ["温かい", "甘味", "甘い", "和食", "スイーツ"] },
+  { name: "🍨 パフェ", tags: ["冷たい", "甘味", "甘い", "洋食", "スイーツ"] },
+  { name: "🍜 塩ラーメン", tags: ["温かい", "麺", "あっさり", "中華", "肉"] },
+  { name: "🍛 ハヤシライス", tags: ["温かい", "ご飯", "こってり", "洋食", "肉"] },
+  { name: "🍤 エビフライ定食", tags: ["温かい", "ご飯", "こってり", "洋食", "魚"] },
+  { name: "🍱 唐揚げ弁当", tags: ["冷たい", "ご飯", "こってり", "和食", "揚げ物"] },
+  { name: "🥢 麻婆豆腐", tags: ["温かい", "ご飯", "辛い", "中華", "豆腐"] },
+  { name: "🍜 冷やし中華", tags: ["冷たい", "麺", "あっさり", "中華", "軽め"] },
+  { name: "🍲 フォー", tags: ["温かい", "麺", "あっさり", "アジア", "軽め"] },
+  { name: "🍛 チャーハン", tags: ["温かい", "ご飯", "こってり", "中華", "卵"] },
+  { name: "🥗 冷しゃぶサラダ", tags: ["冷たい", "肉", "あっさり", "和食", "軽め"] },
+  { name: "🍜 山菜そば", tags: ["温かい", "麺", "あっさり", "和食", "野菜"] },
+  { name: "🍲 寄せ鍋", tags: ["温かい", "鍋", "あっさり", "和食", "魚"] },
+  { name: "🍣 海鮮丼", tags: ["冷たい", "ご飯", "あっさり", "和食", "魚"] },
+  { name: "🍡 ぜんざい", tags: ["温かい", "甘味", "甘い", "和食", "スイーツ"] },
+  { name: "🍞 トースト", tags: ["温かい", "パン", "軽め", "洋食", "軽食"] },
+  { name: "🥩 ハンバーグ", tags: ["温かい", "肉", "甘い", "洋食", "メイン"] },
+  { name: "🍛 チキン南蛮", tags: ["温かい", "肉", "こってり", "洋食", "揚げ物"] },
+  { name: "🍢 焼き鳥", tags: ["温かい", "肉", "塩味", "和食", "軽食"] }
+];
+
+// ------------------------------
+// 🧭 質問データ（5問）
+// ------------------------------
+const questions = [
+  {
+    text: "温かい料理がいいですか？",
+    options: ["温かい", "冷たい"]
+  },
+  {
+    text: "主食はどれがいいですか？",
+    options: ["ご飯", "麺", "パン", "鍋", "野菜", "甘味"]
+  },
+  {
+    text: "味の傾向は？",
+    options: ["あっさり", "こってり", "辛い", "甘い"]
+  },
+  {
+    text: "料理の系統は？",
+    options: ["和食", "洋食", "中華", "アジア"]
+  },
+  {
+    text: "メインの食材は？",
+    options: ["肉", "魚", "野菜", "卵", "スイーツ"]
+  }
+];
+
+// ------------------------------
+// 🔍 絞り込みロジック
+// ------------------------------
+let currentQuestion = 0;
+let selectedTags = [];
+let remaining = [...dishes];
+
+function showQuestion() {
+  const q = questions[currentQuestion];
+  document.getElementById("question").textContent = q.text;
+  const optDiv = document.getElementById("options");
+  optDiv.innerHTML = "";
+  q.options.forEach(opt => {
+    const btn = document.createElement("div");
+    btn.className = "option";
+    btn.textContent = opt;
+    btn.onclick = () => selectOption(opt);
+    optDiv.appendChild(btn);
+  });
+}
+
+function selectOption(tag) {
+  selectedTags.push(tag);
+  remaining = remaining.filter(dish =>
+    selectedTags.every(t => dish.tags.includes(t))
+  );
+  if (remaining.length <= 3 || currentQuestion === questions.length - 1) {
+    showResult();
+  } else {
+    currentQuestion++;
+    showQuestion();
+  }
+}
+
+function showResult() {
+  document.getElementById("question").textContent = "🍴 あなたへのおすすめ料理";
+  document.getElementById("options").innerHTML = "";
+  const resultDiv = document.getElementById("result");
+  resultDiv.innerHTML = "";
+  if (remaining.length === 0) {
+    resultDiv.innerHTML = "<p>条件に合う料理が見つかりませんでした。少し条件をゆるめてください。</p>";
+  } else {
+    const ul = document.createElement("ul");
+    remaining.slice(0, 3).forEach(d => {
+      const li = document.createElement("li");
+      li.textContent = d.name;
+      ul.appendChild(li);
+    });
+    resultDiv.appendChild(ul);
+  }
+}
+
+// 初期表示
+showQuestion();
+</script>
+
+</body>
+</html>

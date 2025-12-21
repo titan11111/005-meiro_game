@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>GB Style Stickman Fighter</title>
+    <style>
+        :root {
+            /* ゲームボーイ風4階調パレット */
+            --gb-color0: #9bbc0f; /* 最も明るい (背景) */
+            --gb-color1: #8bac0f; /* やや明るい (地面) */
+            --gb-color2: #306230; /* やや暗い (影、後ろ側の手足) */
+            --gb-color3: #0f380f; /* 最も暗い (輪郭線、手前側の手足) */
+        }
+        body {
+            background-color: #222;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--gb-color0);
+            font-family: monospace;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden; /* スクロール防止 */
+        }
+        #game-container {
+            position: relative;
+            /* 実際のGB解像度 160x144 */
+            width: 160px;
+            height: 144px;
+            /* 現代の画面で見やすいように拡大 */
+            transform: scale(3.5); 
+            transform-origin: center center;
+            border: 4px solid var(--gb-color3);
+            background-color: var(--gb-color0);
+             /* ドット絵をくっきり表示する設定 */
+            image-rendering: pixelated; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        canvas { display: block; }
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            text-align: center;
+            font-size: 12px;
+            width: 100%;
+        }
+        .key {
+            display: inline-block;
+            border: 1px solid var(--gb-color1);
+            padding: 2px 4px;
+            margin: 0 1px;
+            background: var(--gb-color2);
+            color: var(--gb-color0);
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="160" height="144"></canvas>
+    </div>
+
+    <div id="instructions">
+        <p>P1(左): <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> 移動, <span class="key">F</span> パンチ, <span class="key">G</span> キック</p>
+        <p>P2(右): <span class="key">↑</span><span class="key">←</span><span class="key">↓</span><span class="key">→</span> 移動, <span class="key">K</span> パンチ, <span class="key">L</span> キック</p>
+    </div>
+
+<script>
+// --- 設定と定数 ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// GB風の線の太さ。太いと力強く、細いと繊細になる。
+ctx.lineWidth = 2;
+// 線の端を丸くして関節っぽく見せる
+ctx.lineCap = 'round'; 
+ctx.lineJoin = 'round';
+
+const SCREEN_W = 160;
+const SCREEN_H = 144;
+const GROUND_Y = 125; // 地面のY座標
+
+const PALETTE = {
+    C0: '#9bbc0f', C1: '#8bac0f', C2: '#306230', C3: '#0f380f'
+};
+
+let gameState = 'playing';
+let winnerText = '';
+
+// 入力管理
+const keys = {};
+document.addEventListener('keydown', (e) => {
+    keys[e.key.toLowerCase()] = true;
+    if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code)) e.preventDefault();
+});
+document.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
+
+
+// --- ユーティリティ関数 ---
+
+// 矩形の当たり判定
+function checkCollision(rect1, rect2) {
+    return (
+        rect1.x < rect2.x + rect2.width &&
+        rect1.x + rect1.width > rect2.x &&
+        rect1.y < rect2.y + rect2.height &&
+        rect1.y + rect1.height > rect2.y
+    );
+}
+
+// 2点間に線を引くヘルパー
+function drawLine(x1, y1, x2, y2, color) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = color;
+    ctx.stroke();
+}
+
+// --- ファイタークラス (棒人間化) ---
+
+class Fighter {
+    constructor(x, name, controlScheme, facingRight) {
+        // 基本的な位置と物理ステータス
+        this.x = x;
+        this.y = GROUND_Y;
+        this.width = 14; // 当たり判定用の幅
+        this.height = 30; // 当たり判定用の高さ
+        this.name = name;
+        
+        this.velocity = { x: 0, y: 0 };
+        this.isGrounded = false;
+        this.facingRight = facingRight;
+        this.health = 100;
+        this.controls = controlScheme;
+        
+        // 状態管理
+        this.state = 'idle';
+        this.attackCooldown = 0;
+        this.hurtTimer = 0;
+        this.attackBox = { x: 0, y: 0, width: 0, height: 0, active: false };
+        
+        // アニメーション用タイマー
+        this.animFrame = 0;
+    }
+
+    update(opponent) {
+        if (gameState !== 'playing') return;
+        this.animFrame++;
+
+        // --- 物理演算 ---
+        this.y += this.velocity.y;
+        this.x += this.velocity.x;
+        
+        // 重力
+        if (this.y < GROUND_Y) {
+            this.velocity.y += 1.5;
+            this.isGrounded = false;
+        } else {
+            this.velocity.y = 0;
+            this.y = GROUND_Y;
+            this.isGrounded = true;
+        }
+        // 摩擦
+        if (this.isGrounded) this.velocity.x *= 0.7;
+        // 画面端制限
+        this.x = Math.max(10, Math.min(SCREEN_W - 10, this.x));
+
+        // --- 状態更新 ---
+        if (this.hurtTimer > 0) {
+            this.hurtTimer--;
+            this.state = 'hurt';
+        } else if (this.attackCooldown > 0) {
+            this.attackCooldown--;
+            // 攻撃判定の持続
+            if (this.attackCooldown > 5 && this.attackCooldown < 20) {
+                 // 攻撃中は移動停止
+                if(this.isGrounded) this.velocity.x = 0;
+            } else {
+                this.attackBox.active = false;
+            }
+        } else {
+            // 通常状態の判定
+            if (!this.isGrounded) this.state = 'jump';
+            else if (Math.abs(this.velocity.x) > 0.5) this.state = 'move';
+            else this.state = 'idle';
+
+            this.handleInput();
+        }
+
+        // 向きの更新
+        if (this.state !== 'hurt' && this.attackCooldown === 0) {
+             if (this.x < opponent.x - 5) this.facingRight = true;
+             else if (this.x > opponent.x + 5) this.facingRight = false;
+        }
+
+        // --- 攻撃判定処理 ---
+        if (this.attackBox.active) {
+            // 攻撃判定の位置を更新
+            this.attackBox.x = this.facingRight ? this.x + 5 : this.x - this.attackBox.width - 5;
+            this.attackBox.y = this.y - this.height + 5; // 胸のあたり
+
+            if (checkCollision(this.attackBox, {x: opponent.x - opponent.width/2, y: opponent.y - opponent.height, width: opponent.width, height: opponent.height}) && opponent.state !== 'hurt') {
+                let damage = (this.state === 'punch') ? 8 : 12;
+                let knockback = (this.state === 'punch') ? 5 : 8;
+                // 攻撃ヒット時の反動（ヒットストップ的な演出）
+                this.velocity.x = this.facingRight ? -2 : 2; 
+                opponent.takeDamage(damage, knockback);
+                this.attackBox.active = false; 
+            }
+        }
+    }
+
+    handleInput() {
+        const c = this.controls;
+        if (keys[c.left])  this.velocity.x = -3;
+        if (keys[c.right]) this.velocity.x = 3;
+        if (keys[c.up] && this.isGrounded) this.velocity.y = -14;
+
+        if (this.isGrounded && this.attackCooldown === 0) {
+            if (keys[c.punch]) this.initiateAttack('punch', 25, 10, 25);
+            if (keys[c.kick])  this.initiateAttack('kick', 30, 10, 35);
+        }
+    }
+
+    initiateAttack(type, w, h, cooldown) {
+        this.state = type;
+        this.attackCooldown = cooldown;
+        this.attackBox = { width: w, height: h, active: true };
+        this.animFrame = 0; // アニメーションリセット
+    }
+
+    takeDamage(amount, knockback) {
+        if (this.health <= 0) return;
+        this.health -= amount;
+        this.hurtTimer = 20;
+        this.velocity.y = -4;
+        this.velocity.x = this.facingRight ? -knockback : knockback;
+        if (this.health <= 0) endGame(this.name === "P1" ? "P2 WINS!" : "P1 WINS!");
+    }
+
+    // --- 棒人間の描画ロジック (ここが核心) ---
+    draw() {
+        const centerX = this.x;
+        const footY = this.y;
+        const dir = this.facingRight ? 1 : -1; // 向き係数
+
+        // 基準点計算
+        const hipY = footY - 14;
+        const neckY = hipY - 10;
+        const headY = neckY - 6;
+
+        // ポーズ定義の初期化（デフォルトはidle）
+        // 各関節の先端位置を基準点からのオフセット(dx, dy)で定義する
+        let pose = {
+            headOffset: { x: 0, y: 0 },
+            bodyBend: 0, // 体の傾き
+            // 手前側の手足 (C3色)
+            fHand: { dx: 8, dy: 5 }, // 肘から手の位置
+            fElbow: { dx: 5, dy: 5 }, // 肩から肘の位置
+            fFoot: { dx: 4, dy: 14 }, // 腰から足の位置
+            fKneeBend: 2, // 膝の曲がり具合(Y方向オフセット)
+            // 奥側の手足 (C2色) - 少しずらして立体感を出す
+            bHand: { dx: -4, dy: 8 },
+            bElbow: { dx: -3, dy: 5 },
+            bFoot: { dx: -6, dy: 14 },
+            bKneeBend: 2
+        };
+        
+        // --- 状態ごとのポーズ変更 ---
+        // アニメーションにはサイン波(Math.sin)を使って滑らかな動きを作る
+        const animSlow = Math.sin(this.animFrame * 0.1); 
+        const animFast = Math.sin(this.animFrame * 0.3);
+
+        if (this.state === 'idle') {
+            pose.headOffset.y = animSlow * 1; // 頭が上下に揺れる
+            pose.fHand.dy += animSlow * 1;    // 手が揺れる
+
+        } else if (this.state === 'move') {
+            pose.bodyBend = dir * 2; // 進行方向に体を傾ける
+            // 走るアニメーション (手足を交互に大きく振る)
+            pose.fFoot.dx = animFast * 8;
+            pose.fFoot.dy = 14 - Math.abs(animFast) * 4; // 足を上げる
+            pose.bFoot.dx = -animFast * 8;
+            pose.bFoot.dy = 14 - Math.abs(animFast) * 4;
+            
+            pose.fElbow.dx = -animFast * 5;
+            pose.fHand.dx = -animFast * 8;
+            pose.bElbow.dx = animFast * 5;
+            pose.bHand.dx = animFast * 8;
+
+        } else if (this.state === 'punch') {
+             // 攻撃フレームの進行度 (0.0 -> 1.0 -> 0.0)
+            let progress = 1 - Math.abs((this.attackCooldown - 12.5) / 12.5);
+            pose.bodyBend = dir * 3 * progress; // 体をひねる
+            // パンチの手を前に突き出す
+            pose.fElbow.dx = 10 * progress;
+            pose.fElbow.dy = -2 * progress;
+            pose.fHand.dx = 18 * progress;
+            pose.fHand.dy = -4 * progress;
+
+        } else if (this.state === 'kick') {
+            let progress = 1 - Math.abs((this.attackCooldown - 17.5) / 17.5);
+             pose.bodyBend = -dir * 5 * progress; // 体を後ろに倒す
+             // キックの足を前に突き出す
+             pose.fFoot.dx = 20 * progress;
+             pose.fFoot.dy = 14 - 8 * progress; // 足を高く上げる
+             pose.fKneeBend = -5 * progress; // 膝を伸ばす
+
+        } else if (this.state === 'jump') {
+            pose.fFoot.dy = 10; // 足を曲げる
+            pose.bFoot.dy = 12;
+            pose.fHand.dy = -5; // 手を上げる
+            pose.bHand.dy = -5;
+
+        } else if (this.state === 'hurt') {
+            pose.bodyBend = -dir * 5; // のけぞる
+            pose.headOffset.x = -dir * 3;
+            // 手足がばたつく
+            pose.fHand.dy = -10 + animFast*3; pose.fHand.dx = animFast*5;
+            pose.bHand.dy = -10 - animFast*3; pose.bHand.dx = -animFast*5;
+        }
+
+        // --- 描画実行 ---
+        // 座標計算ヘルパー (向きを考慮)
+        const p = (baseX, baseY, offset) => ({
+            x: baseX + offset.dx * dir,
+            y: baseY + offset.dy
+        });
+
+        // 体の基準点計算
+        const neckPos = { x: centerX + pose.bodyBend, y: neckY + pose.headOffset.y };
+        const hipPos = { x: centerX, y: hipY };
+        const shoulderPos = { x: neckPos.x, y: neckPos.y + 2 }; // 肩は首の少し下
+
+        // --- 奥側の手足を描画 (C2: 暗い色) ---
+        ctx.strokeStyle = PALETTE.C2;
+        // 奥足
+        let bKnee = p(hipPos.x, hipPos.y, {dx: pose.bFoot.dx/2, dy: pose.bFoot.dy/2 + pose.bKneeBend});
+        let bFoot = p(hipPos.x, hipPos.y, pose.bFoot);
+        drawLine(hipPos.x, hipPos.y, bKnee.x, bKnee.y, PALETTE.C2);
+        drawLine(bKnee.x, bKnee.y, bFoot.x, bFoot.y, PALETTE.C2);
+        // 奥手
+        let bElbow = p(shoulderPos.x-dir*2, shoulderPos.y, pose.bElbow); // 奥手は肩位置を少しずらす
+        let bHand = p(bElbow.x, bElbow.y, pose.bHand);
+        drawLine(shoulderPos.x-dir*2, shoulderPos.y, bElbow.x, bElbow.y, PALETTE.C2);
+        drawLine(bElbow.x, bElbow.y, bHand.x, bHand.y, PALETTE.C2);
+
+
+        // --- 胴体と頭を描画 (C3: 最も暗い色) ---
+        ctx.strokeStyle = PALETTE.C3;
+        ctx.fillStyle = PALETTE.C3;
+        // 胴体
+        drawLine(neckPos.x, neckPos.y, hipPos.x, hipPos.y, PALETTE.C3);
+        // 頭 (円)
+        ctx.beginPath();
+        ctx.arc(neckPos.x + pose.headOffset.x, headY + pose.headOffset.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+
+        // --- 手前側の手足を描画 (C3: 最も暗い色) ---
+        // 手前足
+        let fKnee = p(hipPos.x, hipPos.y, {dx: pose.fFoot.dx/2, dy: pose.fFoot.dy/2 + pose.fKneeBend});
+        let fFoot = p(hipPos.x, hipPos.y, pose.fFoot);
+        drawLine(hipPos.x, hipPos.y, fKnee.x, fKnee.y, PALETTE.C3);
+        drawLine(fKnee.x, fKnee.y, fFoot.x, fFoot.y, PALETTE.C3);
+        // 手前手
+        let fElbow = p(shoulderPos.x, shoulderPos.y, pose.fElbow);
+        let fHand = p(fElbow.x, fElbow.y, pose.fHand);
+        drawLine(shoulderPos.x, shoulderPos.y, fElbow.x, fElbow.y, PALETTE.C3);
+        drawLine(fElbow.x, fElbow.y, fHand.x, fHand.y, PALETTE.C3);
+
+
+        // (デバッグ用) 攻撃判定ボックスの表示
+        /*
+        if (this.attackBox.active) {
+            ctx.fillStyle = 'rgba(255,0,0,0.5)';
+            ctx.fillRect(this.attackBox.x, this.attackBox.y, this.attackBox.width, this.attackBox.height);
+        }
+        */
+    }
+}
+
+// --- ゲーム初期化とメインループ ---
+const p1 = new Fighter(40, "P1", { left:'a', right:'d', up:'w', down:'s', punch:'f', kick:'g' }, true);
+const p2 = new Fighter(SCREEN_W - 40, "P2", { left:'arrowleft', right:'arrowright', up:'arrowup', down:'arrowdown', punch:'k', kick:'l' }, false);
+
+function endGame(text) {
+    gameState = 'gameover';
+    winnerText = text;
+}
+
+function drawUI() {
+    // 体力バー枠
+    ctx.strokeStyle = PALETTE.C3; ctx.lineWidth = 1;
+    ctx.strokeRect(8, 8, 62, 6); ctx.strokeRect(SCREEN_W - 70, 8, 62, 6);
+    // 体力中身
+    ctx.fillStyle = PALETTE.C2;
+    ctx.fillRect(9, 9, 60 * (p1.health/100), 4);
+    ctx.fillRect(SCREEN_W - 69 + (60 - 60*(p2.health/100)), 9, 60 * (p2.health/100), 4);
+    
+    if (gameState === 'gameover') {
+        ctx.fillStyle = PALETTE.C3; ctx.font = "14px monospace"; ctx.textAlign = "center";
+        ctx.fillText("K.O.", SCREEN_W/2, SCREEN_H/2 - 5);
+        ctx.font = "10px monospace";
+        ctx.fillText(winnerText, SCREEN_W/2, SCREEN_H/2 + 10);
+    }
+}
+
+function drawBackground() {
+    ctx.fillStyle = PALETTE.C0; ctx.fillRect(0, 0, SCREEN_W, SCREEN_H); // 空
+    ctx.fillStyle = PALETTE.C1; ctx.fillRect(0, GROUND_Y, SCREEN_W, SCREEN_H - GROUND_Y); // 地面
+    ctx.strokeStyle = PALETTE.C3; ctx.lineWidth = 2;
+    drawLine(0, GROUND_Y, SCREEN_W, GROUND_Y, PALETTE.C3); // 地平線
+}
+
+function gameLoop() {
+    p1.update(p2);
+    p2.update(p1);
+    ctx.clearRect(0, 0, SCREEN_W, SCREEN_H);
+    drawBackground();
+    // 線の設定をリセット（UI描画などで変わるため）
+    ctx.lineWidth = 2; ctx.lineCap = 'round';
+
+    // 奥にいるキャラを先に描く
+    if(p1.facingRight) { p2.draw(); p1.draw(); } else { p1.draw(); p2.draw(); }
+    drawUI();
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+
+</script>
+</body>
+</html>

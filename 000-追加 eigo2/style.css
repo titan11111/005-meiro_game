@@ -1,0 +1,240 @@
+/* Cyberpunk Style v2.0 Final Fix */
+:root {
+    --primary: #00ff41;
+    --secondary: #008F11;
+    --accent: #ff0055;
+    --bg-dark: #050505;
+    --glass: rgba(0, 20, 0, 0.7);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Courier New', monospace;
+    background-color: var(--bg-dark);
+    color: var(--primary);
+    overflow: hidden;
+    height: 100vh;
+    user-select: none;
+}
+
+/* Matrix Background */
+#matrixCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    opacity: 0.3;
+}
+
+/* CRT Overlay */
+.crt-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 2px, 3px 100%;
+    pointer-events: none;
+    z-index: 999;
+}
+
+.container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Text Effects */
+.glitch-text {
+    font-size: 3.5rem;
+    font-weight: bold;
+    text-shadow: 2px 2px var(--accent), -2px -2px var(--secondary);
+    animation: glitch 1s infinite alternate;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+/* Buttons */
+.cyber-button {
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    padding: 15px 40px;
+    font-family: inherit;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    position: relative;
+    transition: 0.2s;
+    text-transform: uppercase;
+    box-shadow: 0 0 10px var(--secondary);
+}
+
+.cyber-button:hover {
+    background: var(--primary);
+    color: black;
+    box-shadow: 0 0 20px var(--primary);
+}
+
+/* Game HUD */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--glass);
+    border: 1px solid var(--secondary);
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+.hp-bar {
+    width: 100px;
+    height: 10px;
+    background: #333;
+    border: 1px solid #555;
+    display: inline-block;
+}
+
+#hpBarFill {
+    height: 100%;
+    background: var(--primary);
+    transition: width 0.3s, background 0.3s;
+}
+
+.timer {
+    font-size: 2rem;
+    font-weight: bold;
+    text-shadow: 0 0 10px var(--primary);
+}
+
+.timer.warning { color: var(--accent); text-shadow: 0 0 10px var(--accent); animation: pulse 0.5s infinite; }
+
+/* Question Area */
+.question-box {
+    background: var(--glass);
+    border-left: 5px solid var(--primary);
+    padding: 20px;
+    min-height: 120px;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+    position: relative;
+}
+
+.box-header {
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 10px;
+}
+
+/* Skills */
+.skills-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.skill-btn {
+    background: rgba(0,0,0,0.8);
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    padding: 8px 16px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.skill-btn:disabled {
+    border-color: #555;
+    color: #555;
+    cursor: not-allowed;
+}
+
+/* Answers Grid */
+.answers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.answer-btn {
+    background: rgba(0, 20, 0, 0.8);
+    border: 1px solid var(--secondary);
+    color: #fff;
+    padding: 20px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.answer-btn:hover:not(:disabled) {
+    border-color: var(--primary);
+    background: rgba(0, 50, 0, 0.8);
+}
+
+.answer-btn .key-hint {
+    color: var(--primary);
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.answer-btn.correct {
+    background: var(--primary);
+    color: black;
+    border-color: #fff;
+}
+
+.answer-btn.incorrect {
+    background: var(--accent);
+    border-color: red;
+    animation: shake 0.4s;
+}
+
+.answer-btn:disabled { opacity: 0.7; cursor: default; }
+.answer-btn.faded { opacity: 0.2; pointer-events: none; }
+
+/* Explanation */
+.explanation-box {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(0,0,0,0.9);
+    border: 1px solid #fff;
+    color: #fff;
+}
+
+/* Animations */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Utility */
+.screen { display: none; }
+/* 初期表示用：メニュー画面はblockで上書き */
+#menuScreen { display: block; }
+
+.menu-buttons { display: flex; flex-direction: column; gap: 20px; align-items: center; }
+.game-info { border: 1px dashed var(--secondary); padding: 15px; color: #ccc; font-size: 0.9rem; }
+.hidden { display: none !important; }
+
+/* Result Screen */
+.stats-grid { font-size: 1.5rem; margin: 30px 0; text-align: center; }
+.stat-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #333; margin-bottom: 10px; }

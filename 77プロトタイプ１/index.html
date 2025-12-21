@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sprite Walk Control</title>
+    <style>
+        body {
+            background-color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+            font-family: sans-serif;
+            overflow: hidden; /* スクロールバーを消す */
+        }
+        canvas {
+            border: 4px solid #fff;
+            background-color: #87CEEB;
+            image-rendering: pixelated; /* ドット絵をくっきり表示 */
+        }
+        .controls {
+            position: absolute;
+            top: 20px;
+            text-align: center;
+            pointer-events: none; /* 文字が操作の邪魔にならないように */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <h2>キーボード操作テスト</h2>
+        <p>矢印キー (↑ ↓ ← →) で移動します。</p>
+    </div>
+
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // 画像の読み込み
+    const spriteSheet = new Image();
+    spriteSheet.src = 'sprite.png'; // ★保存した画像ファイル名
+
+    // --- 設定 ---
+    const SPRITE_W = 64;   // 元画像の1コマの幅 (要調整)
+    const SPRITE_H = 64;   // 元画像の1コマの高さ (要調整)
+    const DRAW_SIZE = Math.round(SPRITE_W * 0.25);  // 画面に表示するサイズ（25%サイズ）
+    const TOTAL_FRAMES = 6; // 横方向のコマ数
+    const ANIM_SPEED = 8;  // アニメーション速度（大きいほど遅い）
+    const MOVE_SPEED = 4;  // 移動速度
+    // -----------
+
+    // プレイヤーの状態管理
+    let player = {
+        x: canvas.width / 2 - DRAW_SIZE / 2, // 初期位置(中央)
+        y: canvas.height / 2 - DRAW_SIZE / 2,
+        frameX: 0,
+        frameY: 0, // 今回は常に0行目（正面）を使用
+        isMoving: false
+    };
+
+    // キー入力の状態管理
+    const keys = {
+        ArrowUp: false,
+        ArrowDown: false,
+        ArrowLeft: false,
+        ArrowRight: false
+    };
+
+    // イベントリスナー（キーが押された/離されたを検知）
+    window.addEventListener('keydown', function(e) {
+        if (keys[e.code] !== undefined) keys[e.code] = true;
+    });
+    window.addEventListener('keyup', function(e) {
+        if (keys[e.code] !== undefined) keys[e.code] = false;
+    });
+
+
+    let gameFrame = 0;
+
+    spriteSheet.onload = function() {
+        animate();
+    };
+
+    // プレイヤーの移動処理
+    function movePlayer() {
+        player.isMoving = false;
+        // 斜め移動で速度が上がりすぎないように簡易補正（本気で作るならベクトル計算が必要）
+        let speed = MOVE_SPEED;
+        if ((keys.ArrowUp || keys.ArrowDown) && (keys.ArrowLeft || keys.ArrowRight)) {
+            speed = MOVE_SPEED * 0.7;
+        }
+
+        if (keys.ArrowUp && player.y > 0) {
+            player.y -= speed;
+            player.isMoving = true;
+        }
+        if (keys.ArrowDown && player.y < canvas.height - DRAW_SIZE) {
+            player.y += speed;
+            player.isMoving = true;
+        }
+        if (keys.ArrowLeft && player.x > 0) {
+            player.x -= speed;
+            player.isMoving = true;
+        }
+        if (keys.ArrowRight && player.x < canvas.width - DRAW_SIZE) {
+            player.x += speed;
+            player.isMoving = true;
+        }
+    }
+
+    // アニメーションフレームの管理
+    function handlePlayerFrame() {
+        if (player.isMoving) {
+            // 移動中だけコマを進める
+            if (gameFrame % ANIM_SPEED === 0) {
+                player.frameX = (player.frameX + 1) % TOTAL_FRAMES;
+            }
+        } else {
+            // 停止したら最初のコマ(立ち姿)に戻す
+            player.frameX = 0;
+        }
+    }
+
+    // メインループ
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        movePlayer();
+        handlePlayerFrame();
+
+        // 描画処理
+        ctx.drawImage(
+            spriteSheet, 
+            player.frameX * SPRITE_W, player.frameY * SPRITE_H, SPRITE_W, SPRITE_H, // 切り抜き元
+            player.x, player.y, DRAW_SIZE, DRAW_SIZE // 描画先
+        );
+
+        gameFrame++;
+        requestAnimationFrame(animate);
+    }
+</script>
+
+</body>
+</html>

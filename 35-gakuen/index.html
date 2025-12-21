@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>放課後、願いはカセットに。</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="titleScreen" class="screen active">
+        <div class="title-container">
+            <h1 class="main-title">放課後、願いはカセットに。</h1>
+            <img src="images/kasetto.png" alt="カセットテープ" class="title-image">
+            <p class="subtitle">～ 忘れられた記憶と、少女の声 ～</p>
+            <div class="title-buttons">
+                <button id="startBtn" class="title-btn">はじめから</button>
+                <button id="loadBtn" class="title-btn">つづきから</button>
+                <button id="configBtn" class="title-btn">設定</button>
+            </div>
+            <div class="credits">
+                <p>BGM: オリジナル楽曲</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="gameScreen" class="screen">
+        <div id="backgroundContainer">
+            <img id="background" src="images/houkago.png" alt="背景">
+            <div id="backgroundOverlay"></div>
+        </div>
+
+        <div id="textContainer">
+            <div id="nameBox"></div>
+            <div id="textBox">
+                <p id="gameText"></p>
+                <div id="nextIndicator">▼</div>
+            </div>
+        </div>
+
+        <div id="choicesContainer"></div>
+
+        <div id="gameUI">
+            <button id="menuBtn" class="ui-btn">メニュー</button>
+            <button id="autoBtn" class="ui-btn">オート</button>
+            <button id="skipBtn" class="ui-btn">スキップ</button>
+            <button id="saveBtn" class="ui-btn">セーブ</button>
+        </div>
+    </div>
+
+    <div id="configScreen" class="screen">
+        <div class="config-container">
+            <h2>設定</h2>
+            <div class="config-item">
+                <label>BGM音量</label>
+                <input type="range" id="bgmVolume" min="0" max="100" value="70">
+                <span id="bgmVolumeValue">70</span>
+            </div>
+            <div class="config-item">
+                <label>効果音音量</label>
+                <input type="range" id="seVolume" min="0" max="100" value="80">
+                <span id="seVolumeValue">80</span>
+            </div>
+            <div class="config-item">
+                <label>テキスト速度</label>
+                <input type="range" id="textSpeed" min="1" max="10" value="5">
+                <span id="textSpeedValue">5</span>
+            </div>
+            <button id="configBackBtn" class="title-btn">戻る</button>
+        </div>
+    </div>
+
+    <div id="menuScreen" class="screen">
+        <div class="menu-container">
+            <h2>メニュー</h2>
+            <button id="resumeBtn" class="menu-btn">ゲームに戻る</button>
+            <button id="saveGameBtn" class="menu-btn">セーブ</button>
+            <button id="loadGameBtn" class="menu-btn">ロード</button>
+            <button id="configFromMenuBtn" class="menu-btn">設定</button>
+            <button id="titleFromMenuBtn" class="menu-btn">タイトルに戻る</button>
+        </div>
+    </div>
+
+    <audio id="bgmPlayer" loop preload="auto"></audio>
+    <audio id="sePlayer" preload="auto"></audio>
+
+    <script src="script.js"></script>
+</body>
+</html>

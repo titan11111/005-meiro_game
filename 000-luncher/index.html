@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Ultimate Game Launcher - Metallic Edition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Roboto:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --neon-cyan: #00f3ff;
+      --neon-orange: #ff9e00;
+      --metal-dark: #1a1a1d;
+      --metal-light: #4e4e50;
+      --metal-gradient: linear-gradient(145deg, #3a3a3e, #1f1f21);
+      --text-main: #e0e0e0;
+      --panel-border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    body {
+      font-family: 'Roboto', 'Noto Sans JP', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #0b0b0d;
+      /* ブラッシュドメタル風の背景パターン */
+      background-image: 
+        repeating-linear-gradient(90deg, transparent 0, transparent 2px, rgba(0,0,0,0.3) 2px, rgba(0,0,0,0.3) 4px),
+        radial-gradient(circle at center, #2b2b30 0%, #050505 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      /* スタートオーバーレイ時のスクロール防止用 */
+      overflow-x: hidden; 
+    }
+
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 3.5rem;
+      font-weight: 900;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 6px;
+      /* 金属的な光沢テキスト */
+      background: linear-gradient(to bottom, #ffffff 0%, #a0a0a0 50%, #ffffff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.5));
+      position: relative;
+    }
+
+    h1::after {
+      content: 'SYSTEM ONLINE';
+      position: absolute;
+      bottom: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.8rem;
+      color: var(--neon-cyan);
+      letter-spacing: 10px;
+      -webkit-text-fill-color: var(--neon-cyan);
+      opacity: 0.8;
+    }
+
+    /* コントロールパネル (金属プレート風) */
+    .controls {
+      max-width: 1000px;
+      margin: 0 auto 50px auto;
+      padding: 25px;
+      background: var(--metal-gradient);
+      border-radius: 12px;
+      /* 立体的なベベル処理 */
+      box-shadow: 
+        inset 1px 1px 0 rgba(255,255,255,0.1),
+        inset -1px -1px 0 rgba(0,0,0,0.5),
+        0 10px 30px rgba(0, 0, 0, 0.8);
+      border: 1px solid #444;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    /* 四隅のネジ装飾 */
+    .controls::before, .controls::after {
+      content: '';
+      position: absolute;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #888 30%, #333 100%);
+      box-shadow: inset 0 1px 2px rgba(255,255,255,0.5), 0 1px 2px rgba(0,0,0,0.8);
+      top: 10px;
+    }
+    .controls::before { left: 10px; }
+    .controls::after { right: 10px; }
+
+    .search-box {
+      flex: 1;
+      min-width: 280px;
+    }
+
+    /* 入力フォームのデザイン */
+    input, select {
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 4px;
+      border: none;
+      font-family: inherit;
+      outline: none;
+      background: #111;
+      color: #00f3ff;
+      border-bottom: 2px solid #333;
+      box-shadow: inset 0 5px 10px rgba(0,0,0,0.5);
+      transition: 0.3s;
+      font-family: 'Orbitron', sans-serif;
+      box-sizing: border-box; /* iOSでのレイアウト崩れ防止 */
+    }
+    input::placeholder { color: #555; font-family: sans-serif; }
+    
+    input:focus, select:focus {
+      border-bottom-color: var(--neon-cyan);
+      box-shadow: inset 0 5px 10px rgba(0,0,0,0.5), 0 0 15px rgba(0, 243, 255, 0.2);
+      background: #0a151a;
+    }
+
+    /* ボタン共通（打感重視） */
+    button {
+      padding: 14px 24px;
+      border-radius: 6px;
+      border: none;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: bold;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.1s ease; /* 反応を早くして硬質な感じに */
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 1px;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent; /* iOSタップ時のハイライト削除 */
+    }
+
+    /* 物理ボタンのような立体感 */
+    .btn-random {
+      background: linear-gradient(180deg, #00b8d4 0%, #00838f 100%);
+      color: #fff;
+      box-shadow: 
+        0 4px 0 #006064, /* 側面 */
+        0 6px 10px rgba(0,0,0,0.5), /* 影 */
+        inset 0 1px 0 rgba(255,255,255,0.4); /* 上部ハイライト */
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .btn-random:hover {
+      background: linear-gradient(180deg, #00e5ff 0%, #00acc1 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 5px 0 #006064, 0 8px 15px rgba(0, 243, 255, 0.4), inset 0 1px 0 rgba(255,255,255,0.4);
+    }
+
+    .btn-random:active {
+      transform: translateY(4px); /* 押し込む */
+      box-shadow: 
+        0 0 0 #006064, 
+        inset 0 3px 5px rgba(0,0,0,0.4); /* 埋まり込むような影 */
+    }
+
+    .btn-reset {
+      background: linear-gradient(180deg, #555 0%, #333 100%);
+      color: #ccc;
+      box-shadow: 
+        0 4px 0 #222,
+        0 6px 10px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+
+    .btn-reset:hover {
+      background: linear-gradient(180deg, #666 0%, #444 100%);
+      color: #fff;
+    }
+
+    .btn-reset:active {
+      transform: translateY(4px);
+      box-shadow: 0 0 0 #222, inset 0 3px 5px rgba(0,0,0,0.5);
+    }
+
+    /* コンテナ */
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding-bottom: 40px;
+    }
+
+    /* メタリックカードデザイン */
+    .card {
+      background: #252529;
+      position: relative;
+      border-radius: 4px; /* 角を少し鋭利に */
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      /* 高さ調整（評価エリア分少し伸ばしても良いが自動でOK） */
+      /* height: 340px; */ 
+      min-height: 380px; /* 評価エリア分高さを確保 */
+      
+      /* 金属フレーム */
+      border: 1px solid #444;
+      box-shadow: 0 0 15px rgba(0,0,0,0.7);
+      cursor: default; /* 全体はリンクではない */
+    }
+
+    /* カードのホバーエフェクト */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      border: 2px solid transparent;
+      transition: 0.3s;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .card:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 10px 30px rgba(0, 243, 255, 0.15);
+    }
+
+    .card:hover::before {
+      border-color: var(--neon-cyan);
+      box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.3);
+    }
+
+    /* ゲーム起動リンクエリア */
+    .game-link-area {
+      display: flex;
+      flex-direction: column;
+      flex: 1; /* 残りの高さを埋める */
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .image-wrapper {
+      width: 100%;
+      height: 170px;
+      background: #000;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 2px solid var(--neon-cyan);
+    }
+
+    .image-wrapper::after {
+      /* 画像上の走査線エフェクト */
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.5) 3px);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .image-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+      opacity: 0.9;
+    }
+
+    /* 親の.card:hover に反応させるためセレクタ調整 */
+    .card:hover .image-wrapper img {
+      transform: scale(1.1);
+      opacity: 1;
+      filter: contrast(1.2);
+    }
+
+    .no-photo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      color: #444;
+      background: repeating-linear-gradient(45deg, #111, #111 10px, #151515 10px, #151515 20px);
+      font-family: 'Orbitron', sans-serif;
+      letter-spacing: 2px;
+    }
+
+    .content {
+      padding: 15px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: linear-gradient(to bottom, #2b2b30, #1e1e22);
+    }
+
+    .header-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #444;
+      padding-bottom: 8px;
+    }
+
+    .number {
+      font-size: 12px;
+      color: var(--neon-cyan);
+      font-family: 'Orbitron', sans-serif;
+      text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+    }
+
+    .genre-tag {
+      font-size: 10px;
+      color: #000;
+      background: var(--neon-orange);
+      padding: 2px 8px;
+      border-radius: 2px; /* 角丸を減らす */
+      font-weight: bold;
+      text-transform: uppercase;
+      box-shadow: 0 0 8px rgba(255, 158, 0, 0.6);
+    }
+
+    .title {
+      font-weight: bold;
+      font-size: 16px;
+      color: #fff;
+      line-height: 1.4;
+      margin-bottom: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* 評価エリア（新設） */
+    .rating-area {
+      padding: 10px 15px;
+      background: #151518;
+      border-top: 1px solid #333;
+      text-align: center;
+      z-index: 10;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .star {
+      font-size: 24px;
+      color: #444; /* 未選択の色 */
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-block;
+      line-height: 1;
+    }
+
+    .star:hover,
+    .star.active {
+      color: var(--neon-orange); /* 選択中の色 */
+      text-shadow: 0 0 8px rgba(255, 158, 0, 0.8);
+      transform: scale(1.1);
+    }
+
+    /* モーダル（ホログラム風） */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.3s;
+      backdrop-filter: blur(8px);
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal-content {
+      background: rgba(20, 20, 25, 0.95);
+      padding: 40px;
+      border: 2px solid var(--neon-cyan);
+      border-radius: 8px;
+      text-align: center;
+      max-width: 450px;
+      width: 90%;
+      position: relative;
+      box-shadow: 0 0 30px rgba(0, 243, 255, 0.3), inset 0 0 20px rgba(0, 243, 255, 0.1);
+      transform: scale(0.8) perspective(1000px) rotateX(10deg);
+      transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .modal-overlay.active .modal-content {
+      transform: scale(1) rotateX(0deg);
+    }
+
+    /* ホログラム装飾線 */
+    .modal-content::before {
+      content: '';
+      position: absolute;
+      top: -2px; left: 20%; right: 20%; height: 2px;
+      background: var(--neon-cyan);
+      box-shadow: 0 0 10px var(--neon-cyan);
+    }
+
+    .modal-title {
+      color: var(--neon-orange);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .result-title {
+      font-size: 1.8rem;
+      margin-bottom: 40px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+    .btn-go {
+      display: inline-block;
+      background: var(--neon-cyan);
+      color: #000;
+      padding: 15px 40px;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: 900;
+      font-size: 1.4rem;
+      font-family: 'Orbitron', sans-serif;
+      transition: 0.2s;
+      box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+      text-transform: uppercase;
+    }
+    .btn-go:hover {
+      background: #fff;
+      box-shadow: 0 0 30px rgba(0, 243, 255, 0.8);
+      transform: scale(1.05);
+    }
+    .btn-go:active {
+      transform: scale(0.95);
+    }
+    .btn-close {
+      position: absolute;
+      top: 10px; right: 15px;
+      background: none;
+      border: none;
+      color: #555;
+      font-size: 30px;
+      cursor: pointer;
+      font-family: 'Orbitron', sans-serif;
+      padding: 0;
+      line-height: 1;
+    }
+    .btn-close:hover { color: var(--neon-orange); }
+
+    /* スタート画面オーバーレイ（音声再生ポリシー対策） */
+    #start-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #000;
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    
+    .btn-start {
+      background: transparent;
+      border: 2px solid var(--neon-cyan);
+      color: var(--neon-cyan);
+      padding: 20px 60px;
+      font-size: 2rem;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 5px;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+      animation: pulse 2s infinite;
+    }
+    
+    .btn-start:hover {
+      background: var(--neon-cyan);
+      color: #000;
+      box-shadow: 0 0 50px rgba(0, 243, 255, 0.8);
+    }
+
+    .start-text {
+      margin-top: 20px;
+      color: #666;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 20px rgba(0, 243, 255, 0.2); }
+      50% { box-shadow: 0 0 40px rgba(0, 243, 255, 0.5); }
+      100% { box-shadow: 0 0 20px rgba(0, 243, 255, 0.2); }
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 2rem; }
+      .controls { flex-direction: column; align-items: stretch; padding: 20px; }
+      .search-box { width: 100%; min-width: auto; }
+      .card { min-height: 340px; }
+      .btn-start { font-size: 1.5rem; padding: 15px 40px; }
+    }
+  </style>
+</head>
+<body>
+
+<audio id="bgm" loop preload="auto">
+  <source src="bgm.mp3" type="audio/mp3">
+  Your browser does not support the audio element.
+</audio>
+
+<div id="start-overlay">
+  <button class="btn-start" id="start-btn">SYSTEM BOOT</button>
+  <div class="start-text">INITIALIZE AUDIO & GRAPHICS</div>
+</div>
+
+<h1>Game Launcher</h1>
+
+<div class="controls">
+  <div class="search-box">
+    <input type="text" id="search-input" placeholder="SEARCH SYSTEM...">
+  </div>
+  
+  <select id="category-select">
+    <option value="all">ALL GENRES</option>
+    </select>
+
+  <button class="btn-random" id="random-btn">🎲 RANDOM ACCESS</button>
+  <button class="btn-reset" id="reset-btn">RESET</button>
+</div>
+
+<div class="container" id="game-container"></div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal-content">
+    <button class="btn-close" id="modal-close">×</button>
+    <div class="modal-title">TARGET ACQUIRED</div>
+    <div class="result-title" id="modal-game-title">???</div>
+    <a href="#" class="btn-go" id="modal-game-link" target="_blank">LAUNCH</a>
+  </div>
+</div>
+
+<script>
+const GAMES = [
+{ id: 1, title: 'ねこキャッチ', category: '何猫捕まえられるかな？', url: 'https://titan11111.github.io/001-neko_catch_game/' },
+{ id: 2, title: '化合物クイズ', category: '君はどんな偉人になれるだろう', url: 'https://titan11111.github.io/002-kagoubutu_game/' },
+{ id: 3, title: '選択式あみだくじ', category: 'どんな冒険が待っているか', url: 'https://titan11111.github.io/003-amida-game/' },
+{ id: 4, title: 'バトルゲーム', category: 'いろんな戦闘を楽しめ', url: 'https://titan11111.github.io/004-battle-game/' },
+{ id: 5, title: '迷路クイズ', category: 'ラビリンスを抜けよう', url: 'https://titan11111.github.io/005-meiro_game/' },
+{ id: 6, title: '英語ゲーム', category: '喋って教えてくれるよ', url: 'https://titan11111.github.io/006-eigo-game/' },
+{ id: 7, title: 'カラーワールド', category: 'レアカラーをレッツ混色', url: 'https://titan11111.github.io/007-iro_game/' },
+{ id: 8, title: '酸アルバトル', category: '日常に潜む酸性アルカリ性', url: 'https://titan11111.github.io/008-sannaru_game/' },
+{ id: 9, title: 'モンスタークイズバトル!', category: 'いろんなジャンルを制覇しよう', url: 'https://titan11111.github.io/009-battle2-game/' },
+{ id: 10, title: '選択クイズ', category: '知識を深めよう', url: 'https://titan11111.github.io/010-senntaku_game/' },
+{ id: 11, title: '買い物ゲーム', category: 'ショップチャレンジ', url: 'https://titan11111.github.io/011-kaimono_game/' },
+{ id: 12, title: '商売体験', category: '目指せマーケットマスター', url: 'https://titan11111.github.io/012-buysell_game/' },
+{ id: 13, title: '明治の風', category: 'いろんな角度で明治を感じよう', url: 'https://titan11111.github.io/013-histry/' },
+{ id: 14, title: '脱出クイズ', category: '扉の鍵は開くのか', url: 'https://titan11111.github.io/014-dokidoki/' },
+{ id: 15, title: 'ガンガン目覚まし', category: 'いつまで寝てられるかな', url: 'https://titan11111.github.io/015-wakeup/' },
+{ id: 16, title: 'ロボットランナー', category: 'アクションを楽しめ', url: 'https://titan11111.github.io/016-nigeru/' },
+{ id: 17, title: 'アクションジャンプ', category: 'アクションを楽しめ２', url: 'https://titan11111.github.io/017-action/' },
+{ id: 18, title: 'RPG', category: 'アドベンチャー', url: 'https://titan11111.github.io/018-rpg' },
+{ id: 19, title: 'スカイドロップ', category: '目指せ、地上', url: 'https://titan11111.github.io/019-rakka/' },
+{ id: 20, title: '対称パズル', category: '踊る、芸術', url: 'https://titan11111.github.io/020-taisyou/' },
+{ id: 21, title: '散歩探偵', category: '僕は散歩したいだけ', url: 'https://titan11111.github.io/021-sanpo/' },
+{ id: 22, title: '呪符覚醒', category: 'アドベンチャー', url: 'https://titan11111.github.io/022-rocketman' },
+{ id: 23, title: '給食当番リズム', category: 'お友達が満足するか', url: 'https://titan11111.github.io/023-kyuusyoku/' },
+{ id: 24, title: '棒人間ファイター', category: '目指せ頂点', url: 'https://titan11111.github.io/024-nekonekoneko/' },
+{ id: 25, title: '平和な世界の解決屋さん', category: '猫の国で、魔法の便利屋', url: 'https://titan11111.github.io/025-heiwa/' },
+{ id: 26, title: '坊主相談', category: '君の徳は一体', url: 'https://titan11111.github.io/026-bouzu/' },
+{ id: 27, title: '変な異星人', category: '🌰を死守せよ', url: 'https://titan11111.github.io/027-mayoimori/' },
+{ id: 28, title: 'クイズ3:ひらめき勝負', category: 'クイズ', url: 'https://titan11111.github.io/028-quiz3/' },
+{ id: 29, title: 'アクションRPG2', category: 'アドベンチャー', url: 'https://titan11111.github.io/029-actionrpg2/' },
+{ id: 30, title: '世界樹探検:伝説の樹を求めて', category: 'アドベンチャー', url: 'https://titan11111.github.io/030-yugudora/' },
+{ id: 31, title: 'シューティング1:初めての戦場', category: 'アクションシューティング', url: 'https://titan11111.github.io/031-shoot/' },
+{ id: 32, title: 'シューティング2:炎の逆襲', category: 'アクションシューティング', url: 'https://titan11111.github.io/032-shoot2/' },
+{ id: 33, title: 'ねくび:夢みる旅人', category: 'アドベンチャー', url: 'https://titan11111.github.io/033-nekubi/' },
+{ id: 34, title: 'シャドウキャッスル:魔城の試練', category: 'アドベンチャー', url: 'https://titan11111.github.io/034-demon_castle/' },
+{ id: 35, title: '学園アドベンチャー:ひみつの放課後', category: 'アドベンチャー', url: 'https://titan11111.github.io/035-gakuen/' },
+{ id: 36, title: 'クイズ4', category: 'クイズ', url: 'https://titan11111.github.io/036-quiz4' },
+{ id: 37, title: '冒険RPG:伝説の始まり', category: 'アドベンチャーRPG', url: 'https://titan11111.github.io/037-RPG/' },
+{ id: 38, title: 'コードブレイカー', category: 'クイズパズル', url: 'https://titan11111.github.io/038-codebraker' },
+{ id: 39, title: '深夜のコンビニ店員', category: 'アドベンチャー', url: 'https://titan11111.github.io/039-horaa/' },
+{ id: 40, title: '格闘チャンピオン', category: 'バトルアクション', url: 'https://titan11111.github.io/040-kakuge/' },
+{ id: 41, title: '家の見取り図', category: 'アドベンチャー', url: 'https://titan11111.github.io/041-mitorizu/' },
+{ id: 42, title: '3Dシューティングゲーム', category: 'アクションシューティング', url: 'https://titan11111.github.io/042-3Dshooting/' },
+{ id: 43, title: '格闘チャンピオン2:最強の挑戦者', category: 'バトルアクション', url: 'https://titan11111.github.io/043-kakuge2/' },
+{ id: 44, title: 'アクションRPG', category: 'アドベンチャーRPG', url: 'https://titan11111.github.io/044-actionRPG/' },
+{ id: 45, title: 'ミタ:未知の冒険', category: 'アドベンチャー', url: 'https://titan11111.github.io/045-mita/' },
+{ id: 46, title: '電車', category: 'アドベンチャー', url: 'https://titan11111.github.io/046-dennsya' },
+{ id: 47, title: 'ブロッククラフト', category: 'アドベンチャー', url: 'https://titan11111.github.io/047-maikura' },
+{ id: 48, title: 'RPG2', category: 'アドベンチャーRPG', url: 'https://titan11111.github.io/048-RPG2' },
+{ id: 49, title: 'ブロックパズル', category: 'パズル', url: 'https://titan11111.github.io/049-tetoris' },
+{ id: 50, title: 'アクションジャンプ:天空への挑戦', category: 'アクション', url: 'https://titan11111.github.io/050-action-jamp/' },
+{ id: 51, title: 'ルーレット:運命の回転', category: 'クイズ', url: 'https://titan11111.github.io/051-rulet/' },
+{ id: 52, title: '爆速', category: 'アクション', url: 'https://titan11111.github.io/052-bakusoku' },
+{ id: 53, title: 'スキャンファイターズ:超反応バトル', category: 'バトルアクション', url: 'https://titan11111.github.io/053-SCAN-FIGHTERS/' },
+{ id: 54, title: 'RPG3', category: 'アドベンチャーRPG', url: 'https://titan11111.github.io/054-RPG3' },
+{ id: 55, title: 'ブロック崩し', category: 'アクション', url: 'https://titan11111.github.io/055-block/' },
+{ id: 56, title: 'ブロックパズル2', category: 'パズル', url: 'https://titan11111.github.io/056-tetoris2' },
+{ id: 57, title: 'スペースガーディアン:宇宙防衛戦', category: 'アクションシューティング', url: 'https://titan11111.github.io/057-inveder/' },
+{ id: 58, title: 'ダイナス', category: 'アクション', url: 'https://titan11111.github.io/058-dainas' },
+{ id: 59, title: 'コズミックブロック:宇宙の攻防', category: 'アクションシューティングパズル', url: 'https://titan11111.github.io/059-inveder-block/' },
+{ id: 60, title: '電車2', category: 'アドベンチャー', url: 'https://titan11111.github.io/060-dennsya2' },
+{ id: 61, title: 'リズムゲーム:ビートチャレンジ', category: 'アクション', url: 'https://titan11111.github.io/061-rizme/' },
+{ id: 62, title: 'ローグライト', category: 'アドベンチャーRPG', url: 'https://titan11111.github.io/062-roguelite' },
+{ id: 63, title: 'リズム2', category: 'アクション', url: 'https://titan11111.github.io/063-rizme2' },
+{ id: 64, title: 'ドットランナー:迷宮の冒険', category: 'アクション', url: 'https://titan11111.github.io/064-pincman/' },
+{ id: 65, title: 'RPG4', category: 'アドベンチャーRPG', url: 'https://titan11111.github.io/065-RPG4' },
+{ id: 66, title: 'ねこクイズ:にゃんこ知識テスト', category: 'クイズ', url: 'https://titan11111.github.io/066-catquiz/' },
+{ id: 67, title: 'レースチャレンジ:サーキットスプリント', category: 'アクション', url: 'https://titan11111.github.io/067-race/' },
+{ id: 68, title: 'リバーシバトル:白と黒の陣取り', category: 'パズル', url: 'https://titan11111.github.io/068-rivers/' },
+{ id: 69, title: 'ボムランナー:爆裂迷宮', category: 'アクション', url: 'https://titan11111.github.io/069-bomb/' },
+{ id: 70, title: '忍者スラッシュ:影の戦士', category: 'アクション', url: 'https://titan11111.github.io/070-ninja/' },
+{ id: 71, title: '迷路アドベンチャー2:無限回廊', category: 'アドベンチャー', url: 'https://titan11111.github.io/071-meiro2/' },
+{ id: 72, title: 'サラリーマンダッシュ:通勤サバイバル', category: 'アクション', url: 'https://titan11111.github.io/072-salaryman/' },
+{ id: 73, title: '絵本ワールド:ページをめくろう', category: 'アドベンチャーストーリー', url: 'https://titan11111.github.io/073-ehon/' },
+{ id: 74, title: 'フィッシングアドベンチャー:深海の宝', category: 'アドベンチャーシミュレーション', url: 'https://titan11111.github.io/074-fishing/' },
+{ id: 75, title: 'イングリッシュクエスト:言葉の遺跡', category: 'クイズラーニング', url: 'https://titan11111.github.io/075-englishquest/' },
+{ id: 76, title: 'メタルスロット', category: 'アクション', url: 'https://titan11111.github.io/076-metalslot/' },
+{ id: 77, title: 'アイスイヤー', category: 'アドベンチャー', url: 'https://titan11111.github.io/077-eyecear/' },
+{ id: 78, title: '箱庭シミュレーション', category: 'シミュレーション', url: 'https://titan11111.github.io/078-hakoniwa/' },
+{ id: 79, title: 'キタクダッシュ', category: 'アクション', url: 'https://titan11111.github.io/079-kitakudash/' },
+{ id: 80, title: 'コーヒートーク', category: 'アドベンチャー', url: 'https://titan11111.github.io/080-coffeetalk/' },
+{ id: 81, title: 'カウンター', category: 'アクション', url: 'https://titan11111.github.io/081-counter/' },
+{ id: 82, title: '天誅', category: 'アクション', url: 'https://titan11111.github.io/082-tenchuuu/' },
+{ id: 83, title: '魂の旅人', category: 'アクション', url: 'https://titan11111.github.io/083-bungaku/' },
+{ id: 84, title: 'レモネードスタンド', category: 'シミュレーション', url: 'https://titan11111.github.io/084-manegement/' },
+{ id: 85, title: '古書店と来店者', category: 'クイズ', url: 'https://titan11111.github.io/085-syoten/' },
+{ id: 86, title: '決算書クイズ', category: 'クイズ', url: 'https://titan11111.github.io/086-kessannsyo/' },
+{ id: 87, title: '間違い探し', category: 'パズル', url: 'https://titan11111.github.io/087-matigai/' },
+{ id: 88, title: 'ティーダッシュ', category: 'アクション', url: 'https://titan11111.github.io/088-tea/' },
+{ id: 89, title: 'あみだくじ2', category: 'アドベンチャー', url: 'https://titan11111.github.io/089-amida2/' },
+{ id: 90, title: 'すごろく', category: 'パズル', url: 'https://titan11111.github.io/090-sugoroku/' },
+{ id: 92, title: 'ニューヨークチャレンジ', category: 'アドベンチャー', url: 'https://titan11111.github.io/092-newyork/' },
+{ id: 93, title: 'クリーチャー', category: 'アクション', url: 'https://titan11111.github.io/093-creather/' },
+{ id: 94, title: 'セールスマン', category: 'シミュレーション', url: 'https://titan11111.github.io/094-salesman/' },
+{ id: 95, title: '料理ゲーム', category: 'シミュレーション', url: 'https://titan11111.github.io/095-cooking/' },
+{ id: 96, title: '帰宅ラッシュ', category: 'アクション', url: 'https://titan11111.github.io/096-kitaku/' },
+{ id: 97, title: '振り返り', category: 'クイズ', url: 'https://titan11111.github.io/097-furikaeri/' },
+{ id: 98, title: 'AAA', category: 'クイズ', url: 'https://titan11111.github.io/098-aaa/' },
+{ id: 99, title: '彫像', category: 'アドベンチャー', url: 'https://titan11111.github.io/099-tyouzou/' },
+{ id: 100, title: 'DNA', category: 'シミュレーション', url: 'https://titan11111.github.io/100-DNA/' }
+];
+
+// 要素の取得
+const container = document.getElementById("game-container");
+const searchInput = document.getElementById("search-input");
+const categorySelect = document.getElementById("category-select");
+const randomBtn = document.getElementById("random-btn");
+const resetBtn = document.getElementById("reset-btn");
+const modal = document.getElementById("modal");
+const modalClose = document.getElementById("modal-close");
+const modalTitle = document.getElementById("modal-game-title");
+const modalLink = document.getElementById("modal-game-link");
+
+// オーディオとスタート画面関連の取得
+const bgm = document.getElementById("bgm");
+const startOverlay = document.getElementById("start-overlay");
+const startBtn = document.getElementById("start-btn");
+
+let isSystemStarted = false;
+
+// BGM初期設定（音量小さめ）
+bgm.volume = 0.1;
+
+// スタートボタン処理
+startBtn.addEventListener("click", () => {
+  bgm.play().then(() => {
+    startOverlay.style.opacity = "0";
+    setTimeout(() => {
+      startOverlay.style.display = "none";
+    }, 500);
+    isSystemStarted = true;
+  }).catch(e => {
+    console.error("Audio playback failed:", e);
+    // エラーでも画面は進める
+    startOverlay.style.display = "none";
+    isSystemStarted = true;
+  });
+});
+
+// カテゴリ一覧を自動生成してセレクトボックスに追加
+const categories = [...new Set(GAMES.map(g => g.category))].sort();
+categories.forEach(cat => {
+  const option = document.createElement("option");
+  option.value = cat;
+  option.textContent = cat;
+  categorySelect.appendChild(option);
+});
+
+// ★追加機能: 評価の保存と取得
+function saveRating(gameId, rating) {
+  localStorage.setItem(`game_rating_${gameId}`, rating);
+  // 再描画して表示を更新
+  renderGames(getCurrentFilteredGames());
+}
+
+function getRating(gameId) {
+  return parseInt(localStorage.getItem(`game_rating_${gameId}`)) || 0;
+}
+
+// ★ヘルパー: 現在表示対象のゲームリストを取得
+function getCurrentFilteredGames() {
+  const keyword = searchInput.value.toLowerCase();
+  const category = categorySelect.value;
+  return GAMES.filter(game => {
+    const matchKeyword = game.title.toLowerCase().includes(keyword);
+    const matchCategory = category === "all" || game.category === category;
+    return matchKeyword && matchCategory;
+  });
+}
+
+// ゲームの描画関数（構造変更：div化 + 評価エリア追加）
+function renderGames(gameList) {
+  container.innerHTML = ""; // クリア
+
+  if (gameList.length === 0) {
+    container.innerHTML = '<div style="color:#888; grid-column: 1/-1; text-align:center; padding:40px; font-family: Orbitron;">SYSTEM ALERT: NO DATA FOUND</div>';
+    return;
+  }
+
+  // ID降順でソート
+  gameList.sort((a, b) => b.id - a.id).forEach((game, index) => {
+    // 変更: カード全体をリンクではなくdivコンテナにする
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.animation = `fadeIn 0.5s ease-out ${index * 0.03}s forwards`;
+    card.style.opacity = "0"; // 初期状態非表示（アニメーションで表示）
+
+    // 保存済み評価を取得
+    const userRating = getRating(game.id);
+
+    // 1. ゲーム起動エリア（クリックでゲームへ & BGM停止）
+    const linkArea = document.createElement("a");
+    linkArea.href = game.url;
+    linkArea.target = "_blank";
+    linkArea.className = "game-link-area";
+    linkArea.addEventListener("click", () => {
+      bgm.pause();
+    });
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "image-wrapper";
+
+    const img = document.createElement("img");
+    img.src = `images/${String(game.id).padStart(3,"0")}.png`;
+    img.alt = game.title;
+    img.loading = "lazy";
+
+    img.onerror = () => {
+      img.style.display = "none";
+      const noPhoto = document.createElement("div");
+      noPhoto.className = "no-photo";
+      noPhoto.textContent = "NO SIGNAL";
+      wrapper.appendChild(noPhoto);
+    };
+
+    wrapper.appendChild(img);
+
+    const content = document.createElement("div");
+    content.className = "content";
+    content.innerHTML = `
+      <div class="header-info">
+        <span class="number">No.${String(game.id).padStart(3, "0")}</span>
+        <span class="genre-tag">${game.category}</span>
+      </div>
+      <div class="title">${game.title}</div>
+    `;
+
+    linkArea.appendChild(wrapper);
+    linkArea.appendChild(content);
+
+    // 2. 評価エリア（星）
+    const ratingArea = document.createElement("div");
+    ratingArea.className = "rating-area";
+    
+    for (let i = 1; i <= 5; i++) {
+      const star = document.createElement("span");
+      star.className = "star";
+      star.textContent = "★";
+      if (i <= userRating) {
+        star.classList.add("active");
+      }
+      
+      // クリックイベント
+      star.addEventListener("click", (e) => {
+        e.stopPropagation(); // バブリング防止
+        saveRating(game.id, i);
+      });
+
+      ratingArea.appendChild(star);
+    }
+
+    card.appendChild(linkArea);
+    card.appendChild(ratingArea);
+    container.appendChild(card);
+  });
+}
+
+// アニメーションキーフレーム定義を追加
+const styleSheet = document.createElement("style");
+styleSheet.innerText = `
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+`;
+document.head.appendChild(styleSheet);
+
+
+// フィルター処理
+function filterGames() {
+  const filtered = getCurrentFilteredGames();
+  renderGames(filtered);
+}
+
+// ランダム選出処理
+function pickRandom() {
+  const randomIndex = Math.floor(Math.random() * GAMES.length);
+  const pickedGame = GAMES[randomIndex];
+
+  modalTitle.textContent = pickedGame.title;
+  modalLink.href = pickedGame.url;
+  
+  modal.classList.add("active");
+}
+
+// イベントリスナー
+searchInput.addEventListener("input", filterGames);
+categorySelect.addEventListener("change", filterGames);
+randomBtn.addEventListener("click", pickRandom);
+resetBtn.addEventListener("click", () => {
+  searchInput.value = "";
+  categorySelect.value = "all";
+  filterGames();
+});
+
+modalClose.addEventListener("click", () => {
+  modal.classList.remove("active");
+});
+modal.addEventListener("click", (e) => {
+  if(e.target === modal) modal.classList.remove("active");
+});
+
+// モーダルからのLaunch時にもBGM停止
+modalLink.addEventListener("click", () => {
+  bgm.pause();
+});
+
+// ページ可視性APIによるBGM制御
+document.addEventListener("visibilitychange", () => {
+  if (!isSystemStarted) return; 
+
+  if (document.visibilityState === 'visible') {
+    bgm.play().catch(e => console.log("Resume failed", e));
+  } else {
+    bgm.pause();
+  }
+});
+
+// 初回描画
+renderGames(GAMES);
+
+</script>
+
+</body>
+</html>

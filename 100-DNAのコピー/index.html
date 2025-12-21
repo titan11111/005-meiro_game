@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube動画管理アプリ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="url"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-top: 10px;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-search {
+            background: #4CAF50;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .btn-search:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .video-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .video-item {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s;
+        }
+
+        .video-item:hover {
+            background: #f0f0f0;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .video-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            word-break: break-word;
+        }
+
+        .video-keyword {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .video-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-youtube {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px;
+            background: #FF0000;
+            color: white;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .btn-youtube:hover {
+            background: #cc0000;
+            transform: translateY(-2px);
+        }
+
+        .btn-delete {
+            flex: 1;
+            min-width: 80px;
+            padding: 10px;
+            background: #ff6b6b;
+            color: white;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-delete:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+            font-size: 14px;
+        }
+
+        .stats {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .stats strong {
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            .section {
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+            }
+
+            input[type="text"],
+            input[type="url"] {
+                font-size: 16px;
+            }
+
+            .video-actions {
+                flex-direction: column;
+            }
+
+            .btn-youtube,
+            .btn-delete {
+                min-width: unset;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 YouTube動画管理アプリ</h1>
+            <p>好きな動画をカンタン管理！</p>
+        </div>
+
+        <div class="content">
+            <!-- 追加セクション -->
+            <div class="section">
+                <div class="section-title">📝 動画を追加</div>
+
+                <div class="form-group">
+                    <label for="urlInput">YouTubeのURL:</label>
+                    <input 
+                        type="url" 
+                        id="urlInput" 
+                        placeholder="https://www.youtube.com/watch?v=..."
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="titleInput">タイトル:</label>
+                    <input 
+                        type="text" 
+                        id="titleInput" 
+                        placeholder="例：バイブコーディング入門"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="keywordInput">キーワード:</label>
+                    <input 
+                        type="text" 
+                        id="keywordInput" 
+                        placeholder="例：プログラミング、ゲーム開発"
+                    >
+                </div>
+
+                <button class="btn-add" onclick="addVideo()">➕ 動画を追加</button>
+            </div>
+
+            <!-- 検索セクション -->
+            <div class="section">
+                <div class="section-title">🔍 動画を検索</div>
+
+                <div class="form-group">
+                    <label for="searchInput">キーワードで検索:</label>
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="例：ゲーム、プログラミング"
+                        onkeypress="if(event.key==='Enter') searchVideos()"
+                    >
+                </div>
+
+                <button class="btn-search" onclick="searchVideos()">🔎 検索する</button>
+                <button class="btn-search" style="background: #2196F3; margin-top: 5px;" onclick="showAllVideos()">📋 すべて表示</button>
+            </div>
+
+            <!-- 統計情報 -->
+            <div class="stats">
+                保存済み動画: <strong id="videoCount">0</strong>件
+            </div>
+
+            <!-- 動画リスト -->
+            <div class="section">
+                <div class="section-title">📌 保存済み動画</div>
+                <div id="videoList" class="video-list">
+                    <div class="empty-message">📭 まだ動画がありません。上で追加してみましょう！</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ローカルストレージから動画データを読み込む
+        let videos = JSON.parse(localStorage.getItem('videos')) || [];
+
+        // 初期表示
+        displayVideos(videos);
+
+        // 動画を追加
+        function addVideo() {
+            const url = document.getElementById('urlInput').value.trim();
+            const title = document.getElementById('titleInput').value.trim();
+            const keyword = document.getElementById('keywordInput').value.trim();
+
+            // バリデーション
+            if (!url || !title || !keyword) {
+                alert('❌ すべての項目を入力してください！');
+                return;
+            }
+
+            // URLの簡易チェック
+            if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+                alert('❌ YouTubeのURLを入力してください！');
+                return;
+            }
+
+            // 新しい動画オブジェクト
+            const video = {
+                id: Date.now(),
+                url: url,
+                title: title,
+                keyword: keyword,
+                createdAt: new Date().toLocaleDateString('ja-JP')
+            };
+
+            // 配列に追加
+            videos.push(video);
+
+            // ローカルストレージに保存
+            localStorage.setItem('videos', JSON.stringify(videos));
+
+            // フォームをリセット
+            document.getElementById('urlInput').value = '';
+            document.getElementById('titleInput').value = '';
+            document.getElementById('keywordInput').value = '';
+
+            // 表示更新
+            displayVideos(videos);
+
+            alert('✅ 動画を追加しました！');
+        }
+
+        // 動画を削除
+        function deleteVideo(id) {
+            if (confirm('🗑️ この動画を削除しますか？')) {
+                videos = videos.filter(v => v.id !== id);
+                localStorage.setItem('videos', JSON.stringify(videos));
+                displayVideos(videos);
+                alert('✅ 削除しました！');
+            }
+        }
+
+        // 動画を表示
+        function displayVideos(videosToShow) {
+            const videoList = document.getElementById('videoList');
+            const videoCount = document.getElementById('videoCount');
+
+            videoCount.textContent = videos.length;
+
+            if (videosToShow.length === 0) {
+                videoList.innerHTML = '<div class="empty-message">📭 該当する動画がありません。</div>';
+                return;
+            }
+
+            videoList.innerHTML = videosToShow.map(video => `
+                <div class="video-item">
+                    <div class="video-title">🎥 ${escapeHtml(video.title)}</div>
+                    <div class="video-keyword">🏷️ キーワード: ${escapeHtml(video.keyword)}</div>
+                    <div style="font-size: 12px; color: #999; margin-bottom: 10px;">📅 追加日: ${video.createdAt}</div>
+                    <div class="video-actions">
+                        <a href="${video.url}" target="_blank" class="btn-youtube">▶️ YouTubeで見る</a>
+                        <button class="btn-delete" onclick="deleteVideo(${video.id})">🗑️ 削除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 検索機能
+        function searchVideos() {
+            const searchKeyword = document.getElementById('searchInput').value.trim();
+
+            if (!searchKeyword) {
+                alert('❌ 検索キーワードを入力してください！');
+                return;
+            }
+
+            const filtered = videos.filter(video => {
+                const titleMatch = video.title.toLowerCase().includes(searchKeyword.toLowerCase());
+                const keywordMatch = video.keyword.toLowerCase().includes(searchKeyword.toLowerCase());
+                return titleMatch || keywordMatch;
+            });
+
+            if (filtered.length === 0) {
+                alert(`❌ 「${searchKeyword}」に該当する動画がありません。`);
+                displayVideos([]);
+            } else {
+                alert(`✅ 「${searchKeyword}」で ${filtered.length} 件見つかりました！`);
+                displayVideos(filtered);
+            }
+        }
+
+        // すべて表示
+        function showAllVideos() {
+            document.getElementById('searchInput').value = '';
+            displayVideos(videos);
+        }
+
+        // HTMLエスケープ（セキュリティ対策）
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+    </script>
+</body>
+</html>

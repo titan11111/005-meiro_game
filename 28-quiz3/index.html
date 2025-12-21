@@ -2,217 +2,796 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QUIZ-ZONE - ディストピアクイズバトル</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>知の冒険者：5年生ヒーロー</title>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'DotGothic16', sans-serif;
+            background-color: #111;
+            color: white;
+            overflow: hidden; /* スクロール防止 */
+            touch-action: manipulation; /* タップ遅延防止 */
+            -webkit-user-select: none; /* iOS用テキスト選択防止 */
+            user-select: none;
+            -webkit-touch-callout: none; /* iOS長押しメニュー防止 */
+        }
+        
+        /* ゲーム画面の枠: iOSのdvh対応とセーフエリア */
+        .game-container {
+            max-width: 600px;
+            margin: 0 auto;
+            height: 100vh; /* Fallback */
+            height: 100dvh; /* iOS Safari用 */
+            display: flex;
+            flex-direction: column;
+            background-image: linear-gradient(to bottom, #0f172a, #334155);
+            position: relative;
+            /* iPhone下のバー対策 */
+            padding-bottom: env(safe-area-inset-bottom); 
+        }
+
+        /* アニメーション定義 */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        @keyframes attack {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); text-shadow: 0 0 20px yellow; }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes damageText {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+
+        .shake-anim { animation: shake 0.5s; }
+        .attack-anim { animation: attack 0.2s; }
+        
+        /* UIパーツ */
+        .hp-bar-bg { background-color: #374151; height: 16px; border-radius: 8px; overflow: hidden; border: 2px solid #fff; }
+        .hp-bar-fill { height: 100%; transition: width 0.3s ease-out; }
+        .timer-bar { height: 6px; background: linear-gradient(90deg, #22c55e, #eab308, #ef4444); transition: width 0.1s linear; }
+
+        .btn-answer {
+            background: linear-gradient(to bottom, #3b82f6, #1d4ed8);
+            border: 4px solid #1e3a8a;
+            border-radius: 12px;
+            box-shadow: 0 6px 0 #1e3a8a;
+            transition: all 0.1s;
+            -webkit-tap-highlight-color: transparent; /* タップ時のハイライト削除 */
+        }
+        .btn-answer:active:not(:disabled) {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 #1e3a8a;
+        }
+        .btn-wrong {
+            background: linear-gradient(to bottom, #ef4444, #b91c1c) !important;
+            border-color: #7f1d1d !important;
+            box-shadow: 0 6px 0 #7f1d1d !important;
+        }
+        .btn-correct {
+            background: linear-gradient(to bottom, #22c55e, #15803d) !important;
+            border-color: #14532d !important;
+            box-shadow: 0 6px 0 #14532d !important;
+        }
+
+        /* キャラクター */
+        .character-sprite { font-size: 5rem; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5)); transition: transform 0.3s; }
+        .boss-sprite { font-size: 8rem; filter: drop-shadow(0 0 15px rgba(255, 0, 0, 0.7)); }
+
+        /* エフェクトオーバーレイ */
+        #damage-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: red; opacity: 0; pointer-events: none; z-index: 50; transition: opacity 0.1s;
+        }
+        #flash-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: white; opacity: 0; pointer-events: none; z-index: 50; transition: opacity 0.1s;
+        }
+
+        .damage-number {
+            position: absolute; font-size: 2rem; font-weight: bold; color: #ff0000;
+            text-shadow: 2px 2px 0 #000; animation: damageText 0.8s forwards; z-index: 40;
+        }
+    </style>
 </head>
 <body>
-    <!-- 起動画面 -->
-    <div id="startScreen" class="screen active">
-        <div class="logo">
-            <h1>QUIZ-ZONE</h1>
-            <p class="subtitle">知識管理機構《Z.E.R.O》</p>
+
+<div class="game-container">
+    <div id="damage-overlay"></div>
+    <div id="flash-overlay"></div>
+
+    <div id="start-screen" class="absolute inset-0 z-30 flex flex-col items-center justify-center bg-gray-900 bg-opacity-95 p-6 text-center">
+        <h1 class="text-4xl md:text-6xl text-yellow-400 mb-2 drop-shadow-md">知の冒険者</h1>
+        <h2 class="text-xl md:text-2xl text-white mb-6">〜5年生ヒーロー〜</h2>
+        
+        <div class="bg-gray-800 p-4 rounded-lg border-2 border-gray-600 mb-6 w-full text-left text-sm leading-relaxed text-gray-200">
+            <p class="mb-2 text-yellow-300 font-bold">【MISSION】</p>
+            <p>魔王「ムチ・ムチ」が世界中の知識を奪った！</p>
+            <p>クイズに正解してモンスターを倒し、<span class="text-yellow-400 font-bold">全10ステージ</span>をクリアして世界を救え！</p>
         </div>
-        <div class="warning">
-            <p>⚠️ 無知は罪である ⚠️</p>
-            <p>知能試練を開始せよ</p>
-        </div>
-        <button id="startBtn" class="main-btn">試練開始</button>
+
+        <div class="text-6xl mb-6 animate-bounce">🦸‍♂️</div>
+        
+        <button onclick="startGame()" class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-4 px-10 rounded-xl text-2xl border-b-8 border-yellow-700 active:border-b-0 active:translate-y-2 transition-all w-full max-w-xs shadow-lg">
+            出動する！
+        </button>
+        <div class="mt-4 text-sm text-gray-400">音が出ます 🔊</div>
+        <div class="text-sm text-gray-400">最高到達レベル: <span id="high-score-level">1</span></div>
     </div>
 
-    <!-- ゾーン選択画面 -->
-    <div id="zoneScreen" class="screen">
-        <div class="header">
-            <h2>ZONEタワー</h2>
-            <p>クリア済み: <span id="clearCount">0</span>/8</p>
+    <div id="result-screen" class="hidden absolute inset-0 z-30 flex flex-col items-center justify-center bg-gray-900 bg-opacity-95 p-6 text-center">
+        <h1 id="result-title" class="text-5xl text-red-500 mb-4 font-bold">GAME OVER</h1>
+        <div class="text-6xl mb-4">💀</div>
+        <p class="text-xl text-white mb-2">力尽きてしまった...</p>
+        <div class="bg-gray-800 p-4 rounded-lg border-2 border-gray-600 mb-8 w-full max-w-xs">
+            <div class="flex justify-between mb-1"><span>到達レベル:</span> <span id="result-level" class="text-yellow-400 font-bold">1</span></div>
+            <div class="flex justify-between mb-1"><span>倒した敵:</span> <span id="result-score" class="text-yellow-400 font-bold">0</span></div>
+            <div class="flex justify-between"><span>最大コンボ:</span> <span id="result-combo" class="text-yellow-400 font-bold">0</span></div>
         </div>
-        <div class="zone-grid">
-            <div class="zone-box" data-zone="1">
-                <div class="zone-number">1</div>
-                <div class="zone-name">数学</div>
-                <div class="zone-status">🔒</div>
-            </div>
-            <div class="zone-box" data-zone="2">
-                <div class="zone-number">2</div>
-                <div class="zone-name">国語</div>
-                <div class="zone-status">🔒</div>
-            </div>
-            <div class="zone-box" data-zone="3">
-                <div class="zone-number">3</div>
-                <div class="zone-name">理科</div>
-                <div class="zone-status">🔒</div>
-            </div>
-            <div class="zone-box" data-zone="4">
-                <div class="zone-number">4</div>
-                <div class="zone-name">社会</div>
-                <div class="zone-status">🔒</div>
-            </div>
-            <div class="zone-box omega" data-zone="omega">
-                <div class="zone-number">Ω</div>
-                <div class="zone-name">中央AI</div>
-                <div class="zone-status">🔒</div>
-            </div>
-            <div class="zone-box" data-zone="5">
-                <div class="zone-number">5</div>
-                <div class="zone-name">英語</div>
-                <div class="zone-status">🔒</div>
-            </div>
-            <div class="zone-box" data-zone="6">
-                <div class="zone-number">6</div>
-                <div class="zone-name">生活</div>
-                <div class="zone-status">🔒</div>
-            </div>
-            <div class="zone-box" data-zone="7">
-                <div class="zone-number">7</div>
-                <div class="zone-name">音楽</div>
-                <div class="zone-status">🔒</div>
-            </div>
-            <div class="zone-box" data-zone="8">
-                <div class="zone-number">8</div>
-                <div class="zone-name">体育</div>
-                <div class="zone-status">🔒</div>
-            </div>
-        </div>
-        <button id="trainingBtn" class="sub-btn">記憶補完室</button>
+        <button onclick="location.reload()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-xl text-xl border-b-4 border-blue-700 active:border-b-0 active:translate-y-1 transition-all">
+            もう一度挑む！
+        </button>
     </div>
 
-    <!-- クイズ画面 -->
-    <div id="quizScreen" class="screen">
-        <div class="quiz-header">
-            <div class="zone-info">
-                <span id="currentZone">Zone 1</span>
-                <span id="bossName">数学管理官</span>
-            </div>
-            <div class="quiz-status">
-                <span id="questionNum">1/5</span>
-                <span id="score">正解: 0/5</span>
-            </div>
-            <div class="timer">
-                <span id="timeLeft">30</span>秒
-            </div>
+    <div id="ending-screen" class="hidden absolute inset-0 z-40 flex flex-col items-center justify-center bg-gradient-to-b from-blue-900 to-black p-6 text-center">
+        <h1 class="text-4xl md:text-5xl text-yellow-300 mb-4 font-bold drop-shadow-[0_0_10px_rgba(255,255,0,0.8)] animate-pulse">MISSION COMPLETE!</h1>
+        <div class="text-8xl mb-6 relative">
+            🦸‍♂️
+            <div class="absolute top-0 right-0 text-4xl animate-bounce">👑</div>
+        </div>
+        <div class="bg-white bg-opacity-10 p-6 rounded-xl border border-yellow-400 mb-8 w-full backdrop-blur-sm">
+            <p class="text-lg text-white mb-4">おめでとう！<br>魔王を倒し、世界に知識が戻った！</p>
+            <p class="text-sm text-gray-300">君こそが真の「知のヒーロー」だ！</p>
         </div>
         
-        <div class="quiz-content">
-            <div class="question-box">
-                <p id="question">問題がここに表示されます</p>
+        <div class="text-yellow-400 text-2xl font-bold mb-8">
+            FINAL SCORE: <span id="final-score">0</span>
+        </div>
+
+        <button onclick="location.reload()" class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-4 px-12 rounded-xl text-xl border-b-8 border-yellow-700 active:border-b-0 active:translate-y-2 transition-all">
+            タイトルへ戻る
+        </button>
+    </div>
+
+    <div class="p-3 bg-gray-800 border-b-4 border-gray-700 flex justify-between items-center z-10 shrink-0">
+        <div class="flex flex-col w-1/3">
+            <div class="text-xs text-gray-400">HERO HP</div>
+            <div class="hp-bar-bg relative w-full">
+                <div id="player-hp" class="hp-bar-fill bg-green-500 w-full"></div>
             </div>
-            <div class="answers">
-                <button class="answer-btn" data-answer="0">選択肢1</button>
-                <button class="answer-btn" data-answer="1">選択肢2</button>
-                <button class="answer-btn" data-answer="2">選択肢3</button>
-                <button class="answer-btn" data-answer="3">選択肢4</button>
+            <div class="text-xs text-right"><span id="hp-text">100</span>/100</div>
+        </div>
+        <div class="flex flex-col items-center w-1/3">
+            <div class="text-yellow-400 font-bold text-xl drop-shadow-md">Lv.<span id="level-display">1</span></div>
+            <div class="text-xs text-gray-400">STAGE <span id="stage-display">1</span></div>
+        </div>
+        <div class="flex flex-col w-1/3 items-end">
+            <div class="text-xs text-gray-400">ENEMY HP</div>
+            <div class="hp-bar-bg relative w-full">
+                <div id="enemy-hp" class="hp-bar-fill bg-red-500 w-full"></div>
             </div>
+        </div>
+    </div>
+
+    <div class="flex-grow relative flex flex-col justify-center items-center overflow-hidden bg-gray-900">
+        <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#4b5563 1px, transparent 1px); background-size: 20px 20px;"></div>
+
+        <div id="enemy-container" class="flex flex-col items-center mb-10 transition-all duration-300">
+            <div id="enemy-sprite" class="character-sprite">👾</div>
+            <div id="enemy-name" class="mt-2 text-red-300 font-bold bg-black bg-opacity-50 px-2 rounded">スライム</div>
         </div>
         
-        <button id="quitBtn" class="sub-btn">試練中断</button>
+        <div id="combo-display" class="hidden absolute top-4 right-4 text-right">
+            <div class="text-yellow-400 font-bold text-3xl italic animate-pulse"><span id="combo-count">2</span> COMBO!</div>
+            <div class="text-sm text-white">SCORE UP!</div>
+        </div>
+
+        <div class="absolute bottom-4 left-6 text-5xl opacity-80 filter drop-shadow-lg">🦸‍♂️</div>
     </div>
 
-    <!-- 結果画面 -->
-    <div id="resultScreen" class="screen">
-        <div class="result-content">
-            <h2 id="resultTitle">結果</h2>
-            <div class="result-info">
-                <p id="resultScore">正解数: 0/5</p>
-                <p id="resultMessage">メッセージ</p>
-            </div>
-            <div class="result-actions">
-                <button id="retryBtn" class="main-btn">再挑戦</button>
-                <button id="backToZoneBtn" class="sub-btn">ZONEタワーへ</button>
-            </div>
+    <div class="bg-gray-800 border-t-4 border-gray-700 p-4 z-20 pb-8 rounded-t-3xl shadow-lg -mt-6 shrink-0 safe-area-pb">
+        <div class="w-full bg-gray-700 h-2 mb-3 rounded-full overflow-hidden">
+            <div id="timer-bar" class="timer-bar w-full"></div>
+        </div>
+
+        <div class="mb-4 min-h-[4rem]">
+            <span id="q-category" class="inline-block bg-blue-600 text-xs px-2 py-1 rounded text-white mb-1">算数</span>
+            <p id="q-text" class="text-lg font-bold leading-relaxed">ここに問題が表示されます。</p>
+        </div>
+
+        <div id="options-container" class="grid grid-cols-1 gap-3">
+            <button class="btn-answer w-full py-3 px-4 text-lg font-bold text-white relative overflow-hidden">
+                選択肢A
+            </button>
+            <button class="btn-answer w-full py-3 px-4 text-lg font-bold text-white relative overflow-hidden">
+                選択肢B
+            </button>
+            <button class="btn-answer w-full py-3 px-4 text-lg font-bold text-white relative overflow-hidden">
+                選択肢C
+            </button>
         </div>
     </div>
+</div>
 
-    <!-- トレーニング画面 -->
-    <div id="trainingScreen" class="screen">
-        <div class="training-header">
-            <h2>記憶補完室</h2>
-            <p>間違えた問題を復習しよう</p>
-        </div>
-        <div class="training-content">
-            <div id="trainingList" class="training-list">
-                <p class="no-data">まだ復習する問題がありません</p>
-            </div>
-        </div>
-        <button id="backFromTrainingBtn" class="sub-btn">戻る</button>
-    </div>
+<script>
+// ========== 音声設定 ==========
+const bgm = new Audio('audio/quiz.mp3'); // アップロードされたファイルのパス
+bgm.loop = true; // ループ再生
+bgm.volume = 0.4; // 音量調整
 
-    <!-- エンディング画面 -->
-    <div id="endingScreen" class="screen">
-        <div class="ending-content">
-            <div class="ending-header">
-                <h1 class="ending-title">LIBERATION</h1>
-                <p class="ending-subtitle">知識の解放</p>
-            </div>
-            
-            <div class="ending-story">
-                <div class="story-section" id="story1">
-                    <h3>システム崩壊</h3>
-                    <p>中央制御AI《Ω》の破壊により、知識管理機構《Z.E.R.O》のシステムが完全に停止した。</p>
-                    <p>長年にわたって人々を支配していた「無知は罪である」という思想が、今、終焉を迎える。</p>
-                </div>
-                
-                <div class="story-section" id="story2">
-                    <h3>真実の開示</h3>
-                    <p>システムの奥深くに隠されていた真実が明かされる。</p>
-                    <p>知識管理機構は、人々の思考を制御し、自由な学びを阻害するための装置だった。</p>
-                    <p>あなたの勝利は、単なる個人の成功ではなく、人類全体の解放を意味していた。</p>
-                </div>
-                
-                <div class="story-section" id="story3">
-                    <h3>新たな始まり</h3>
-                    <p>他の被験者たちも次々と目覚め、知識の自由を取り戻していく。</p>
-                    <p>ZONEタワーは崩壊し、代わりに真の学びの場が建設されることになる。</p>
-                    <p>あなたは「知識の解放者」として、新たな時代の扉を開いた。</p>
-                </div>
-            </div>
-            
-            <div class="ending-stats">
-                <h3>最終成績</h3>
-                <p>クリアしたゾーン: <span id="finalClearCount">0</span>/8</p>
-                <p>総試行回数: <span id="totalAttempts">0</span>回</p>
-                <p>解放者レベル: <span id="liberatorLevel">初級</span></p>
-            </div>
-            
-            <div class="ending-actions">
-                <button id="restartBtn" class="main-btn">新たな試練へ</button>
-                <button id="creditsBtn" class="sub-btn">クレジット</button>
-            </div>
-        </div>
-    </div>
+// ========== データ (元のコードと同じ) ==========
+const QUIZ_DB = [
+    // --- 算数 (Math) ---
+    { cat: "算数", q: "3.14 × 2 =", a: ["6.28", "6.14", "3.28"], c: 0 },
+    { cat: "算数", q: "三角形の面積の公式", a: ["底辺×高さ÷2", "底辺×高さ", "半径×半径×3.14"], c: 0 },
+    { cat: "算数", q: "1000の1/10は？", a: ["100", "10", "0.1"], c: 0 },
+    { cat: "算数", q: "180度の角の名前", a: ["平角", "直角", "鋭角"], c: 0 },
+    { cat: "算数", q: "分母が違う足し算ですることは？", a: ["通分", "約分", "微分"], c: 0 },
+    { cat: "算数", q: "一辺5cmの立方体の体積", a: ["125㎤", "25㎤", "15㎤"], c: 0 },
+    { cat: "算数", q: "1ha (ヘクタール)は何㎡？", a: ["10000㎡", "1000㎡", "100㎡"], c: 0 },
+    { cat: "算数", q: "偶数＋奇数は？", a: ["奇数", "偶数", "かわらない"], c: 0 },
+    { cat: "算数", q: "三角形の内角の和", a: ["180度", "360度", "90度"], c: 0 },
+    { cat: "算数", q: "五角形の内角の和", a: ["540度", "360度", "720度"], c: 0 },
+    { cat: "算数", q: "直径10cmの円周", a: ["31.4cm", "314cm", "3.14cm"], c: 0 },
+    { cat: "算数", q: "3.14 × 100 =", a: ["314", "31.4", "3140"], c: 0 },
+    { cat: "算数", q: "割合を表す「％」の読み方", a: ["パーセント", "センチ", "メートル"], c: 0 },
+    { cat: "算数", q: "1より小さい数をかけると？", a: ["小さくなる", "大きくなる", "変わらない"], c: 0 },
+    { cat: "算数", q: "四角形の内角の和", a: ["360度", "180度", "540度"], c: 0 },
+    { cat: "算数", q: "平均を求める計算", a: ["合計÷個数", "個数÷合計", "最大-最小"], c: 0 },
+    { cat: "算数", q: "4と6の最小公倍数", a: ["12", "24", "2"], c: 0 },
+    { cat: "算数", q: "8と12の最大公約数", a: ["4", "2", "8"], c: 0 },
+    { cat: "算数", q: "1mは何cm？", a: ["100cm", "10cm", "1000cm"], c: 0 },
+    { cat: "算数", q: "直方体の体積公式", a: ["たて×横×高さ", "一辺×一辺×一辺", "底辺×高さ"], c: 0 },
+    { cat: "算数", q: "立方体の体積公式", a: ["一辺×一辺×一辺", "たて×横×高さ", "底面積×高さ"], c: 0 },
+    { cat: "算数", q: "2.5 × 4 =", a: ["10", "100", "8.5"], c: 0 },
+    { cat: "算数", q: "1/2 ＋ 1/4 ＝", a: ["3/4", "2/6", "2/4"], c: 0 },
+    { cat: "算数", q: "速さの公式(道のり)", a: ["速さ×時間", "速さ÷時間", "時間÷速さ"], c: 0 },
+    { cat: "算数", q: "時速60kmで2時間進むと？", a: ["120km", "30km", "90km"], c: 0 },
+    { cat: "算数", q: "円周率はおよそいくつ？", a: ["3.14", "3.41", "3.11"], c: 0 },
+    { cat: "算数", q: "0.1 × 0.1 =", a: ["0.01", "0.1", "1.0"], c: 0 },
+    { cat: "算数", q: "合同な図形とは？", a: ["ぴったり重なる", "面積が同じ", "形が似ている"], c: 0 },
+    { cat: "算数", q: "比例のグラフの形は？", a: ["直線", "曲線", "折れ線"], c: 0 },
+    { cat: "算数", q: "正多角形は線対称？", a: ["そうである", "ちがう", "図形による"], c: 0 },
 
-    <!-- クレジット画面 -->
-    <div id="creditsScreen" class="screen">
-        <div class="credits-content">
-            <h2>QUIZ-ZONE</h2>
-            <div class="credits-section">
-                <h3>開発・制作</h3>
-                <p>Knowledge Liberation Project</p>
-                <p>ディストピアクイズバトルシステム</p>
-            </div>
-            <div class="credits-section">
-                <h3>ストーリー</h3>
-                <p>知識管理機構《Z.E.R.O》</p>
-                <p>中央制御AI《Ω》</p>
-                <p>8つの知識ゾーン</p>
-            </div>
-            <div class="credits-section">
-                <h3>メッセージ</h3>
-                <p>「知識は自由であるべきだ」</p>
-                <p>「学びは喜びであるべきだ」</p>
-                <p>「無知は罪ではない、学ぶ勇気こそが尊い」</p>
-            </div>
-            <button id="backToEndingBtn" class="sub-btn">エンディングに戻る</button>
-        </div>
-    </div>
+    // --- 国語 (Japanese) ---
+    { cat: "国語", q: "「千載一遇」の意味", a: ["絶好の機会", "大ピンチ", "長い歴史"], c: 0 },
+    { cat: "国語", q: "「明日」の対義語", a: ["昨日", "未来", "過去"], c: 0 },
+    { cat: "国語", q: "「猫に小判」と同じ意味", a: ["馬の耳に念仏", "犬も歩けば", "虎の威を借る"], c: 0 },
+    { cat: "国語", q: "「五月雨」の読み方", a: ["さみだれ", "ごがつあめ", "さつきあめ"], c: 0 },
+    { cat: "国語", q: "「竹馬の友」の意味", a: ["幼なじみ", "ライバル", "兄弟"], c: 0 },
+    { cat: "国語", q: "「画竜点睛」の読み", a: ["がりょうてんせい", "がりゅうてんせい", "がろうてんせい"], c: 0 },
+    { cat: "国語", q: "「一石〇鳥」", a: ["二", "三", "百"], c: 0 },
+    { cat: "国語", q: "「氵（さんずい）」の意味", a: ["水", "心", "手"], c: 0 },
+    { cat: "国語", q: "敬語の種類ではないもの", a: ["標準語", "尊敬語", "謙譲語"], c: 0 },
+    { cat: "国語", q: "「いとをかし」の意味", a: ["とてもおもしろい", "とてもおいしい", "とてもおかしい"], c: 0 },
+    { cat: "国語", q: "竹取物語の主人公", a: ["かぐや姫", "桃太郎", "浦島太郎"], c: 0 },
+    { cat: "国語", q: "「校正」の意味", a: ["間違いを直す", "学校を正す", "構成を考える"], c: 0 },
+    { cat: "国語", q: "「紅葉」の読み方", a: ["こうよう", "もみば", "べにば"], c: 0 },
+    { cat: "国語", q: "「大黒柱」の意味", a: ["一家を支える人", "黒い柱", "太い柱"], c: 0 },
+    { cat: "国語", q: "「矛盾」の由来になった武器", a: ["矛と盾", "剣と鎧", "弓と矢"], c: 0 },
+    { cat: "国語", q: "「蛍雪の功」の意味", a: ["苦労して勉強する", "雪遊びをする", "蛍を捕まえる"], c: 0 },
+    { cat: "国語", q: "四字熟語「〇肉〇食」", a: ["弱・強", "焼・定", "大・小"], c: 0 },
+    { cat: "国語", q: "物語の「クライマックス」", a: ["最高潮", "始まり", "終わり"], c: 0 },
+    { cat: "国語", q: "「蛇足」の意味", a: ["余計なもの", "足りないもの", "足が長い"], c: 0 },
+    { cat: "国語", q: "俳句の文字数は？", a: ["5・7・5", "5・7・5・7・7", "7・5・7"], c: 0 },
+    { cat: "国語", q: "「急がば回れ」の意味", a: ["確実な道が良い", "急いだ方が良い", "回ると遅れる"], c: 0 },
+    { cat: "国語", q: "「案の定」の意味", a: ["予想通り", "予想外", "安心した"], c: 0 },
+    { cat: "国語", q: "「月とすっぽん」の意味", a: ["比べ物にならない", "似ている", "仲が良い"], c: 0 },
+    { cat: "国語", q: "「古池や蛙飛び込む…」", a: ["水の音", "池の音", "雨の音"], c: 0 },
+    { cat: "国語", q: "主語と〇〇語", a: ["述語", "英語", "物語"], c: 0 },
+    { cat: "国語", q: "「小春日和」の季節は？", a: ["冬の初め", "春", "秋"], c: 0 },
+    { cat: "国語", q: "「無我夢中」の意味", a: ["心を奪われる", "夢を見る", "我慢する"], c: 0 },
+    { cat: "国語", q: "ローマ字の「SHI」", a: ["し", "ち", "ひ"], c: 0 },
+    { cat: "国語", q: "「お母さん『が』笑う」", a: ["主語", "述語", "修飾語"], c: 0 },
+    { cat: "国語", q: "本を数える単位", a: ["冊", "本", "枚"], c: 0 },
 
-    <!-- 効果音用（表示されない） -->
-    <audio id="correctSound" preload="auto">
-        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUF" type="audio/wav">
-    </audio>
-    <audio id="wrongSound" preload="auto">
-        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCUOb3O2KVhMKNovR7K1VFAo5k9n3s2EcBzGM1enHcSUF" type="audio/wav">
-    </audio>
+    // --- 理科 (Science) ---
+    { cat: "理科", q: "メダカのオスは？", a: ["背びれに切れ込み", "腹びれが大きい", "色が派手"], c: 0 },
+    { cat: "理科", q: "台風のうず巻きの向き", a: ["左巻き", "右巻き", "決まってない"], c: 0 },
+    { cat: "理科", q: "水の沸騰する温度", a: ["100度", "90度", "110度"], c: 0 },
+    { cat: "理科", q: "種子の発芽条件、水・空気と…", a: ["適当な温度", "日光", "肥料"], c: 0 },
+    { cat: "理科", q: "インゲンマメの養分はどこ？", a: ["子葉", "根", "葉"], c: 0 },
+    { cat: "理科", q: "食塩が水に溶ける限度", a: ["決まっている", "無限", "温度による"], c: 0 },
+    { cat: "理科", q: "雲の動きと関係あるのは？", a: ["天気の変化", "地震", "潮の満ち引き"], c: 0 },
+    { cat: "理科", q: "川の外側は流れが？", a: ["速い", "遅い", "同じ"], c: 0 },
+    { cat: "理科", q: "ふりこの1往復の時間", a: ["長さで変わる", "重さで変わる", "振れ幅で変わる"], c: 0 },
+    { cat: "理科", q: "ヒトの赤ちゃんが育つ場所", a: ["子宮", "胃", "心臓"], c: 0 },
+    { cat: "理科", q: "花粉がめしべの先につくこと", a: ["受粉", "受精", "発芽"], c: 0 },
+    { cat: "理科", q: "顕微鏡で見るとき使う板", a: ["プレパラート", "シャーレ", "ビーカー"], c: 0 },
+    { cat: "理科", q: "流れる水の働き「浸食」と？", a: ["運搬・堆積", "破壊・創造", "蒸発・凝固"], c: 0 },
+    { cat: "理科", q: "1日の気温が一番高いのは？", a: ["14時ごろ", "12時ごろ", "10時ごろ"], c: 0 },
+    { cat: "理科", q: "雨の量を測る道具", a: ["雨量計", "温度計", "風向計"], c: 0 },
+    { cat: "理科", q: "ヘチマの雄花にあるのは？", a: ["花粉", "実", "種"], c: 0 },
+    { cat: "理科", q: "電磁石を強くするには？", a: ["巻き数を増やす", "電池を減らす", "細くする"], c: 0 },
+    { cat: "理科", q: "方位磁針のNが指す方角", a: ["北", "南", "東"], c: 0 },
+    { cat: "理科", q: "溶けたものが再び出てくること", a: ["結晶", "蒸発", "融解"], c: 0 },
+    { cat: "理科", q: "魚が呼吸に使う部分", a: ["エラ", "肺", "口"], c: 0 },
+    { cat: "理科", q: "天気記号「◎」は？", a: ["くもり", "晴れ", "雨"], c: 0 },
+    { cat: "理科", q: "モーターが回る力", a: ["磁力", "重力", "摩擦力"], c: 0 },
+    { cat: "理科", q: "秋の七草ではないもの", a: ["サクラ", "ハギ", "ススキ"], c: 0 },
+    { cat: "理科", q: "北極星を見つける星座", a: ["カシオペヤ座", "オリオン座", "さそり座"], c: 0 },
+    { cat: "理科", q: "日なたと日陰、温かいのは？", a: ["日なた", "日陰", "同じ"], c: 0 },
+    { cat: "理科", q: "ミョウバンはお湯に？", a: ["よく溶ける", "溶けない", "変わらない"], c: 0 },
+    { cat: "理科", q: "受粉を手伝う虫", a: ["ミツバチ", "カマキリ", "ダンゴムシ"], c: 0 },
+    { cat: "理科", q: "台風の目の中の天気", a: ["晴れや風が弱い", "大嵐", "雷"], c: 0 },
+    { cat: "理科", q: "川の上流にある石の形", a: ["角ばっている", "丸い", "砂みたい"], c: 0 },
+    { cat: "理科", q: "人の体温はおよそ？", a: ["36度", "30度", "40度"], c: 0 },
 
-    <script src="script.js"></script>
+    // --- 社会 (Social) ---
+    { cat: "社会", q: "日本の最南端の島", a: ["沖ノ鳥島", "与那国島", "南鳥島"], c: 0 },
+    { cat: "社会", q: "日本一高い山", a: ["富士山", "北岳", "槍ヶ岳"], c: 0 },
+    { cat: "社会", q: "米作りが盛んな平野", a: ["庄内平野", "関東平野", "十勝平野"], c: 0 },
+    { cat: "社会", q: "自動車工業が盛んな都市", a: ["豊田市", "京都市", "札幌市"], c: 0 },
+    { cat: "社会", q: "日本の周りの海流(暖流)", a: ["黒潮", "親潮", "リマン海流"], c: 0 },
+    { cat: "社会", q: "寒い地方の家作りの工夫", a: ["窓を二重にする", "床を高くする", "窓を大きくする"], c: 0 },
+    { cat: "社会", q: "日本で一番広い湖", a: ["琵琶湖", "霞ヶ浦", "サロマ湖"], c: 0 },
+    { cat: "社会", q: "地図記号「⛆」", a: ["温泉", "交番", "病院"], c: 0 },
+    { cat: "社会", q: "地図記号「交番」の形", a: ["×（バツ）", "○（マル）", "□（シカク）"], c: 0 },
+    { cat: "社会", q: "促成栽培で作る野菜", a: ["ピーマン・ナス", "リンゴ", "白菜"], c: 0 },
+    { cat: "社会", q: "抑制栽培が盛んな地域", a: ["野辺山原", "宮崎平野", "越後平野"], c: 0 },
+    { cat: "社会", q: "日本の主食", a: ["米", "パン", "麺"], c: 0 },
+    { cat: "社会", q: "水産業が盛んな海流のぶつかり", a: ["潮目", "海溝", "大陸棚"], c: 0 },
+    { cat: "社会", q: "京浜工業地帯の中心", a: ["東京・横浜", "大阪・神戸", "名古屋"], c: 0 },
+    { cat: "社会", q: "伝統的工芸品「南部鉄器」の県", a: ["岩手県", "青森県", "秋田県"], c: 0 },
+    { cat: "社会", q: "公害病「水俣病」の原因", a: ["メチル水銀", "カドミウム", "二酸化硫黄"], c: 0 },
+    { cat: "社会", q: "森林の働き", a: ["水を蓄える", "空気を汚す", "土を流す"], c: 0 },
+    { cat: "社会", q: "情報ネットワークの活用", a: ["POSシステム", "SOSシステム", "PTAシステム"], c: 0 },
+    { cat: "社会", q: "新聞を作る仕事", a: ["記者", "医者", "運転手"], c: 0 },
+    { cat: "社会", q: "世界自然遺産", a: ["屋久島", "姫路城", "原爆ドーム"], c: 0 },
+    { cat: "社会", q: "日本一長い川", a: ["信濃川", "利根川", "石狩川"], c: 0 },
+    { cat: "社会", q: "リアス海岸が見られる場所", a: ["三陸海岸", "九十九里浜", "鳥取砂丘"], c: 0 },
+    { cat: "社会", q: "沖縄県の気候区分", a: ["南西諸島の気候", "日本海側の気候", "瀬戸内の気候"], c: 0 },
+    { cat: "社会", q: "石油化学コンビナート", a: ["石油製品を作る", "魚を獲る", "野菜を作る"], c: 0 },
+    { cat: "社会", q: "日本の食料自給率は？", a: ["低い(約38%)", "高い(約80%)", "半分(50%)"], c: 0 },
+    { cat: "社会", q: "貿易港として有名な場所", a: ["横浜港", "漁港", "空港"], c: 0 },
+    { cat: "社会", q: "中小工場が多い都市", a: ["東大阪市", "豊田市", "北九州市"], c: 0 },
+    { cat: "社会", q: "放送局の役割", a: ["情報を伝える", "商品を売る", "法律を作る"], c: 0 },
+    { cat: "社会", q: "輪中(わじゅう)がある場所", a: ["濃尾平野", "関東平野", "大阪平野"], c: 0 },
+    { cat: "社会", q: "棚田(たなだ)の目的", a: ["斜面で米作り", "観光のため", "洪水を防ぐ"], c: 0 },
+
+    // --- 英語 (English) ---
+    { cat: "英語", q: "Wednesday", a: ["水曜日", "火曜日", "木曜日"], c: 0 },
+    { cat: "英語", q: "Station", a: ["駅", "公園", "学校"], c: 0 },
+    { cat: "英語", q: "Apple", a: ["りんご", "バナナ", "オレンジ"], c: 0 },
+    { cat: "英語", q: "Twelve", a: ["12", "11", "20"], c: 0 },
+    { cat: "英語", q: "Library", a: ["図書館", "本屋", "教室"], c: 0 },
+    { cat: "英語", q: "Teacher", a: ["先生", "生徒", "医者"], c: 0 },
+    { cat: "英語", q: "Breakfast", a: ["朝食", "昼食", "夕食"], c: 0 },
+    { cat: "英語", q: "Summer", a: ["夏", "春", "冬"], c: 0 },
+    { cat: "英語", q: "Red", a: ["赤", "青", "黄"], c: 0 },
+    { cat: "英語", q: "Dog", a: ["犬", "猫", "鳥"], c: 0 },
+    { cat: "英語", q: "Soccer", a: ["サッカー", "野球", "テニス"], c: 0 },
+    { cat: "英語", q: "Good morning", a: ["おはよう", "こんにちは", "さようなら"], c: 0 },
+    { cat: "英語", q: "Thank you", a: ["ありがとう", "ごめんなさい", "お願いします"], c: 0 },
+    { cat: "英語", q: "Book", a: ["本", "ノート", "鉛筆"], c: 0 },
+    { cat: "英語", q: "Chair", a: ["いす", "机", "ベッド"], c: 0 },
+    { cat: "英語", q: "Mother", a: ["お母さん", "お父さん", "妹"], c: 0 },
+    { cat: "英語", q: "Friend", a: ["友達", "家族", "先生"], c: 0 },
+    { cat: "英語", q: "Happy", a: ["幸せ", "悲しい", "怒る"], c: 0 },
+    { cat: "英語", q: "Big", a: ["大きい", "小さい", "長い"], c: 0 },
+    { cat: "英語", q: "Run", a: ["走る", "歩く", "泳ぐ"], c: 0 },
+    { cat: "英語", q: "Swim", a: ["泳ぐ", "歌う", "飛ぶ"], c: 0 },
+    { cat: "英語", q: "January", a: ["1月", "2月", "6月"], c: 0 },
+    { cat: "英語", q: "August", a: ["8月", "4月", "10月"], c: 0 },
+    { cat: "英語", q: "Music", a: ["音楽", "算数", "理科"], c: 0 },
+    { cat: "英語", q: "Japan", a: ["日本", "アメリカ", "中国"], c: 0 },
+    { cat: "英語", q: "English", a: ["英語", "国語", "社会"], c: 0 },
+    { cat: "英語", q: "Elephant", a: ["ゾウ", "ライオン", "キリン"], c: 0 },
+    { cat: "英語", q: "Fish", a: ["魚", "肉", "野菜"], c: 0 },
+    { cat: "英語", q: "Pen", a: ["ペン", "消しゴム", "定規"], c: 0 },
+    { cat: "英語", q: "Yellow", a: ["黄色", "白", "黒"], c: 0 },
+
+    // --- その他 ---
+    { cat: "音楽", q: "フォルテ(f)の意味", a: ["強く", "弱く", "速く"], c: 0 },
+    { cat: "音楽", q: "ピアノ(p)の意味", a: ["弱く", "強く", "遅く"], c: 0 },
+    { cat: "音楽", q: "ト音記号", a: ["高音部", "低音部", "打楽器"], c: 0 },
+    { cat: "音楽", q: "クレシェンドの意味", a: ["だんだん強く", "だんだん弱く", "急に強く"], c: 0 },
+    { cat: "音楽", q: "四分音符の長さ", a: ["1拍", "2拍", "0.5拍"], c: 0 },
+    { cat: "音楽", q: "リコーダーの穴の数", a: ["8個", "6個", "10個"], c: 0 },
+    { cat: "音楽", q: "「春の小川」は…", a: ["さらさら行くよ", "どろどろ行くよ", "ざあざあ行くよ"], c: 0 },
+    { cat: "音楽", q: "ベートーベンの運命", a: ["ジャジャジャジャーン", "キラキラヒカル", "ドレミファソ"], c: 0 },
+    { cat: "音楽", q: "指揮者は何をする？", a: ["テンポを決める", "歌う", "踊る"], c: 0 },
+    { cat: "音楽", q: "鍵盤ハーモニカの別名", a: ["ピアニカ", "ピアノ", "オルガン"], c: 0 },
+    { cat: "体育", q: "短距離走のスタート", a: ["クラウチング", "スタンディング", "フライング"], c: 0 },
+    { cat: "体育", q: "水泳の息継ぎ", a: ["クロールは横", "平泳ぎは横", "背泳ぎは下"], c: 0 },
+    { cat: "体育", q: "リレーで使う棒", a: ["バトン", "ポール", "スティック"], c: 0 },
+    { cat: "体育", q: "サッカーの手の使用", a: ["キーパーだけ", "全員OK", "誰もダメ"], c: 0 },
+    { cat: "体育", q: "バスケのドリブル", a: ["つける", "けれる", "なげる"], c: 0 },
+    { cat: "体育", q: "跳び箱の着地", a: ["ピタッと止まる", "走り抜ける", "転がる"], c: 0 },
+    { cat: "体育", q: "準備運動の目的", a: ["怪我予防", "疲れるため", "時間つぶし"], c: 0 },
+    { cat: "体育", q: "ハードル走", a: ["飛び越える", "くぐる", "倒す"], c: 0 },
+    { cat: "体育", q: "マット運動の前転", a: ["頭の後ろをつく", "おでこをつく", "手を使わない"], c: 0 },
+    { cat: "体育", q: "50m走の平均(小5)", a: ["9秒くらい", "5秒くらい", "15秒くらい"], c: 0 },
+    { cat: "家庭", q: "ご飯を炊くときの水", a: ["お米の1.2倍", "お米と同じ", "お米の3倍"], c: 0 },
+    { cat: "家庭", q: "包丁の渡し方", a: ["柄を相手に向ける", "刃を相手に向ける", "投げる"], c: 0 },
+    { cat: "家庭", q: "味噌汁の出汁(だし)", a: ["煮干し", "砂糖", "塩"], c: 0 },
+    { cat: "家庭", q: "ボタン付けに使うもの", a: ["針と糸", "ボンド", "テープ"], c: 0 },
+    { cat: "家庭", q: "アイロンの注意点", a: ["やけど", "水漏れ", "重さ"], c: 0 },
+    { cat: "家庭", q: "五大栄養素「炭水化物」", a: ["エネルギーになる", "体を作る", "調子を整える"], c: 0 },
+    { cat: "家庭", q: "ゆで卵の時間(固ゆで)", a: ["12分", "3分", "30分"], c: 0 },
+    { cat: "家庭", q: "賞味期限の意味", a: ["美味しく食べられる", "過ぎたら毒", "作った日"], c: 0 },
+    { cat: "家庭", q: "掃除の基本", a: ["上から下へ", "下から上へ", "適当に"], c: 0 },
+    { cat: "家庭", q: "整理整頓の「整頓」", a: ["使いやすく並べる", "捨てる", "隠す"], c: 0 }
+];
+
+// ========== ゲームロジック ==========
+
+const MAX_HP = 100;
+const DAMAGE_PLAYER = 20;
+const DAMAGE_ENEMY_BASE = 25;
+const LEVEL_UP_INTERVAL = 5;
+const TIME_LIMIT = 15;
+const BOSS_INTERVAL = 5; // 5ステージごとにボス
+const MAX_STAGE = 10; // 全10ステージ
+
+const ENEMIES = [
+    { icon: "👾", name: "バグスライム" },
+    { icon: "🦇", name: "シャドーバット" },
+    { icon: "🦂", name: "デザートサソリ" },
+    { icon: "👻", name: "ゴースト" },
+    { icon: "🐺", name: "ウルフ" },
+    { icon: "👹", name: "アカオニ" },
+    { icon: "🤖", name: "ロボ兵士" },
+    { icon: "🦖", name: "T-レックス" },
+    { icon: "👺", name: "テング" },
+    { icon: "👽", name: "エイリアン" }
+];
+const BOSSES = [
+    { icon: "🐉", name: "ドラゴン" },
+    { icon: "🦑", name: "クラーケン" },
+    { icon: "👿", name: "魔王" }
+];
+
+let gameState = {
+    hp: MAX_HP,
+    level: 1,
+    stage: 1,
+    score: 0,
+    combo: 0,
+    maxCombo: 0,
+    enemyHp: 100,
+    currentQ: null,
+    timer: null,
+    timeLeft: TIME_LIMIT,
+    isBoss: false,
+    shuffledDB: []
+};
+
+let savedLevel = localStorage.getItem('quizHeroLevel');
+if(savedLevel) {
+    document.getElementById('high-score-level').innerText = savedLevel;
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function startGame() {
+    // ユーザー操作タイミングでBGM開始（iOS対策）
+    bgm.currentTime = 0;
+    bgm.play().catch(e => console.log("Audio play failed:", e));
+
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('result-screen').classList.add('hidden');
+    document.getElementById('ending-screen').classList.add('hidden');
+    
+    gameState.hp = MAX_HP;
+    gameState.level = 1;
+    gameState.stage = 1;
+    gameState.score = 0;
+    gameState.combo = 0;
+    gameState.maxCombo = 0;
+    gameState.shuffledDB = shuffleArray([...QUIZ_DB]);
+    
+    updateHUD();
+    spawnEnemy();
+    nextQuestion();
+}
+
+function spawnEnemy() {
+    gameState.isBoss = (gameState.stage % BOSS_INTERVAL === 0);
+    
+    // 修正：ボスのHPを2倍に設定 (Plan A)
+    if (gameState.isBoss) {
+        gameState.enemyHp = 200;
+    } else {
+        gameState.enemyHp = 100;
+    }
+    
+    const enemyContainer = document.getElementById('enemy-container');
+    const sprite = document.getElementById('enemy-sprite');
+    const name = document.getElementById('enemy-name');
+
+    sprite.style.transform = "scale(0)";
+    
+    let enemyData;
+    if (gameState.isBoss) {
+        // ラストステージは魔王固定
+        if(gameState.stage === MAX_STAGE) {
+             enemyData = BOSSES[2];
+        } else {
+             enemyData = BOSSES[Math.floor(Math.random() * BOSSES.length)];
+        }
+        sprite.className = "boss-sprite animate-bounce";
+    } else {
+        enemyData = ENEMIES[Math.floor(Math.random() * ENEMIES.length)];
+        sprite.className = "character-sprite";
+    }
+
+    setTimeout(() => {
+        sprite.innerText = enemyData.icon;
+        name.innerText = gameState.isBoss ? "BOSS: " + enemyData.name : "Lv." + gameState.stage + " " + enemyData.name;
+        sprite.style.transform = "scale(1)";
+        document.getElementById('enemy-hp').style.width = '100%';
+    }, 100);
+}
+
+function nextQuestion() {
+    if (gameState.shuffledDB.length === 0) {
+        gameState.shuffledDB = shuffleArray([...QUIZ_DB]);
+    }
+    gameState.currentQ = gameState.shuffledDB.pop();
+    renderQuestion();
+    startTimer();
+}
+
+function startTimer() {
+    clearInterval(gameState.timer);
+    gameState.timeLeft = TIME_LIMIT;
+    const timerBar = document.getElementById('timer-bar');
+    
+    gameState.timer = setInterval(() => {
+        gameState.timeLeft -= 0.1;
+        const percent = (gameState.timeLeft / TIME_LIMIT) * 100;
+        timerBar.style.width = percent + "%";
+
+        if (gameState.timeLeft <= 0) {
+            clearInterval(gameState.timer);
+            timeUp();
+        }
+    }, 100);
+}
+
+function timeUp() {
+    takeDamage(10);
+    showMessage("時間切れ！", "text-yellow-400");
+    resetCombo();
+    setTimeout(nextQuestion, 1000);
+}
+
+function renderQuestion() {
+    const q = gameState.currentQ;
+    const catColors = { "算数": "bg-blue-600", "国語": "bg-red-600", "理科": "bg-green-600", "社会": "bg-yellow-600", "英語": "bg-purple-600", "音楽": "bg-pink-500", "体育": "bg-orange-500", "家庭": "bg-teal-500" };
+    
+    document.getElementById('q-category').innerText = q.cat;
+    document.getElementById('q-category').className = `inline-block text-xs px-2 py-1 rounded text-white mb-1 ${catColors[q.cat] || "bg-gray-600"}`;
+    document.getElementById('q-text').innerText = q.q;
+
+    const optionsContainer = document.getElementById('options-container');
+    optionsContainer.innerHTML = "";
+
+    let options = q.a.map((ans, index) => ({ text: ans, originalIndex: index }));
+    options = shuffleArray(options);
+
+    options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = "btn-answer w-full py-3 px-4 text-lg font-bold text-white relative overflow-hidden";
+        btn.innerText = opt.text;
+        btn.onclick = () => checkAnswer(opt.originalIndex, btn);
+        optionsContainer.appendChild(btn);
+    });
+}
+
+function checkAnswer(index, btnElement) {
+    clearInterval(gameState.timer);
+    
+    const btns = document.querySelectorAll('.btn-answer');
+    btns.forEach(b => b.disabled = true);
+
+    const isCorrect = (index === 0);
+
+    if (isCorrect) {
+        btnElement.classList.add('btn-correct');
+        attackEnemy();
+        gameState.score++;
+        gameState.combo++;
+        if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
+        
+        if (gameState.combo > 1) {
+            document.getElementById('combo-display').classList.remove('hidden');
+            document.getElementById('combo-count').innerText = gameState.combo;
+        }
+
+        let damage = DAMAGE_ENEMY_BASE;
+        if (gameState.combo >= 3) damage *= 1.5;
+        if (gameState.combo >= 5) damage *= 2.0;
+
+        gameState.enemyHp -= damage;
+        if (gameState.enemyHp < 0) gameState.enemyHp = 0;
+        
+        // 修正: ボスの場合は最大HPが違うので割合計算を変える
+        const currentMaxHp = gameState.isBoss ? 200 : 100;
+        document.getElementById('enemy-hp').style.width = (gameState.enemyHp / currentMaxHp * 100) + '%';
+
+        if (gameState.enemyHp <= 0) {
+            setTimeout(() => {
+                enemyDefeated();
+            }, 500);
+        } else {
+            setTimeout(nextQuestion, 800);
+        }
+
+    } else {
+        btnElement.classList.add('btn-wrong');
+        btns.forEach(b => {
+             if (b.innerText === gameState.currentQ.a[0]) {
+                 b.classList.add('btn-correct');
+             }
+        });
+        
+        takeDamage(DAMAGE_PLAYER);
+        resetCombo();
+        setTimeout(nextQuestion, 1500);
+    }
+}
+
+function enemyDefeated() {
+    showMessage("撃破！", "text-yellow-300");
+    
+    // エンディング判定 (10ステージクリア)
+    if (gameState.stage >= MAX_STAGE) {
+        setTimeout(gameClear, 1500);
+        return;
+    }
+
+    gameState.stage++;
+    if (gameState.stage % LEVEL_UP_INTERVAL === 1 && gameState.stage > 1) {
+        levelUp();
+    } else {
+        spawnEnemy();
+        nextQuestion();
+    }
+    updateHUD();
+}
+
+function gameClear() {
+    clearInterval(gameState.timer);
+    bgm.pause(); // BGM停止
+
+    const currentHigh = localStorage.getItem('quizHeroLevel') || 0;
+    if (gameState.level > currentHigh) {
+        localStorage.setItem('quizHeroLevel', gameState.level);
+    }
+
+    document.getElementById('final-score').innerText = gameState.score * 100 + (gameState.maxCombo * 50);
+    document.getElementById('ending-screen').classList.remove('hidden');
+}
+
+function levelUp() {
+    gameState.level++;
+    gameState.hp = MAX_HP;
+    
+    const flash = document.getElementById('flash-overlay');
+    flash.style.opacity = 0.8;
+    setTimeout(() => flash.style.opacity = 0, 300);
+
+    showMessage("LEVEL UP!", "text-cyan-300", 2000);
+    updateHUD();
+    
+    setTimeout(() => {
+        spawnEnemy();
+        nextQuestion();
+    }, 1500);
+}
+
+function takeDamage(amount) {
+    gameState.hp -= amount;
+    if (gameState.hp < 0) gameState.hp = 0;
+    
+    document.querySelector('.game-container').classList.add('shake-anim');
+    setTimeout(() => document.querySelector('.game-container').classList.remove('shake-anim'), 500);
+
+    const overlay = document.getElementById('damage-overlay');
+    overlay.style.opacity = 0.5;
+    setTimeout(() => overlay.style.opacity = 0, 300);
+
+    showDamageNumber(amount);
+    updateHUD();
+
+    if (gameState.hp <= 0) {
+        setTimeout(gameOver, 500);
+    }
+}
+
+function attackEnemy() {
+    const sprite = document.getElementById('enemy-sprite');
+    sprite.classList.add('attack-anim');
+    setTimeout(() => sprite.classList.remove('attack-anim'), 200);
+}
+
+function updateHUD() {
+    document.getElementById('player-hp').style.width = (gameState.hp / MAX_HP * 100) + '%';
+    document.getElementById('hp-text').innerText = Math.ceil(gameState.hp);
+    document.getElementById('level-display').innerText = gameState.level;
+    document.getElementById('stage-display').innerText = gameState.stage;
+
+    const hpBar = document.getElementById('player-hp');
+    if (gameState.hp < 30) {
+        hpBar.classList.remove('bg-green-500');
+        hpBar.classList.add('bg-red-600', 'animate-pulse');
+    } else {
+        hpBar.classList.add('bg-green-500');
+        hpBar.classList.remove('bg-red-600', 'animate-pulse');
+    }
+}
+
+function resetCombo() {
+    gameState.combo = 0;
+    document.getElementById('combo-display').classList.add('hidden');
+}
+
+function showDamageNumber(num) {
+    const el = document.createElement('div');
+    el.className = 'damage-number';
+    el.innerText = "-" + num;
+    el.style.left = '20%';
+    el.style.top = '50%';
+    document.querySelector('.game-container').appendChild(el);
+    setTimeout(() => el.remove(), 1000);
+}
+
+function showMessage(text, colorClass, duration = 1000) {
+    const el = document.createElement('div');
+    el.className = `absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-6xl font-bold z-50 ${colorClass}`;
+    el.style.textShadow = "0 0 10px black";
+    el.style.animation = "popIn 0.3s forwards";
+    el.innerText = text;
+    document.querySelector('.game-container').appendChild(el);
+    setTimeout(() => el.remove(), duration);
+}
+
+function gameOver() {
+    clearInterval(gameState.timer);
+    bgm.pause(); // BGM停止
+    bgm.currentTime = 0;
+
+    const currentHigh = localStorage.getItem('quizHeroLevel') || 0;
+    if (gameState.level > currentHigh) {
+        localStorage.setItem('quizHeroLevel', gameState.level);
+        document.getElementById('result-title').innerText = "NEW RECORD!";
+        document.getElementById('result-title').className = "text-5xl text-yellow-400 mb-4 font-bold animate-pulse";
+    } else {
+        document.getElementById('result-title').innerText = "GAME OVER";
+        document.getElementById('result-title').className = "text-5xl text-red-500 mb-4 font-bold";
+    }
+
+    document.getElementById('result-level').innerText = gameState.level;
+    document.getElementById('result-score').innerText = gameState.stage - 1;
+    document.getElementById('result-combo').innerText = gameState.maxCombo;
+    
+    document.getElementById('result-screen').classList.remove('hidden');
+}
+</script>
 </body>
 </html>

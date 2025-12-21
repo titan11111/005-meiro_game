@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D間違い探しゲーム - 5ステージ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- ステージ選択画面 -->
+    <div id="stage-select-screen">
+        <h1>🎮 3D間違い探しゲーム</h1>
+        <p class="subtitle">ステージを選んでね！</p>
+        
+        <div id="stage-buttons">
+            <button class="stage-btn" data-stage="1">
+                <div class="stage-number">ステージ 1</div>
+                <div class="stage-name">🏫 教室</div>
+                <div class="stage-difficulty">★☆☆☆☆ かんたん</div>
+                <div class="stage-info">間違い: 3個</div>
+            </button>
+            
+            <button class="stage-btn" data-stage="2">
+                <div class="stage-number">ステージ 2</div>
+                <div class="stage-name">⚽ 校庭</div>
+                <div class="stage-difficulty">★★☆☆☆</div>
+                <div class="stage-info">間違い: 4個</div>
+            </button>
+            
+            <button class="stage-btn" data-stage="3">
+                <div class="stage-number">ステージ 3</div>
+                <div class="stage-name">🌳 公園</div>
+                <div class="stage-difficulty">★★★☆☆ ふつう</div>
+                <div class="stage-info">間違い: 5個</div>
+            </button>
+            
+            <button class="stage-btn" data-stage="4">
+                <div class="stage-number">ステージ 4</div>
+                <div class="stage-name">🏪 商店街</div>
+                <div class="stage-difficulty">★★★★☆</div>
+                <div class="stage-info">間違い: 6個</div>
+            </button>
+            
+            <button class="stage-btn" data-stage="5">
+                <div class="stage-number">ステージ 5</div>
+                <div class="stage-name">🚶 学校帰りの道</div>
+                <div class="stage-difficulty">★★★★★ むずかしい</div>
+                <div class="stage-info">間違い: 8個</div>
+            </button>
+        </div>
+    </div>
+
+    <!-- ゲーム画面 -->
+    <div id="game-container" style="display: none;">
+        <div class="header-bar">
+            <button id="back-btn">◀ ステージ選択</button>
+            <h1 id="stage-title">ステージ 1</h1>
+            <div></div>
+        </div>
+        
+        <p class="instruction">右の画面から間違いを見つけよう！</p>
+        
+        <div id="score-board">
+            <div class="score-item">
+                <span class="label">見つけた:</span>
+                <span id="found-count">0</span> / <span id="total-count">3</span>
+            </div>
+            <div class="score-item">
+                <span class="label">残り:</span>
+                <span id="remaining-count">3</span>
+            </div>
+        </div>
+
+        <div id="canvas-container">
+            <div class="canvas-wrapper">
+                <div class="canvas-label">正しい画面（左）</div>
+                <canvas id="canvas-left"></canvas>
+            </div>
+            <div class="canvas-wrapper">
+                <div class="canvas-label">間違い探し（右）</div>
+                <canvas id="canvas-right"></canvas>
+            </div>
+        </div>
+
+        <div id="message"></div>
+        
+        <button id="restart-btn">もう一度</button>
+    </div>
+
+    <!-- クリアモーダル -->
+    <div id="victory-modal" class="modal">
+        <div class="modal-content">
+            <h2>🎉 クリア！</h2>
+            <p id="clear-message">すべての間違いを見つけました！</p>
+            <div class="modal-buttons">
+                <button id="next-stage-btn" class="modal-btn primary">次のステージへ →</button>
+                <button id="retry-btn" class="modal-btn">もう一度</button>
+                <button id="to-select-btn" class="modal-btn">ステージ選択</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- エンディング動画モーダル -->
+    <div id="ending-modal" class="modal">
+        <div class="modal-content ending-video-content">
+            <h2>🎊 全ステージクリア！ 🎊</h2>
+            <div class="video-container">
+                <video id="ending-video" controls autoplay>
+                    <source src="images/endding.mp4" type="video/mp4">
+                    お使いのブラウザは動画再生に対応していません。
+                </video>
+            </div>
+            <div class="modal-buttons">
+                <button id="ending-to-select-btn" class="modal-btn primary">ステージ選択へ</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

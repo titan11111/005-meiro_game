@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>2-Line Fighter (Homage)</title>
+  <style>
+    /* ===== style.css ===== */
+    * { box-sizing: border-box; }
+    body { margin: 0; background:#111; color:#eee; font-family: system-ui, sans-serif; overflow:hidden; touch-action:none; overscroll-behavior:none; }
+    .ui { position: absolute; inset: 0; pointer-events:none; }
+    .names { display:flex; justify-content:space-between; padding:8px 16px; font-weight:700; letter-spacing:.5px; }
+    #round { opacity:.9 }
+    .bars { display:flex; justify-content:space-between; padding:0 16px; gap:16px; }
+    .bar { width:45%; height:18px; background:#333; border:2px solid #666; }
+    .hp { height:100%; width:100%; background:linear-gradient(90deg,#19c37d,#f5d90a); transition:width .15s linear; }
+    #announce { position:absolute; top:45%; left:50%; transform:translate(-50%,-50%); font-size:48px; font-weight:900; text-shadow:0 2px 8px #000; opacity:0; transition:opacity .2s; }
+    .help { position:absolute; bottom:8px; left:16px; right:16px; font-size:12px; opacity:.8; }
+    #game { display:block; margin:0 auto; background: linear-gradient(#f97316 0%, #facc15 40%, #7c2d12 40% 60%, #1a1a1a 60%); border-top:4px solid #000; touch-action:none; }
+    #modeSelect { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; background:rgba(0,0,0,.6); }
+    #modeSelect button { margin:8px; padding:12px 24px; font-size:20px; cursor:pointer; }
+
+    /* Mobile controls */
+    #controls { position:absolute; inset:0; display:none; }
+    #controls .pad { position:absolute; left:12px; bottom:12px; width:180px; height:180px; }
+    #controls .pad button {
+      position:absolute; width:60px; height:60px; border-radius:8px;
+      background:rgba(255,255,255,.1); color:#fff; border:2px solid #666;
+      font-size:24px; opacity:.8;
+    }
+    #controls .pad .up { left:60px; top:0; }
+    #controls .pad .left { left:0; top:60px; }
+    #controls .pad .right { left:120px; top:60px; }
+    #controls .pad .down { left:60px; top:120px; }
+    #controls .actions { position:absolute; right:12px; bottom:12px; display:flex; flex-direction:column; gap:12px; }
+    #controls .actions button {
+      width:80px; height:80px; border-radius:50%;
+      background:rgba(255,255,255,.1); color:#fff; border:2px solid #666;
+      font-size:20px; opacity:.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="ui">
+    <div class="names">
+      <span id="p1name">Hero</span>
+      <span id="round">ROUND 1</span>
+      <span id="p2name">Rival</span>
+    </div>
+    <div class="bars">
+      <div class="bar"><div id="hp1" class="hp"></div></div>
+      <div class="bar"><div id="hp2" class="hp"></div></div>
+    </div>
+    <div id="announce"></div>
+    <div class="help">
+      <div>
+        <b>1P</b> A/D 移動, W ジャンプ, S しゃがみ, F 弱, G 強, R ライン, F+↘（QCF）:飛び, 後ろでガード, F+G:ホーミング, 前+G:突進, 下+G:対空
+      </div>
+      <div>
+        <b>2P</b> ←/→ 移動, ↑ ジャンプ, ↓ しゃがみ, K 弱, L 強, P ライン, K+↘:飛び, 後ろでガード, K+L:ホーミング, 前+L:突進, 下+L:対空
+      </div>
+    </div>
+  </div>
+  <canvas id="game" width="960" height="540"></canvas>
+  <div id="controls" class="controls">
+    <div class="pad">
+      <button class="up" data-btn="up">▲</button>
+      <button class="left" data-btn="left">◀</button>
+      <button class="right" data-btn="right">▶</button>
+      <button class="down" data-btn="down">▼</button>
+    </div>
+    <div class="actions">
+      <button data-btn="lp">LP</button>
+      <button data-btn="hp">HP</button>
+      <button data-btn="plane">PL</button>
+    </div>
+  </div>
+  <div id="modeSelect">
+    <button id="btnP2">2Pと対戦</button>
+    <button id="btnCPU">CPUと対戦</button>
+  </div>
+
+  <script>
+    // ===== main.js =====
+    const cvs = document.getElementById('game');
+    const ctx = cvs.getContext('2d');
+    const hp1El = document.getElementById('hp1');
+    const hp2El = document.getElementById('hp2');
+    const announceEl = document.getElementById('announce');
+    const roundEl = document.getElementById('round');
+    const modeSelEl = document.getElementById('modeSelect');
+
+    ['touchstart','touchmove'].forEach(ev=>{
+      cvs.addEventListener(ev, e=>e.preventDefault(), {passive:false});
+    });
+
+    const W = cvs.width, H = cvs.height;
+    const GRAV = 0.9, FRICTION = 0.82;
+    const GROUND_Y = H * 0.60;
+    const PLANES = [0, 48];
+    let round = 1, state = 'intro';
+    let wins1 = 0, wins2 = 0;
+
+    function showAnn(text, t=90){
+      announceEl.textContent = text;
+      announceEl.style.opacity = 1;
+      setTimeout(()=>announceEl.style.opacity=0, t*16);
+    }
+
+    // 入力
+    class Input {
+      constructor(map){ this.map=map; this.keys=new Set(); this.buffer=[]; }
+      onKey(down, code){
+        const k=this.map[code]; if(!k) return;
+        if(down){ this.keys.add(k); this.buffer.unshift({k, t:performance.now()}); this.buffer=this.buffer.slice(0,12);}
+        else this.keys.delete(k);
+      }
+      pressed(k){ return this.keys.has(k); }
+      chord(...ks){ return ks.every(k=>this.keys.has(k)); }
+      checkQCF(facingRight){
+        const seq = facingRight ? ['right','down'] : ['left','down'];
+        let i=0, last=Infinity;
+        for(const e of this.buffer){
+          if(e.k===seq[i] && e.t <= last+150){ i++; last=e.t; if(i===seq.length) return true; }
+        }
+        return false;
+      }
+    }
+    const map1 = { KeyA:'left', KeyD:'right', KeyW:'up', KeyS:'down', KeyF:'lp', KeyG:'hp', KeyR:'plane' };
+    const map2 = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down', KeyK:'lp', KeyL:'hp', KeyP:'plane' };
+    const in1 = new Input(map1), in2 = new Input(map2);
+    let cpuMode = false;
+    addEventListener('keydown', e=>{ in1.onKey(true,e.code); if(!cpuMode) in2.onKey(true,e.code); });
+    addEventListener('keyup',   e=>{ in1.onKey(false,e.code); if(!cpuMode) in2.onKey(false,e.code); });
+
+    function setupMobileControls(){
+      if(!('ontouchstart' in window)) return;
+      const ctrl=document.getElementById('controls');
+      if(!ctrl) return;
+      ctrl.style.display='block';
+      const map={left:'KeyA', right:'KeyD', up:'KeyW', down:'KeyS', lp:'KeyF', hp:'KeyG', plane:'KeyR'};
+      ctrl.querySelectorAll('button').forEach(btn=>{
+        const act=btn.dataset.btn, code=map[act];
+        const start=e=>{ e.preventDefault(); in1.onKey(true,code); };
+        const end=e=>{ e.preventDefault(); in1.onKey(false,code); };
+        btn.addEventListener('touchstart',start);
+        btn.addEventListener('touchend',end);
+        btn.addEventListener('touchcancel',end);
+        btn.addEventListener('mousedown',start);
+        btn.addEventListener('mouseup',end);
+        btn.addEventListener('mouseleave',end);
+      });
+    }
+    setupMobileControls();
+
+    // ユーティリティ
+    function rectsOverlap(a,b){
+      return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
+    }
+
+    // 簡易CPU制御
+    class CPUController{
+      constructor(input, self, opponent){
+        this.input=input; this.self=self; this.opponent=opponent;
+      }
+      update(){
+        const i=this.input; i.keys.clear();
+        const s=this.self, o=this.opponent;
+        const dx=o.x - s.x;
+        if(Math.abs(dx)>60){ i.keys.add(dx>0?'right':'left'); }
+        if(s.grounded && Math.random()<0.01) i.keys.add('up');
+        if(Math.abs(dx)<80 && Math.random()<0.05) i.keys.add('lp');
+        if(Math.abs(dx)<120 && Math.random()<0.02) i.keys.add('hp');
+        if(s.plane!==o.plane && Math.random()<0.02) i.keys.add('plane');
+      }
+    }
+
+    // キャラクター基底
+    class Character {
+      constructor(opts){
+        Object.assign(this, {
+          x:W*0.5, y:GROUND_Y, vx:0, vy:0,
+          plane:0, facing:1, grounded:true, crouch:false,
+          hp:100, stun:0, dead:false, guardTimer:0, guarding:false,
+          attack:null, switchLock:false, homingLock:false, clinch:0,
+          color:'#4ad', name:'Fighter',
+          shirtColor:'#2a7', pantsColor:'#333', beltColor:'#8b5',
+          speed:3.6, jumpV:-15, body:{w:96,h:172, pad:12},
+          specials:{
+            lunge: ()=>this.startAttack('lunge'),
+            antiAir: ()=>this.startAttack('antiAir'),
+          },
+          // アニメーション用
+          walkCycle: 0,
+          attackFrame: 0
+        }, opts||{});
+      }
+
+      rect(){ return {x:this.x-this.body.w/2, y:this.y-this.body.h, w:this.body.w, h:this.body.h}; }
+      getHurtbox(){ const r=this.rect(); return {x:r.x+this.body.pad, y:r.y+PLANES[this.plane], w:r.w-this.body.pad*2, h:r.h}; }
+
+      getHitbox(){
+        if(!this.attack || !this.attack.hit) return null;
+        const a=this.attack.hit;
+        const y = this.rect().y + a.dy + PLANES[this.plane];
+        const x = this.x + a.dx - (a.w/2);
+        return {x, y, w:a.w, h:a.h, dmg:a.dmg, stun:a.stun, knock:a.knock, prio:a.prio};
+      }
+
+      updateGuard(input, other){
+        const holdBack = (this.facing===1 && input.pressed('left')) || (this.facing===-1 && input.pressed('right'));
+        this.guarding = this.grounded && this.plane===other.plane && holdBack;
+        this.guardTimer = this.guarding ? 3 : Math.max(0, this.guardTimer-1);
+      }
+
+      takeHit(info, wasBlocked=false){
+        if(this.dead) return;
+        let dmg = info.dmg, kb = info.knock, stun = info.stun;
+        if(wasBlocked){
+          dmg = Math.max(2, Math.floor(dmg*0.2));
+          kb = Math.floor(kb*0.3);
+          stun = Math.max(6, Math.floor(stun*0.6));
+          this.guardTimer = 6;
+        }
+        this.hp = Math.max(0, this.hp - dmg);
+        this.vx += kb * (info.from.x < this.x ? 1 : -1);
+        this.vy -= 2;
+        this.stun = Math.max(this.stun, stun);
+        if(this.hp<=0){ this.dead=true; showAnn('K.O.', 180); }
+      }
+
+      startAttack(kind){
+        if(this.dead || this.attack) return;
+        this.attackFrame = 0;
+        if(kind==='lp'){
+          this.attack={t:14, hit:{w:60,h:32,dx:this.facing*72,dy:-100,dmg:6,stun:8,knock:6,prio:1}};
+        }else if(kind==='hp'){
+          this.attack={t:20, hit:{w:72,h:44,dx:this.facing*84,dy:-96,dmg:12,stun:12,knock:10,prio:2}};
+        }else if(kind==='lunge'){
+          this.attack={t:22, hit:{w:56,h:44,dx:this.facing*104,dy:-92,dmg:9,stun:12,knock:12,prio:2}};
+          this.vx += this.facing*7;
+          showAnn('RUSH', 35);
+        }else if(kind==='antiAir'){
+          this.attack={t:18, hit:{w:52,h:64,dx:this.facing*40,dy:-140,dmg:11,stun:14,knock:8,prio:3}};
+          this.vy = -16;
+          showAnn('RISE', 35);
+        }else if(kind==='projectile'){
+          projectiles.push(new Projectile(this, this.facing));
+          this.attack={t:12, hit:null};
+          showAnn('SPECIAL', 35);
+        }
+        this.stun = 6;
+      }
+
+      tryHoming(input, other){
+        if(this.homingLock || this.attack || this.dead) return;
+        if(input.chord('lp','hp') && this.plane !== other.plane){
+          this.homingLock = true;
+          this.plane = other.plane;
+          this.vx = this.facing*8;
+          this.attack = {t:16, hit:{w:48,h:36,dx:this.facing*68,dy:-104,dmg:7,stun:8,knock:6,prio:2}};
+          showAnn('HOMING', 35);
+          setTimeout(()=>this.homingLock=false, 350);
+        }
+      }
+
+      handleClinch(other){
+        const hbA = this.getHurtbox(), hbB = other.getHurtbox();
+        if(this.plane===other.plane && rectsOverlap(hbA, hbB) && !this.attack && !other.attack){
+          this.clinch = 8; other.clinch = 8;
+          const sep = (this.facing===1)?-1:1;
+          this.x += 2*sep; other.x -= 2*sep;
+        }else{
+          this.clinch = Math.max(0, this.clinch-1);
+        }
+      }
+
+      update(input, other){
+        if(this.dead) return;
+        this.facing = this.x < other.x ? 1 : -1;
+        this.updateGuard(input, other);
+
+        if(this.stun>0){ this.stun--; return; }
+
+        const speed = this.crouch ? this.speed*0.55 : this.speed;
+        if(input.pressed('left'))  this.vx += -speed;
+        if(input.pressed('right')) this.vx +=  speed;
+
+        // 歩きアニメーション
+        if(Math.abs(this.vx) > 0.6 && this.grounded){
+          this.walkCycle += 0.2;
+        }
+
+        this.crouch = input.pressed('down') && this.grounded;
+        if(input.pressed('up') && this.grounded){ this.vy = this.jumpV; this.grounded=false; }
+
+        if(input.pressed('plane') && !this.switchLock){
+          this.plane = (this.plane+1)&1;
+          this.switchLock = true; setTimeout(()=>this.switchLock=false, 220);
+          showAnn(this.plane===0?'FRONT':'BACK', 45);
+        }
+
+        this.tryHoming(input, other);
+
+        if(!this.attack){
+          const qcf = input.checkQCF(this.facing===1);
+          if(qcf && input.pressed('lp')) this.startAttack('projectile');
+          else{
+            if(input.pressed('lp')) this.startAttack('lp');
+            if(input.pressed('hp')) this.startAttack('hp');
+          }
+          if(input.pressed('hp') && input.pressed('down')) this.specials.antiAir();
+          if(input.pressed('hp') && ((this.facing===1 && input.pressed('right')) || (this.facing===-1 && input.pressed('left')))) this.specials.lunge();
+        }
+
+        this.vy += GRAV;
+        this.x += this.vx; this.y += this.vy;
+        this.vx *= FRICTION;
+
+        if(this.y >= GROUND_Y){ this.y = GROUND_Y; this.vy = 0; this.grounded=true; }
+        this.x = Math.max(40, Math.min(W-40, this.x));
+
+        this.handleClinch(other);
+
+        if(this.attack){ 
+          this.attack.t--; 
+          this.attackFrame++;
+          if(this.attack.t<=0) this.attack=null; 
+        }
+      }
+
+      // 見やすいキャラクターを描画
+      drawCharacter(){
+        const pOffset = PLANES[this.plane];
+        const r = this.rect();
+        const centerX = this.x;
+        const centerY = r.y + r.h/2 + pOffset;
+        
+        // 影
+        ctx.globalAlpha = .25;
+        ctx.beginPath(); 
+        ctx.ellipse(centerX, GROUND_Y + 8 + pOffset, 56, 20, 0, 0, Math.PI*2); 
+        ctx.fillStyle='#000'; 
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // メインボディ
+        const bodyY = centerY - 20;
+        const bodyHeight = this.crouch ? 80 : 100;
+        
+        // 体の色（キャラクターによって変える）
+        ctx.fillStyle = this.color;
+        
+        // 体（楕円）
+        ctx.beginPath();
+        ctx.ellipse(centerX, bodyY, 44, bodyHeight/2, 0, 0, Math.PI*2);
+        ctx.fill();
+        
+        // 服を描画
+        // パンツ（下半身）
+        ctx.fillStyle = this.pantsColor || '#333';
+        const pantsTop = bodyY + bodyHeight/4;
+        const pantsHeight = bodyHeight/2 + 10;
+        ctx.beginPath();
+        ctx.ellipse(centerX, pantsTop + pantsHeight/2, 40, pantsHeight/2, 0, 0, Math.PI*2);
+        ctx.fill();
+        
+        // シャツ（上半身）
+        ctx.fillStyle = this.shirtColor || '#2a7';
+        const shirtTop = bodyY - bodyHeight/4;
+        const shirtHeight = bodyHeight/2;
+        ctx.beginPath();
+        ctx.ellipse(centerX, shirtTop + shirtHeight/2, 42, shirtHeight/2, 0, 0, Math.PI*2);
+        ctx.fill();
+        
+        // ベルト
+        ctx.fillStyle = this.beltColor || '#8b5';
+        ctx.fillRect(centerX - 38, pantsTop - 4, 76, 8);
+        
+        // シャツの襟/ネックライン
+        ctx.strokeStyle = this.shirtColor || '#2a7';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(centerX, shirtTop, 35, 0, Math.PI);
+        ctx.stroke();
+        
+        // 体の色に戻す（手足用）
+        ctx.fillStyle = this.color;
+        
+        // 頭
+        const headY = bodyY - bodyHeight/2 - 30;
+        ctx.beginPath();
+        ctx.arc(centerX, headY, 32, 0, Math.PI*2);
+        ctx.fill();
+        
+        // 顔の向き（目）
+        ctx.fillStyle = '#fff';
+        const eyeOffsetX = this.facing * 8;
+        ctx.beginPath();
+        ctx.arc(centerX + eyeOffsetX - 10, headY - 6, 6, 0, Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(centerX + eyeOffsetX + 10, headY - 6, 6, 0, Math.PI*2);
+        ctx.fill();
+        
+        // 瞳
+        ctx.fillStyle = '#000';
+        const pupilOffsetX = this.facing * 12;
+        ctx.beginPath();
+        ctx.arc(centerX + pupilOffsetX - 10, headY - 6, 3, 0, Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(centerX + pupilOffsetX + 10, headY - 6, 3, 0, Math.PI*2);
+        ctx.fill();
+        
+        // 状態による表情
+        if(this.dead || this.stun > 0){
+          // バツ目
+          ctx.fillStyle = '#f00';
+          ctx.strokeStyle = '#f00';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(centerX - 16, headY - 12);
+          ctx.lineTo(centerX - 4, headY);
+          ctx.moveTo(centerX - 4, headY - 12);
+          ctx.lineTo(centerX - 16, headY);
+          ctx.moveTo(centerX + 4, headY - 12);
+          ctx.lineTo(centerX + 16, headY);
+          ctx.moveTo(centerX + 16, headY - 12);
+          ctx.lineTo(centerX + 4, headY);
+          ctx.stroke();
+        }
+        
+        // 口
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        if(this.attack){
+          // 攻撃時は口を開ける
+          ctx.arc(centerX, headY + 10, 8, 0, Math.PI);
+        } else if(this.guarding || this.guardTimer > 0){
+          // ガード時は困った顔
+          ctx.moveTo(centerX - 8, headY + 10);
+          ctx.lineTo(centerX + 8, headY + 10);
+        } else {
+          // 通常時
+          ctx.arc(centerX, headY + 6, 6, 0, Math.PI);
+        }
+        ctx.stroke();
+        
+        // 手足
+        ctx.fillStyle = this.color;
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 8;
+        
+        // 腕
+        const armY = bodyY - 20;
+        let leftArmX = centerX - 40;
+        let rightArmX = centerX + 40;
+        let armEndY = armY + 30;
+        
+        // 攻撃モーション
+        if(this.attack){
+          if(this.facing === 1){
+            rightArmX = centerX + 70 + Math.sin(this.attackFrame * 0.8) * 20;
+            armEndY = armY + Math.cos(this.attackFrame * 0.8) * 10;
+          } else {
+            leftArmX = centerX - 70 - Math.sin(this.attackFrame * 0.8) * 20;
+            armEndY = armY + Math.cos(this.attackFrame * 0.8) * 10;
+          }
+        }
+        
+        // 歩きモーション
+        if(Math.abs(this.vx) > 0.6 && this.grounded && !this.attack){
+          const swing = Math.sin(this.walkCycle) * 16;
+          leftArmX += swing;
+          rightArmX -= swing;
+        }
+        
+        // 腕を描画
+        ctx.beginPath();
+        ctx.moveTo(centerX - 30, armY);
+        ctx.lineTo(leftArmX, armEndY);
+        ctx.moveTo(centerX + 30, armY);
+        ctx.lineTo(rightArmX, armEndY);
+        ctx.stroke();
+        
+        // 手
+        ctx.beginPath();
+        ctx.arc(leftArmX, armEndY, 6, 0, Math.PI*2);
+        ctx.arc(rightArmX, armEndY, 6, 0, Math.PI*2);
+        ctx.fill();
+        
+        // 足
+        const legY = bodyY + bodyHeight/2;
+        let leftLegX = centerX - 16;
+        let rightLegX = centerX + 16;
+        let legEndY = legY + 50;
+        
+        if(!this.crouch && !this.grounded){
+          // ジャンプ時は足を曲げる
+          legEndY = legY + 30;
+          leftLegX = centerX - 24;
+          rightLegX = centerX + 24;
+        } else if(Math.abs(this.vx) > 0.6 && this.grounded && !this.attack){
+          // 歩きモーション
+          const legSwing = Math.sin(this.walkCycle + Math.PI) * 12;
+          leftLegX += legSwing;
+          rightLegX -= legSwing;
+          legEndY += Math.abs(legSwing) * 0.3;
+        }
+        
+        // 足を描画
+        ctx.beginPath();
+        ctx.moveTo(centerX - 16, legY);
+        ctx.lineTo(leftLegX, legEndY);
+        ctx.moveTo(centerX + 16, legY);
+        ctx.lineTo(rightLegX, legEndY);
+        ctx.stroke();
+        
+        // 足先
+        ctx.beginPath();
+        ctx.arc(leftLegX, legEndY, 8, 0, Math.PI*2);
+        ctx.arc(rightLegX, legEndY, 8, 0, Math.PI*2);
+        ctx.fill();
+        
+        // 攻撃エフェクト
+        if(this.attack && this.attack.hit){
+          const h = this.getHitbox();
+          if(h){
+            ctx.globalAlpha = 0.6;
+            ctx.fillStyle = '#f5d90a';
+            // 攻撃の軌跡
+            ctx.beginPath();
+            ctx.arc(h.x + h.w/2, h.y + h.h/2, h.w/2 + 10, 0, Math.PI*2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            
+            // スパーク効果
+            for(let i = 0; i < 5; i++){
+              const angle = (i / 5) * Math.PI * 2;
+              const sparkX = h.x + h.w/2 + Math.cos(angle) * (30 + this.attackFrame * 4);
+              const sparkY = h.y + h.h/2 + Math.sin(angle) * (30 + this.attackFrame * 4);
+              ctx.fillStyle = '#fff';
+              ctx.beginPath();
+              ctx.arc(sparkX, sparkY, 4, 0, Math.PI*2);
+              ctx.fill();
+            }
+          }
+        }
+        
+        // ガードエフェクト
+        if(this.guarding || this.guardTimer > 0){
+          ctx.strokeStyle = '#4af';
+          ctx.lineWidth = 6;
+          ctx.globalAlpha = 0.7;
+          const shieldX = centerX + this.facing * -50;
+          ctx.beginPath();
+          ctx.arc(shieldX, centerY, 60, -Math.PI/3, Math.PI/3);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+        
+        // 移動中の風エフェクト
+        if(Math.abs(this.vx) > 4 && this.grounded){
+          ctx.globalAlpha = 0.3;
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 4;
+          for(let i = 0; i < 3; i++){
+            const windX = centerX - this.facing * (40 + i * 16);
+            const windY = centerY - 40 + i * 20;
+            ctx.beginPath();
+            ctx.moveTo(windX, windY);
+            ctx.lineTo(windX - this.facing * 30, windY);
+            ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
+        }
+        
+        // プレーン表示
+        if(this.plane === 1){
+          ctx.fillStyle = 'rgba(255,255,255,0.3)';
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([5, 5]);
+          ctx.strokeRect(r.x, r.y + pOffset, r.w, r.h);
+          ctx.setLineDash([]);
+        }
+      }
+
+      draw(){
+        this.drawCharacter();
+      }
+    }
+
+    // 飛び道具
+    class Projectile {
+      constructor(owner, dir){
+        this.owner=owner; this.dir=dir; this.x=owner.x + dir*60; this.y=GROUND_Y-36; this.v=6*dir; this.w=44; this.h=28;
+        this.plane = owner.plane; this.alive=true; this.frame = 0;
+      }
+      update(){ 
+        this.x += this.v; 
+        this.frame++;
+        if(this.x<-40||this.x>W+40) this.alive=false; 
+      }
+      draw(){ 
+        const p=PLANES[this.plane]; 
+        
+        // エネルギー弾の描画
+        ctx.save();
+        ctx.translate(this.x, this.y + p);
+        
+        // 外側の輝き
+        ctx.globalAlpha = 0.6;
+        ctx.fillStyle = '#f5d90a';
+        ctx.beginPath();
+        ctx.arc(0, 0, this.w/2 + 8, 0, Math.PI*2);
+        ctx.fill();
+        
+        // 内側のコア
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(0, 0, this.w/2 - 4, 0, Math.PI*2);
+        ctx.fill();
+        
+        // 回転エフェクト
+        ctx.strokeStyle = '#f5d90a';
+        ctx.lineWidth = 4;
+        ctx.rotate(this.frame * 0.2);
+        for(let i = 0; i < 4; i++){
+          const angle = (i / 4) * Math.PI * 2;
+          const x1 = Math.cos(angle) * 16;
+          const y1 = Math.sin(angle) * 16;
+          const x2 = Math.cos(angle) * 24;
+          const y2 = Math.sin(angle) * 24;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        }
+        
+        ctx.restore();
+      }
+      hitInfo(){ return {dmg:10, stun:10, knock:8, from:this.owner}; }
+    }
+    const projectiles = [];
+
+    // キャラ差分
+    class Hero extends Character{
+      constructor(x){
+        super({x, color:'#4ad', name:'Hero',
+          shirtColor:'#2a7', pantsColor:'#1a4', beltColor:'#8b5',
+          speed:3.8, jumpV:-15.5, body:{w:92,h:168,pad:12},
+          specials:{
+            lunge: ()=>{ this.startAttack('lunge'); this.vx+=this.facing*1; },
+            antiAir: ()=>this.startAttack('antiAir'),
+          }
+        });
+      }
+    }
+    class Rival extends Character{
+      constructor(x){
+        super({x, color:'#d44', name:'Rival',
+          shirtColor:'#a22', pantsColor:'#511', beltColor:'#f84',
+          speed:3.2, jumpV:-16.5, body:{w:100,h:176,pad:16},
+          specials:{
+            lunge: ()=>this.startAttack('lunge'),
+            antiAir: ()=>{ this.startAttack('antiAir'); this.attack.hit.dmg+=2; },
+          }
+        });
+      }
+    }
+
+    // セットアップ
+    const p1 = new Hero(W*0.3);
+    const p2 = new Rival(W*0.7);
+
+    let cpu=null;
+
+    function startGame(vsCPU){
+      cpuMode = vsCPU;
+      wins1 = 0; wins2 = 0;
+      round = 1;
+      roundEl.textContent = 'ROUND 1';
+      modeSelEl.style.display='none';
+      cpu = cpuMode ? new CPUController(in2, p2, p1) : null;
+      showAnn('ROUND 1', 60);
+      setTimeout(resetRound, 900);
+    }
+
+    function resetRound(){
+      for(const p of [p1,p2]){
+        p.y=GROUND_Y; p.vx=p.vy=0; p.plane=0; p.stun=0; p.attack=null; p.dead=false; p.guarding=false; p.guardTimer=0; p.homingLock=false;
+        p.walkCycle = 0; p.attackFrame = 0;
+      }
+      projectiles.length=0;
+      showAnn('READY?', 60);
+      setTimeout(()=>showAnn('FIGHT!', 60), 1000);
+      state='fight';
+    }
+
+    // ステージ描画
+    function drawStage(){
+      ctx.clearRect(0,0,W,H);
+      
+      // 背景グラデーション
+      const gradient = ctx.createLinearGradient(0, 0, 0, H);
+      gradient.addColorStop(0, '#f97316');
+      gradient.addColorStop(0.4, '#facc15');
+      gradient.addColorStop(0.6, '#7c2d12');
+      gradient.addColorStop(1, '#1a1a1a');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, W, H);
+      
+      // プレーンライン
+      for(const p of PLANES){
+        ctx.globalAlpha=.25;
+        ctx.fillStyle='#ddd';
+        for(let x=40;x<W;x+=80){ ctx.fillRect(x, GROUND_Y+p, 40, 4); }
+        ctx.globalAlpha=1;
+      }
+      
+      // 観客シルエット
+      for(let i=0;i<18;i++){
+        const x = 40 + i*(W-80)/17;
+        const h = 16 + (i%5)*4;
+        ctx.globalAlpha=.12; 
+        ctx.fillStyle='#000';
+        // 頭
+        ctx.beginPath();
+        ctx.arc(x + 5, GROUND_Y-120, 6, 0, Math.PI*2);
+        ctx.fill();
+        // 体
+        ctx.fillRect(x, GROUND_Y-120 + 6, 10, h - 6);
+        
+        // 手を振るアニメーション
+        if(i % 3 === 0){
+          const armY = GROUND_Y-120 + 10;
+          const swing = Math.sin(Date.now() * 0.01 + i) * 5;
+          ctx.beginPath();
+          ctx.moveTo(x + 5, armY);
+          ctx.lineTo(x + 5 + swing, armY - 8);
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+      }
+      ctx.globalAlpha=1;
+    }
+
+    // メインループ
+    function update(){
+      drawStage();
+
+      if(state==='fight'){
+        p1.update(in1, p2);
+        if(cpu) cpu.update();
+        p2.update(in2, p1);
+
+        function resolveAttack(attacker, defender){
+          if(attacker.attack && attacker.attack.hit && attacker.plane===defender.plane){
+            const h = attacker.getHitbox(), hurt = defender.getHurtbox();
+            if(h && rectsOverlap(h, hurt)){
+              const blocked = defender.guarding;
+              defender.takeHit({...h, from:attacker}, blocked);
+              attacker.attack=null;
+            }
+          }
+        }
+        resolveAttack(p1,p2);
+        resolveAttack(p2,p1);
+
+        for(const pr of projectiles){
+          pr.update(); pr.draw();
+          if(!pr.alive) continue;
+          const target = (pr.owner===p1)?p2:p1;
+          if(pr.plane===target.plane){
+            const box={x:pr.x-pr.w/2,y:pr.y-pr.h+PLANES[pr.plane],w:pr.w,h:pr.h};
+            if(rectsOverlap(box, target.getHurtbox())){
+              const blocked = target.guarding;
+              const info = pr.hitInfo();
+              if(blocked){ info.dmg = Math.max(2, Math.floor(info.dmg*0.2)); info.knock = Math.floor(info.knock*0.3); info.stun = Math.max(6, Math.floor(info.stun*0.6)); }
+              target.takeHit({...info, from:pr.owner}, blocked);
+              pr.alive=false;
+            }
+          }
+        }
+        for(let i=projectiles.length-1;i>=0;i--) if(!projectiles[i].alive) projectiles.splice(i,1);
+
+        hp1El.style.width = `${p1.hp}%`;
+        hp2El.style.width = `${p2.hp}%`;
+
+        if(p1.dead || p2.dead){
+          state='over';
+          if(p2.dead) wins1++; else if(p1.dead) wins2++;
+          const matchOver = wins1 >= 2 || wins2 >= 2;
+          if(matchOver){
+            const msg = wins1 >= 2 ? 'あなたの勝ち' : 'あなたの負け';
+            setTimeout(()=>{
+              showAnn(msg, 180);
+              modeSelEl.style.display='block';
+            }, 500);
+            return;
+          }
+          setTimeout(()=>{
+            round++; roundEl.textContent=`ROUND ${round}`;
+            p1.hp=100; p2.hp=100;
+            resetRound();
+          }, 2200);
+        }
+      }
+
+      [p1,p2].sort((a,b)=>a.plane-b.plane || a.y-b.y).forEach(p=>p.draw());
+      requestAnimationFrame(update);
+    }
+    update();
+
+    document.getElementById('btnP2').addEventListener('click', ()=>startGame(false));
+    document.getElementById('btnCPU').addEventListener('click', ()=>startGame(true));
+  </script>
+</body>
+</html>

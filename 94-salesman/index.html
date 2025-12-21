@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>決断の朝</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            max-width: 500px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex: 1;
+            overflow: hidden;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        #titleScreen {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .title-content h1 {
+            font-size: 44px;
+            color: #667eea;
+            margin-bottom: 8px;
+            font-weight: 900;
+        }
+
+        .title-content p {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .title-description {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            line-height: 1.8;
+            font-size: 15px;
+            color: #555;
+        }
+
+        .btn {
+            padding: 18px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            border: 3px solid #ddd;
+            font-size: 14px;
+            padding: 14px 16px;
+            margin-bottom: 6px;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+            border-color: #bbb;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            font-size: 14px;
+            padding: 14px 16px;
+            margin-bottom: 6px;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+        }
+
+        #gameScreen {
+            padding: 14px;
+            gap: 10px;
+        }
+
+        .status-bar {
+            background: #f9f9f9;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            border: 2px solid #e0e0e0;
+            flex-shrink: 0;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .status-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .label {
+            width: 65px;
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .bar {
+            flex: 1;
+            height: 22px;
+            background: #e0e0e0;
+            border-radius: 11px;
+            overflow: hidden;
+            border: 2px solid #ccc;
+        }
+
+        .bar-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        #actionBar { background: linear-gradient(90deg, #667eea, #764ba2); }
+        #contentmentBar { background: linear-gradient(90deg, #4CAF50, #81C784); }
+        #sinceretyBar { background: linear-gradient(90deg, #FF9800, #FFB74D); }
+
+        .status-value {
+            width: 35px;
+            text-align: right;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .time-display {
+            text-align: center;
+            padding: 12px;
+            background: #e8f5e9;
+            border-radius: 12px;
+            font-weight: bold;
+            color: #2e7d32;
+            font-size: 16px;
+            border: 2px solid #81C784;
+            flex-shrink: 0;
+        }
+
+        .character-display {
+            display: flex;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .character-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            border: 4px solid #ddd;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .char-tanaka { background: linear-gradient(135deg, #FFB6C1, #FFC0CB); }
+        .char-suzuki { background: linear-gradient(135deg, #87CEEB, #B0E0E6); }
+        .char-satou { background: linear-gradient(135deg, #98FB98, #90EE90); }
+        .char-takahashi { background: linear-gradient(135deg, #FFD700, #FFA500); }
+
+        .story-box {
+            background: #f0f4ff;
+            padding: 14px;
+            border-radius: 12px;
+            line-height: 1.7;
+            font-size: 14px;
+            color: #333;
+            min-height: 50px;
+            border-left: 6px solid #667eea;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            border: 2px solid #e0f0ff;
+        }
+
+        .story-box.morning {
+            background: linear-gradient(135deg, #fff9e6, #ffe4b5);
+            border-left-color: #FFA500;
+        }
+
+        .story-box.afternoon {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            border-left-color: #4CAF50;
+        }
+
+        .story-box.evening {
+            background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+            border-left-color: #9C27B0;
+        }
+
+        .button-area {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        #resultScreen {
+            padding: 20px;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .result-box {
+            width: 100%;
+        }
+
+        .result-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #667eea;
+        }
+
+        .result-message {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .result-stats {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            text-align: left;
+            border: 2px solid #e0e0e0;
+        }
+
+        .result-stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="titleScreen" class="screen active">
+            <div class="title-content">
+                <h1>決断の朝</h1>
+                <p>営業は、行動の速さから始まる</p>
+                <div class="title-description">
+                    <p>あなたは営業マン。</p>
+                    <p>毎日、選択を重ねながら</p>
+                    <p>「納得できる仕事」を見つけていく。</p>
+                    <p style="margin-top: 10px; font-size: 13px; opacity: 0.8;">
+                        成功や失敗ではなく、<br>自分が納得できたかが大切。
+                    </p>
+                </div>
+                <button class="btn btn-primary" onclick="startGame()">ゲーム開始</button>
+            </div>
+        </div>
+
+        <div id="gameScreen" class="screen">
+            <div class="status-bar">
+                <div class="status-item">
+                    <span class="label">判断度</span>
+                    <div class="bar"><div id="actionBar" class="bar-fill" style="width: 0%"></div></div>
+                    <span class="status-value" id="actionValue">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">納得度</span>
+                    <div class="bar"><div id="contentmentBar" class="bar-fill" style="width: 0%"></div></div>
+                    <span class="status-value" id="contentmentValue">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">誠実度</span>
+                    <div class="bar"><div id="sinceretyBar" class="bar-fill" style="width: 0%"></div></div>
+                    <span class="status-value" id="sinceretyValue">0</span>
+                </div>
+            </div>
+
+            <div class="time-display">
+                <span id="dayInfo">1日目</span> - <span id="timeInfo">朝</span>
+            </div>
+
+            <div id="characterDisplay" class="character-display"></div>
+            <div id="storyBox" class="story-box morning"></div>
+            <div id="buttonArea" class="button-area"></div>
+        </div>
+
+        <div id="resultScreen" class="screen">
+            <div class="result-box">
+                <div class="result-title" id="resultTitle">1日が終わった</div>
+                <div class="result-message" id="resultMessage"></div>
+                <div class="result-stats" id="resultStats"></div>
+                <button class="btn btn-primary" onclick="nextDay()">次の日へ</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            day: 1,
+            maxDays: 10,
+            phase: 'morning',
+            stats: { action: 0, contentment: 0, sincerity: 0 },
+            lastCustomer: null
+        };
+
+        const customers = {
+            tanaka: { name: '田中さん', icon: '👨‍💼', class: 'char-tanaka' },
+            suzuki: { name: '鈴木さん', icon: '👴', class: 'char-suzuki' },
+            satou: { name: '佐藤さん', icon: '🧑‍💻', class: 'char-satou' },
+            takahashi: { name: '高橋さん', icon: '👨‍✔️', class: 'char-takahashi' },
+            hirata: { name: '平田さん', icon: '👨‍🎨', class: 'char-tanaka' },
+            kashiwagi: { name: '柏木さん', icon: '👴', class: 'char-suzuki' },
+            misaki: { name: '美咲さん', icon: '📱', class: 'char-satou' },
+            kawata: { name: '河田さん', icon: '📖', class: 'char-takahashi' },
+            kishimoto: { name: '岸本さん', icon: '🤔', class: 'char-tanaka' },
+            chiba: { name: '千葉さん', icon: '😤', class: 'char-suzuki' },
+            okada: { name: '岡田さん', icon: '🏃', class: 'char-satou' },
+            nakamura: { name: '中村さん', icon: '💼', class: 'char-takahashi' },
+            yamada: { name: '山田さん', icon: '👩‍💼', class: 'char-tanaka' },
+            ito: { name: '伊藤さん', icon: '🎯', class: 'char-suzuki' },
+            sato2: { name: '佐藤さん2', icon: '🧠', class: 'char-satou' },
+            kobayashi: { name: '小林さん', icon: '⚙️', class: 'char-takahashi' },
+            kondo: { name: '近藤さん', icon: '🌟', class: 'char-tanaka' },
+            goto: { name: '後藤さん', icon: '📊', class: 'char-suzuki' },
+            ishida: { name: '石田さん', icon: '🚀', class: 'char-satou' },
+            watanabe: { name: '渡辺さん', icon: '💡', class: 'char-takahashi' }
+        };
+
+        function startGame() {
+            gameState.day = 1;
+            gameState.stats = { action: 0, contentment: 0, sincerity: 0 };
+            gameState.phase = 'morning';
+            showGameScreen();
+            displayPhase();
+        }
+
+        function showGameScreen() {
+            document.getElementById('titleScreen').classList.remove('active');
+            document.getElementById('gameScreen').classList.add('active');
+            document.getElementById('resultScreen').classList.remove('active');
+        }
+
+        function showResultScreen() {
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('resultScreen').classList.add('active');
+            displayResult();
+        }
+
+        function updateUI() {
+            document.getElementById('dayInfo').textContent = `${gameState.day}日目`;
+            document.getElementById('actionValue').textContent = gameState.stats.action;
+            document.getElementById('contentmentValue').textContent = gameState.stats.contentment;
+            document.getElementById('sinceretyValue').textContent = gameState.stats.sincerity;
+
+            const actionPercent = Math.min(gameState.stats.action * 10, 100);
+            const contentmentPercent = Math.min(gameState.stats.contentment * 10, 100);
+            const sinceretyPercent = Math.min(gameState.stats.sincerity * 10, 100);
+
+            document.getElementById('actionBar').style.width = actionPercent + '%';
+            document.getElementById('contentmentBar').style.width = contentmentPercent + '%';
+            document.getElementById('sinceretyBar').style.width = sinceretyPercent + '%';
+        }
+
+        function displayPhase() {
+            const storyBox = document.getElementById('storyBox');
+            const buttonArea = document.getElementById('buttonArea');
+            const characterDisplay = document.getElementById('characterDisplay');
+            buttonArea.innerHTML = '';
+            characterDisplay.innerHTML = '';
+
+            if (gameState.phase === 'morning') {
+                storyBox.className = 'story-box morning';
+                storyBox.innerHTML = '朝、会社に着いた。☀️ 今日は、何を目標にする？';
+
+                const options = [
+                    { text: '速く動く⚡「今日は5件回ろう！」', action: () => makeChoice(3, 1, 1) },
+                    { text: '丁寧に動く🤝 お客さんの話をしっかり聞こう', action: () => makeChoice(1, 2, 3) },
+                    { text: '結果を求める📈「売上を上げよう」', action: () => makeChoice(0, 0, 0) }
+                ];
+
+                options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn btn-primary';
+                    btn.textContent = opt.text;
+                    btn.onclick = opt.action;
+                    buttonArea.appendChild(btn);
+                });
+
+            } else if (gameState.phase === 'afternoon') {
+                storyBox.className = 'story-box afternoon';
+
+                const scenarioKeys = ['tanaka', 'suzuki', 'satou', 'takahashi', 'hirata', 'kashiwagi', 'misaki', 'kawata'];
+                
+                const scenarios = {
+                    tanaka: {
+                        setup: '【田中さん】「話は短くしてくれ。」',
+                        choices: [
+                            { text: 'サッと要点を説明', reaction: '「いいじゃん。」', action: () => afternoonChoice(3, 2, 1) },
+                            { text: '背景も含めて丁寧に', reaction: '「長いな...」', action: () => afternoonChoice(0, 1, 1) },
+                            { text: '「ちょうどいい長さで説明します」', reaction: '「そっか、わかったよ。」', action: () => afternoonChoice(2, 2, 2) }
+                        ]
+                    },
+                    suzuki: {
+                        setup: '【鈴木さん】「時間ないんですけど...」',
+                        choices: [
+                            { text: '「では別の時間に。」', reaction: '「ありがとう。助かります。」', action: () => afternoonChoice(0, 3, 3) },
+                            { text: '「3分でいいので。」', reaction: '「本当に急いでるんで...」', action: () => afternoonChoice(3, 0, 0) },
+                            { text: '「メールで資料を送りますね」', reaction: '「あ、それいいですね。」', action: () => afternoonChoice(1, 2, 2) }
+                        ]
+                    },
+                    satou: {
+                        setup: '【佐藤さん】「へぇ、面白そう！」',
+                        choices: [
+                            { text: 'すぐに契約書を出す', reaction: '「あ、ちょっと待ってください...」', action: () => afternoonChoice(3, 2, 1) },
+                            { text: '本当に必要か相談させる', reaction: '「そう、考えてみます。」', action: () => afternoonChoice(1, 3, 3) },
+                            { text: '「一度、試してみませんか？」', reaction: '「お、いいですね。」', action: () => afternoonChoice(2, 3, 2) }
+                        ]
+                    },
+                    takahashi: {
+                        setup: '【高橋さん】「前の業者とトラブルあってさ...」',
+                        choices: [
+                            { text: 'サッと気を変えさせる', reaction: '「君、人の話聞いてる？」', action: () => afternoonChoice(3, 0, 0) },
+                            { text: 'じっくり話を聞く', reaction: '「ちゃんと聞いてくれるんだ。」', action: () => afternoonChoice(0, 3, 3) },
+                            { text: '「それなら、うちなら大丈夫ですよ」', reaction: '「ほんと？考えてみるか。」', action: () => afternoonChoice(2, 2, 2) }
+                        ]
+                    },
+                    hirata: {
+                        setup: '【平田さん】「あ、これ、いいですね」',
+                        choices: [
+                            { text: 'その気持ちに乗じてGO！', reaction: '「えっ、もう決めちゃう？」', action: () => afternoonChoice(3, 2, 2) },
+                            { text: '「一緒に考えましょう」', reaction: '「信頼できますね。」', action: () => afternoonChoice(1, 3, 3) },
+                            { text: '「詳しく説明してもいいですか？」', reaction: '「もっと知りたいです。」', action: () => afternoonChoice(1, 3, 2) }
+                        ]
+                    },
+                    kashiwagi: {
+                        setup: '【柏木さん】「これ、本当に効くんですか？」',
+                        choices: [
+                            { text: '「はい、実績があります」', reaction: '「それなら試します。」', action: () => afternoonChoice(2, 2, 2) },
+                            { text: '「人によって個人差があります」', reaction: '「正直ですね。」', action: () => afternoonChoice(0, 2, 3) },
+                            { text: '「もちろんです。保証します」', reaction: '「ちょっと...」', action: () => afternoonChoice(3, 1, 0) }
+                        ]
+                    },
+                    misaki: {
+                        setup: '【美咲さん】「他社との違いは？」',
+                        choices: [
+                            { text: '「価格が安いです」', reaction: '「そっか。」', action: () => afternoonChoice(2, 1, 1) },
+                            { text: '「アフターサービスが充実」', reaction: '「いいですね。」', action: () => afternoonChoice(1, 2, 2) },
+                            { text: '「まずはご要望をお聞きします」', reaction: '「真摯だ。」', action: () => afternoonChoice(0, 3, 3) }
+                        ]
+                    },
+                    kawata: {
+                        setup: '【河田さん】「うーん、迷ってるんです」',
+                        choices: [
+                            { text: '「では別の提案をします」', reaction: '「ありがとう。」', action: () => afternoonChoice(1, 2, 2) },
+                            { text: '「決断は急がなくてもいいですよ」', reaction: '「気が楽になりました。」', action: () => afternoonChoice(0, 3, 3) },
+                            { text: '「今なら特別料金で対応します」', reaction: '「本当ですか！」', action: () => afternoonChoice(3, 2, 1) }
+                        ]
+                    }
+                };
+
+                const randomKey = scenarioKeys[Math.floor(Math.random() * scenarioKeys.length)];
+                const scenario = scenarios[randomKey];
+                const customer = customers[randomKey];
+
+                const charIcon = document.createElement('div');
+                charIcon.className = `character-icon ${customer.class}`;
+                charIcon.textContent = customer.icon;
+                characterDisplay.appendChild(charIcon);
+
+                storyBox.innerHTML = scenario.setup;
+
+                scenario.choices.forEach((choice) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn btn-secondary';
+                    btn.textContent = choice.text;
+                    btn.onclick = () => {
+                        storyBox.innerHTML += `<p style="margin-top:6px;padding:6px;background:white;border-radius:6px;"><strong>"${choice.reaction}"</strong></p>`;
+                        setTimeout(() => choice.action(), 600);
+                    };
+                    buttonArea.appendChild(btn);
+                });
+
+            } else if (gameState.phase === 'evening') {
+                storyBox.className = 'story-box evening';
+                storyBox.innerHTML = '🌙 夜、1日が終わった。今日の行動は、満足できた？';
+
+                const options = [
+                    { text: '「すごく満足！」😊', action: () => eveningChoice(2) },
+                    { text: '「まあまあだった」🙂', action: () => eveningChoice(1) },
+                    { text: '「少し悔しい」😔', action: () => eveningChoice(0) }
+                ];
+
+                options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn btn-success';
+                    btn.textContent = opt.text;
+                    btn.onclick = opt.action;
+                    buttonArea.appendChild(btn);
+                });
+            }
+
+            updateUI();
+        }
+
+        function makeChoice(action, contentment, sincerity) {
+            gameState.stats.action += action;
+            gameState.stats.contentment += contentment;
+            gameState.stats.sincerity += sincerity;
+            gameState.phase = 'afternoon';
+            displayPhase();
+        }
+
+        function afternoonChoice(action, contentment, sincerity) {
+            gameState.stats.action += action;
+            gameState.stats.contentment += contentment;
+            gameState.stats.sincerity += sincerity;
+            gameState.phase = 'evening';
+            displayPhase();
+        }
+
+        function eveningChoice(satisfaction) {
+            gameState.stats.contentment += satisfaction;
+            showResultScreen();
+        }
+
+        function displayResult() {
+            const resultTitle = document.getElementById('resultTitle');
+            const resultMessage = document.getElementById('resultMessage');
+            const resultStats = document.getElementById('resultStats');
+
+            resultTitle.textContent = `${gameState.day}日目が終わった`;
+
+            let message = '';
+            if (gameState.stats.contentment >= 8) {
+                message = '💯 素晴らしい1日だった！';
+            } else if (gameState.stats.contentment >= 5) {
+                message = '😊 まあまあな1日だった。';
+            } else {
+                message = '📥 悔しい1日だった。';
+            }
+
+            resultMessage.innerHTML = message;
+
+            resultStats.innerHTML = `
+                <div class="result-stat">
+                    <span>⚡ 判断度</span>
+                    <strong>${gameState.stats.action}</strong>
+                </div>
+                <div class="result-stat">
+                    <span>😌 納得度</span>
+                    <strong>${gameState.stats.contentment}</strong>
+                </div>
+                <div class="result-stat">
+                    <span>🤝 誠実度</span>
+                    <strong>${gameState.stats.sincerity}</strong>
+                </div>
+            `;
+
+            const nextBtn = document.querySelector('#resultScreen .btn');
+            if (gameState.day >= gameState.maxDays) {
+                nextBtn.textContent = 'ゲーム終了';
+                nextBtn.onclick = showGameEnd;
+            } else {
+                nextBtn.onclick = nextDay;
+            }
+        }
+
+        function nextDay() {
+            gameState.day++;
+            if (gameState.day > gameState.maxDays) {
+                showGameEnd();
+            } else {
+                gameState.stats = { action: 0, contentment: 0, sincerity: 0 };
+                gameState.phase = 'morning';
+                showGameScreen();
+                displayPhase();
+            }
+        }
+
+        function showGameEnd() {
+            const endHTML = `
+                <h1 style="font-size: 32px; color: #667eea; margin-bottom: 10px; font-weight: 900;">ゲーム終了</h1>
+                <div style="background: #f5f5f5; padding: 15px; border-radius: 12px; margin-bottom: 15px; line-height: 1.6; font-size: 14px;">
+                    <p style="font-size: 16px; margin-bottom: 10px;"><strong>${gameState.day - 1}日間、お疲れさまでした！</strong></p>
+                    <p style="font-size: 15px; font-weight: bold; margin-bottom: 10px;">
+                        ⚡ 判断度: ${gameState.stats.action}<br>
+                        😌 納得度: ${gameState.stats.contentment}<br>
+                        🤝 誠実度: ${gameState.stats.sincerity}
+                    </p>
+                </div>
+            `;
+            document.getElementById('resultScreen').classList.remove('active');
+            document.getElementById('titleScreen').classList.add('active');
+            document.getElementById('titleScreen').innerHTML = `<div class="title-content">${endHTML}<button class="btn btn-primary" onclick="location.reload()">もう一度遊ぶ</button></div>`;
+        }
+    </script>
+</body>
+</html>

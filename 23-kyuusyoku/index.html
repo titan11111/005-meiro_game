@@ -2,68 +2,825 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>きゅうしょく当番リズム</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>給食当番ラッシュ：Mobile Tuned</title>
+    <style>
+        /* =========================================
+           VERSION 2.1 (Mobile UX & Haptics)
+           ========================================= */
+        :root {
+            --primary-color: #ff8e8e;
+            --accent-color: #ffd700;
+            --text-color: #333;
+            --safe-top: env(safe-area-inset-top, 20px);
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation; /* ダブルタップズーム防止 */
+            user-select: none; /* テキスト選択防止 */
+            -webkit-user-select: none;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden; /* スクロール完全禁止 */
+            overscroll-behavior: none; /* バウンススクロール防止 */
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            background-color: #222;
+            background-image: url('haikei.png'); 
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: brightness(0.9);
+        }
+
+        .crt-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.05) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.2;
+        }
+        
+        .game-container {
+            width: 100%;
+            height: 100%;
+            max-width: 600px; /* モバイル最適化のため幅制限を調整 */
+            background: rgba(255, 255, 255, 0.94);
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            /* iOS Safe Area 対応 */
+            padding-top: var(--safe-top);
+            padding-bottom: var(--safe-bottom);
+        }
+
+        /* PC/タブレット時は枠を表示 */
+        @media (min-width: 601px) {
+            .game-container {
+                height: 92vh;
+                max-height: 850px;
+                border-radius: 24px;
+                border: 4px solid #444;
+                box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            }
+        }
+
+        .screen {
+            flex: 1;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            position: relative;
+        }
+        .screen.hidden { display: none; }
+
+        /* --- Title Screen --- */
+        #title-screen { 
+            background: rgba(255, 251, 230, 0.95);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            color: #e67e22;
+            text-shadow: 2px 2px 0px #fff, 4px 4px 0px rgba(0,0,0,0.1);
+            line-height: 1.1;
+            margin-bottom: 0.5rem;
+            transform: rotate(-2deg);
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            transition: transform 0.05s cubic-bezier(0.1, 0.7, 1.0, 0.1), background 0.1s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 打感を出すためのリップルエフェクト用 */
+        button::after {
+            content: "";
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 5px; height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+        button:active::after {
+            animation: ripple 0.4s ease-out;
+        }
+        @keyframes ripple {
+            0% { transform: scale(0, 0); opacity: 0.5; }
+            100% { transform: scale(40, 40); opacity: 0; }
+        }
+
+        .big-button {
+            background: #ff6b6b;
+            color: white;
+            padding: 20px 60px; /* タップ領域拡大 */
+            font-size: 1.4rem;
+            font-weight: 900;
+            border-radius: 50px;
+            box-shadow: 0 6px 0 #c0392b, 0 10px 10px rgba(0,0,0,0.2);
+            margin: 20px;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+        }
+        .big-button:active { 
+            transform: translateY(6px) scale(0.98); 
+            box-shadow: 0 0 0 #c0392b, inset 0 2px 5px rgba(0,0,0,0.2); 
+        }
+
+        /* --- Game UI --- */
+        .game-header {
+            width: 100%;
+            padding: 5px 10px;
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            justify-content: space-between; /* 均等配置 */
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            z-index: 10;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .pill {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #bdc3c7;
+        }
+        .pill span { 
+            font-weight: 900; 
+            font-size: 1.3rem; 
+            color: #f1c40f; 
+            font-family: "Courier New", monospace;
+        }
+
+        .game-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column; 
+            width: 100%;
+            padding: 10px;
+            gap: 10px;
+            overflow: hidden;
+        }
+
+        /* --- Student Section (Fixed for Osho) --- */
+        .student-area {
+            flex: 0 0 32%; /* 画面の約1/3 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 5;
+        }
+
+        .student-card {
+            background: #fff;
+            border: 4px solid #2ecc71;
+            border-radius: 20px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* 完全中央揃え */
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            position: relative;
+        }
+        
+        /* 絵文字のズレ修正：Flexboxで強制中央揃え */
+        .student-face { 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 60%; /* カード内での比率 */
+            width: 100%;
+            font-size: clamp(4rem, 18vh, 7rem); 
+            line-height: normal; /* iOSでの高さズレ防止 */
+            filter: drop-shadow(0 4px 0 rgba(0,0,0,0.1));
+            padding-bottom: 10px; /* 微調整 */
+        }
+        
+        .student-info {
+            height: 40%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+        }
+
+        .order-bubble {
+            background: #2c3e50;
+            color: #fff;
+            border-radius: 30px;
+            padding: 6px 18px;
+            font-weight: bold;
+            font-size: clamp(0.9rem, 3.5vw, 1.2rem);
+            box-shadow: 0 3px 0 #1a252f;
+            margin-bottom: 5px;
+            white-space: nowrap;
+        }
+
+        /* --- Menu Section (Improved Grid) --- */
+        .menu-selection {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(236, 240, 241, 0.6);
+            border-radius: 16px 16px 0 0;
+            padding: 10px;
+            padding-bottom: 0; /* 下部はボタンで埋める */
+        }
+        
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 8px;
+            height: 100%;
+            width: 100%;
+        }
+
+        .menu-btn {
+            background: #fff;
+            border: 1px solid #dfe6e9;
+            border-bottom: 4px solid #b2bec3; /* 影を濃く */
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            /* タッチの反応速度向上 */
+            touch-action: manipulation;
+        }
+
+        .menu-btn:active {
+            transform: translateY(4px) scale(0.95); /* 押し込み + 縮小 */
+            border-bottom-width: 0px;
+            border-top-width: 4px; /* 上に枠を追加して沈み込み表現 */
+            border-top-color: transparent;
+            background: #f1f2f6;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .menu-icon {
+            font-size: clamp(2rem, 8vw, 2.8rem);
+            line-height: 1.2;
+            pointer-events: none; /* タップ判定をボタン親に集約 */
+        }
+        .menu-text {
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #555;
+            margin-top: -2px;
+            pointer-events: none;
+        }
+        
+        .refresh-button {
+            background: #3498db;
+            color: white;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 12px;
+            box-shadow: 0 4px 0 #2980b9;
+            width: 100%;
+            margin: 8px 0 0 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .refresh-button:active { transform: translateY(4px); box-shadow: 0 0 0 #2980b9; }
+
+        /* --- Visual Effects --- */
+        .reaction-area {
+            position: absolute;
+            top: 40%; left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 50;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+        }
+        .reaction-msg {
+            font-weight: 900;
+            font-size: 5rem;
+            text-shadow: 3px 3px 0 #fff, -3px -3px 0 #fff;
+            opacity: 0;
+            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: scale(0.5);
+        }
+        .reaction-msg.show { opacity: 1; transform: scale(1.2) rotate(-10deg); }
+        .reaction-msg.good { color: #e67e22; -webkit-text-stroke: 2px #d35400; }
+        .reaction-msg.bad { color: #34495e; -webkit-text-stroke: 2px #000; }
+
+        .float-score {
+            position: absolute;
+            font-weight: 900;
+            font-size: 2.5rem;
+            pointer-events: none;
+            animation: floatPop 0.5s ease-out forwards;
+            text-shadow: 2px 2px 0 rgba(255,255,255,0.8);
+            z-index: 100;
+        }
+        @keyframes floatPop {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            50% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+            100% { transform: translateY(-50px) scale(1); opacity: 0; }
+        }
+
+        .hurry-up .game-header { background: #c0392b; animation: pulse 0.5s infinite; }
+        @keyframes pulse { to { background: #e74c3c; } }
+
+        /* Result Screen */
+        .result-rank { font-size: 7rem; font-weight: 900; color: #f1c40f; text-shadow: 4px 4px 0 #c0392b; }
+        .result-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; margin-bottom: 10px; }
+        .stat-box { background: #fff; padding: 10px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+    </style>
 </head>
 <body>
+    <div class="crt-overlay"></div>
     <div class="game-container">
         <div id="title-screen" class="screen">
-            <h1>きゅうしょく当番リズム</h1>
-            <p>4年2組の給食当番になって、みんなを笑顔にしよう！</p>
-            <p>生徒の「好き」と「嫌い」を覚えて、今日のメニューから正しい給食を選んであげよう！</p>
-            <button id="start-btn" class="big-button">ゲームスタート</button>
+            <h1>給食当番<br>ラッシュ！</h1>
+            <p style="background:#fff; padding:5px 15px; border-radius:20px; font-weight:bold; color:#555; border:2px solid #e67e22;">Mobile Optimized</p>
+            <button id="start-btn" class="big-button">配膳開始！</button>
+            <div style="margin-top:20px;">
+                <label style="display:flex; align-items:center; gap:8px; padding:10px; background:rgba(255,255,255,0.5); border-radius:12px;">
+                    <input type="checkbox" id="hard-mode-toggle" style="transform:scale(1.5);"> 
+                    <span style="font-weight:bold;">激務モード (Hard)</span>
+                </label>
+            </div>
         </div>
 
-        <div id="game-screen" class="screen hidden">
+        <div id="game-screen" class="screen hidden" style="padding:0;">
             <div class="game-header">
-                <div class="score-info">
-                    <span>スコア: <span id="score">0</span></span>
-                    <span>残り時間: <span id="timer">60</span>秒</span>
-                    <span>対応した生徒: <span id="served">0/32</span></span>
-                </div>
-                </div>
+                <div class="pill">SCORE<span id="score">0</span></div>
+                <div class="pill">TIME<span id="timer">60</span></div>
+                <div class="pill">COMBO<span id="combo">0</span></div>
+            </div>
 
             <div class="game-main">
                 <div class="student-area">
-                    <h3>次の生徒</h3>
-                    <div id="current-student" class="student-card">
-                        </div>
+                    <div id="current-student" class="student-card"></div>
                 </div>
+                
                 <div class="menu-selection">
-                    <h3>給食を選んであげよう！</h3>
-                    <div id="menu-buttons" class="menu-buttons-grid">
-                        </div>
+                    <div id="menu-grid" class="menu-grid"></div>
+                    <button id="refresh-btn" class="refresh-button">
+                        <span style="font-size:1.4rem">🔄</span> メニュー入替 (-5秒)
+                    </button>
                 </div>
             </div>
 
             <div class="reaction-area">
-                <div id="reaction-message" class="reaction-message"></div>
+                <div id="reaction-message" class="reaction-msg"></div>
             </div>
         </div>
 
         <div id="result-screen" class="screen hidden">
-            <h2>結果発表！</h2>
+            <h2>みんなのお便り</h2>
+            <div class="result-rank" id="final-rank">S</div>
+            
             <div class="result-stats">
-                <div class="stat">
-                    <div class="stat-label">最終スコア</div>
-                    <div id="final-score" class="stat-value">0</div>
+                <div class="stat-box">
+                    <div style="font-size:0.7rem; color:#999;">スコア</div>
+                    <div id="final-score" style="font-size:1.2rem; font-weight:bold;">0</div>
                 </div>
-                <div class="stat">
-                    <div class="stat-label">対応した生徒数</div>
-                    <div id="final-served" class="stat-value">0</div>
+                <div class="stat-box">
+                    <div style="font-size:0.7rem; color:#999;">最大コンボ</div>
+                    <div id="final-combo" style="font-size:1.2rem; font-weight:bold;">0</div>
                 </div>
-                <div class="stat">
-                    <div class="stat-label">正答率</div>
-                    <div id="accuracy" class="stat-value">0%</div>
+                <div class="stat-box">
+                    <div style="font-size:0.7rem; color:#999;">配膳数</div>
+                    <div id="final-served" style="font-size:1.2rem; font-weight:bold;">0</div>
                 </div>
             </div>
-            <p id="result-message" class="result-message"></p>
-            <button id="restart-btn" class="big-button">もう一度遊ぶ</button>
-            <button id="title-btn" class="big-button">タイトルに戻る</button>
+
+            <div style="background:rgba(255,255,255,0.7); width:100%; padding:15px; border-radius:12px; margin-bottom:20px; flex:1; overflow-y:auto;">
+                <div style="font-size:0.9rem; font-weight:bold; border-bottom:2px solid #ddd; margin-bottom:10px; padding-bottom:5px;">📢 生徒の声</div>
+                <div id="result-comments-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+
+            <button id="restart-btn" class="big-button" style="margin:10px; padding:15px 40px; font-size:1.2rem;">次の日へ</button>
+            <button id="title-btn" class="secondary-button" style="background:#95a5a6; color:#fff; border-radius:20px; padding:10px 20px;">タイトルへ</button>
         </div>
     </div>
 
-    <script src="main.js"></script>
+    <audio id="bgm-game" src="kyuusyoku.mp3" loop preload="auto"></audio>
+    <audio id="bgm-result" src="Golden Lamp Glow.mp3" loop preload="auto"></audio>
+
+    <script>
+        // --- 設定・データ ---
+        const menuDatabase = [
+            { name: "カレー", icon: "🍛", tags: ["辛い", "ご飯", "ガッツリ", "茶色", "温かい", "人気"] },
+            { name: "ミルメーク", icon: "🥛", tags: ["甘い", "飲み物", "白い", "人気"] },
+            { name: "冷凍みかん", icon: "🍊", tags: ["甘い", "デザート", "冷たい", "黄色"] },
+            { name: "ソフト麺", icon: "🍝", tags: ["麺", "赤い", "ガッツリ", "温かい"] },
+            { name: "揚げパン", icon: "🥖", tags: ["甘い", "パン", "茶色", "人気"] },
+            { name: "牛乳", icon: "🥛", tags: ["白い", "飲み物"] },
+            { name: "きなこパン", icon: "🥖", tags: ["甘い", "パン", "茶色", "人気"] },
+            { name: "ハムカツ", icon: "🥩", tags: ["ガッツリ", "揚げ物", "茶色"] },
+            { name: "ミルク寒天", icon: "🍮", tags: ["甘い", "デザート", "白い", "冷たい"] },
+            { name: "さば味噌", icon: "🐟", tags: ["魚", "茶色", "和食", "温かい"] },
+            { name: "コッペパン", icon: "🥖", tags: ["パン", "茶色"] },
+            { name: "サラダスパ", icon: "🥗", tags: ["麺", "野菜", "冷たい", "さっぱり"] },
+            { name: "わかめ汁", icon: "🍲", tags: ["汁物", "温かい", "さっぱり"] },
+            { name: "焼きそば", icon: "🍝", tags: ["麺", "茶色", "ガッツリ", "野菜"] },
+            { name: "きのこ", icon: "🍄", tags: ["野菜", "きのこ", "茶色"] },
+            { name: "フルポン", icon: "🍒", tags: ["甘い", "デザート", "冷たい"] },
+            { name: "カツカレー", icon: "🍛", tags: ["辛い", "ご飯", "ガッツリ", "茶色", "肉"] },
+            { name: "サラダ", icon: "🥗", tags: ["野菜", "さっぱり", "冷たい"] },
+            { name: "たまご汁", icon: "🥚", tags: ["汁物", "黄色", "温かい"] },
+            { name: "焼き魚", icon: "🐟", tags: ["魚", "和食", "温かい"] },
+            { name: "牛乳プリン", icon: "🍮", tags: ["甘い", "デザート", "白い"] },
+            { name: "酢の物", icon: "🥒", tags: ["野菜", "さっぱり", "冷たい", "和食"] },
+            { name: "おでん", icon: "🍢", tags: ["汁物", "温かい", "和食", "茶色"] },
+            { name: "中華丼", icon: "🍚", tags: ["ご飯", "野菜", "温かい", "ガッツリ"] },
+            { name: "パイン", icon: "🍍", tags: ["甘い", "デザート", "黄色", "冷たい"] },
+            { name: "白ごはん", icon: "🍚", tags: ["ご飯", "白い", "和食"] },
+            { name: "シチュー", icon: "🍲", tags: ["汁物", "白い", "温かい", "野菜"] },
+            { name: "ナポリタン", icon: "🍝", tags: ["麺", "赤い", "野菜"] },
+            { name: "うどん", icon: "🍜", tags: ["麺", "温かい", "野菜"] },
+            { name: "ひじき", icon: "🥢", tags: ["和食", "黒い", "野菜"] },
+            { name: "チキンライス", icon: "🥘", tags: ["ご飯", "赤い", "肉"] },
+            { name: "野菜スープ", icon: "🥬", tags: ["汁物", "野菜", "温かい"] },
+            { name: "チキン", icon: "🍗", tags: ["肉", "揚げ物", "茶色", "ガッツリ"] },
+            { name: "コーン汁", icon: "🌽", tags: ["汁物", "黄色", "温かい", "甘い"] },
+            { name: "チャーハン", icon: "🍚", tags: ["ご飯", "中華", "ガッツリ"] },
+            { name: "ヨーグルト", icon: "🥣", tags: ["甘い", "デザート", "白い"] },
+            { name: "カボチャ煮", icon: "🎃", tags: ["野菜", "甘い", "黄色", "和食"] },
+            { name: "カレーうどん", icon: "🍜", tags: ["麺", "辛い", "温かい", "茶色"] },
+            { name: "こんにゃく", icon: "🍢", tags: ["黒い", "ヘルシー"] },
+            { name: "ミネスト", icon: "🍅", tags: ["汁物", "赤い", "野菜", "温かい"] },
+            { name: "ハンバーグ", icon: "🍖", tags: ["肉", "ガッツリ", "茶色", "人気"] },
+            { name: "トマト", icon: "🍅", tags: ["赤い", "野菜", "冷たい"] },
+            { name: "冷やし中華", icon: "🍜", tags: ["麺", "冷たい", "さっぱり", "夏"] },
+            { name: "野菜炒め", icon: "🥕", tags: ["野菜", "温かい", "中華"] },
+            { name: "ゼリー", icon: "🍮", tags: ["甘い", "デザート", "冷たい"] }
+        ];
+
+        const students = [
+            { name: "タケダ", face: { normal: "😁", good: "😆", bad: "😫" } },
+            { name: "サトウ", face: { normal: "👧", good: "😍", bad: "😭" } },
+            { name: "ナカジマ", face: { normal: "🥴", good: "🤤", bad: "🤮" } },
+            { name: "ヤマモト", face: { normal: "😋", good: "😝", bad: "🤢" } },
+            { name: "フジイ", face: { normal: "👱‍♂️", good: "🐮", bad: "🤧" } }, 
+            { name: "クドウ", face: { normal: "😑", good: "🦁", bad: "🦴" } }, 
+            { name: "イシイ", face: { normal: "😍", good: "😘", bad: "💔" } },
+            { name: "ナガオカ", face: { normal: "🍵", good: "👴", bad: "☕" } },
+            { name: "ミヤザワ", face: { normal: "😖", good: "😤", bad: "😱" } },
+            { name: "ホソカワ", face: { normal: "😱", good: "😇", bad: "💀" } },
+            { name: "キムラ", face: { normal: "🍄", good: "🍄✨", bad: "🍄🔥" } },
+            { name: "ハセガワ", face: { normal: "🥰", good: "💏", bad: "💔" } },
+            { name: "タカハシ", face: { normal: "💪", good: "🏋️", bad: "🤕" } },
+            { name: "イノウエ", face: { normal: "🐟", good: "🐠", bad: "🐡" } }, 
+            { name: "カネコ", face: { normal: "😤", good: "😆", bad: "🤯" } },
+            { name: "ウエハラ", face: { normal: "🍝", good: "🇮🇹", bad: "🍞" } }, 
+            { name: "タニグチ", face: { normal: "🍅", good: "🥗", bad: "🐛" } },
+            { name: "ハマダ", face: { normal: "🍗", good: "🍗✨", bad: "🦴" } },
+            { name: "カワサキ", face: { normal: "🍜", good: "🍥", bad: "🥣" } }, 
+            { name: "オクダ", face: { normal: "🙏", good: "👌", bad: "👎" } },
+            { name: "ノナカ", face: { normal: "🍅", good: "🍅✨", bad: "🍅💨" } },
+            // レアキャラ
+            { name: "校長先生", rare: true, face: { normal: "🥸", good: "🥸✨", bad: "👺" } },
+            { name: "宇宙人", rare: true, face: { normal: "👽", good: "🛸", bad: "👾" } }
+        ];
+
+        const hintTypes = [
+            { label: "ツルツル！", tag: "麺" },
+            { label: "白いやつ！", tag: "白い" },
+            { label: "ガッツリ！", tag: "ガッツリ" },
+            { label: "甘い気分！", tag: "甘い" },
+            { label: "汁物！", tag: "汁物" },
+            { label: "パン！", tag: "パン" },
+            { label: "ご飯！", tag: "ご飯" },
+            { label: "野菜！", tag: "野菜" },
+            { label: "辛いやつ！", tag: "辛い" },
+            { label: "さっぱり！", tag: "さっぱり" },
+            { label: "茶色！", tag: "茶色" },
+            { label: "赤いやつ！", tag: "赤い" },
+            { label: "黄色！", tag: "黄色" },
+            { label: "お肉！", tag: "肉" },
+            { label: "飲み物！", tag: "飲み物" },
+            { label: "和食！", tag: "和食" },
+            { label: "人気！", tag: "人気" },
+            { label: "黒いやつ", tag: "黒い" }
+        ];
+
+        const endingComments = {
+            high: ["神速の配膳だった…！", "君は給食のプロだ！", "残食ゼロ！最高！", "クラスのヒーロー！"],
+            mid: ["ありがとう！", "なかなか早かった！", "明日もよろしく！", "ごちそうさま！"],
+            low: ["もっと早くしてよ～", "これじゃない…", "私の分は？", "お腹すいた…"]
+        };
+
+        // --- Sound & Haptic Engine ---
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.bgmGame = document.getElementById('bgm-game');
+                this.bgmResult = document.getElementById('bgm-result');
+            }
+            init() {
+                if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+            }
+            // Haptics Helper
+            vibrate(pattern) {
+                if (navigator.vibrate) navigator.vibrate(pattern);
+            }
+
+            playTone(freqs, type, duration, volume = 0.1) {
+                if (!this.ctx) return;
+                const t = this.ctx.currentTime;
+                freqs.forEach((f) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(f, t);
+                    gain.gain.setValueAtTime(volume, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(t);
+                    osc.stop(t + duration);
+                });
+            }
+
+            playCorrect(combo) { 
+                const pitch = Math.min(combo * 50, 600);
+                this.playTone([880 + pitch, 1100 + pitch], 'triangle', 0.15, 0.2); 
+                this.vibrate(10); // 短く鋭い振動
+            }
+            playWrong() { 
+                this.playTone([150, 140], 'sawtooth', 0.3, 0.2); 
+                this.vibrate([30, 30, 30]); // ブブッ
+            }
+            playRefresh() { 
+                this.playTone([600], 'square', 0.1, 0.1); 
+                this.vibrate(20);
+            }
+            playClick() {
+                // ボタンを押した時の「カッ」という音
+                this.playTone([2000], 'sine', 0.05, 0.05);
+            }
+            
+            playBGM(type) {
+                this.bgmGame.pause(); this.bgmResult.pause();
+                const bgm = type === 'game' ? this.bgmGame : this.bgmResult;
+                bgm.volume = 0.4;
+                bgm.currentTime = 0;
+                bgm.play().catch(()=>{});
+            }
+            stopBGM() { this.bgmGame.pause(); this.bgmResult.pause(); }
+        }
+        const audio = new SoundEngine();
+
+        // --- Game Logic ---
+        let state = {
+            score: 0, time: 60, combo: 0, served: 0,
+            currentStudent: null, currentHint: null, 
+            hand: [], gameActive: false
+        };
+
+        const els = {
+            screens: document.querySelectorAll('.screen'),
+            startBtn: document.getElementById('start-btn'),
+            refreshBtn: document.getElementById('refresh-btn'),
+            hardToggle: document.getElementById('hard-mode-toggle'),
+            score: document.getElementById('score'),
+            timer: document.getElementById('timer'),
+            combo: document.getElementById('combo'),
+            studentCard: document.getElementById('current-student'),
+            menuGrid: document.getElementById('menu-grid'),
+            reaction: document.getElementById('reaction-message'),
+            container: document.querySelector('.game-container')
+        };
+
+        function switchScreen(id) {
+            els.screens.forEach(s => s.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function startGame() {
+            audio.init();
+            state.score = 0; state.time = 60; state.combo = 0; state.served = 0;
+            state.gameActive = true;
+            
+            state.hand = [];
+            for(let i=0; i<12; i++) state.hand.push(getRandomMenuItem());
+
+            els.container.classList.remove('hurry-up');
+            updateHUD();
+            renderMenu();
+            nextStudent();
+            switchScreen('game-screen');
+            audio.playBGM('game');
+
+            const timerId = setInterval(() => {
+                if (!state.gameActive) { clearInterval(timerId); return; }
+                state.time--;
+                if (state.time <= 15) els.container.classList.add('hurry-up');
+                updateHUD();
+                if (state.time <= 0) endGame();
+            }, 1000);
+        }
+
+        function getRandomMenuItem() { return menuDatabase[Math.floor(Math.random() * menuDatabase.length)]; }
+
+        function nextStudent() {
+            let pool = (Math.random() < 0.05) ? students.filter(s => s.rare) : students.filter(s => !s.rare);
+            state.currentStudent = pool[Math.floor(Math.random() * pool.length)];
+            state.currentHint = hintTypes[Math.floor(Math.random() * hintTypes.length)];
+
+            // 詰み防止
+            if (!state.hand.some(item => item.tags.includes(state.currentHint.tag))) {
+                const matching = menuDatabase.filter(m => m.tags.includes(state.currentHint.tag));
+                const idx = Math.floor(Math.random() * 12);
+                state.hand[idx] = matching[Math.floor(Math.random() * matching.length)];
+                renderMenu(idx);
+            }
+
+            els.studentCard.innerHTML = `
+                <div class="student-face">${state.currentStudent.face.normal}</div>
+                <div class="student-info">
+                    <div class="order-bubble">${state.currentHint.label}</div>
+                    <div class="student-name">${state.currentStudent.name}</div>
+                </div>
+            `;
+            els.reaction.className = 'reaction-msg';
+            els.studentCard.classList.remove('shake');
+        }
+
+        function renderMenu(animIndex = -1) {
+            els.menuGrid.innerHTML = '';
+            state.hand.forEach((item, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'menu-btn';
+                if (index === animIndex) {
+                    btn.style.animation = "popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+                }
+                btn.innerHTML = `<div class="menu-icon">${item.icon}</div><div class="menu-text">${item.name}</div>`;
+                
+                // タッチ開始時に反応させる（高速化）
+                btn.onpointerdown = (e) => {
+                    e.preventDefault(); // スクロール防止
+                    btn.releasePointerCapture(e.pointerId); // 領域外でも離した判定を受け取れるように調整
+                    handleInput(item, index, btn);
+                };
+                els.menuGrid.appendChild(btn);
+            });
+        }
+
+        function handleInput(item, index, btnEl) {
+            if (!state.gameActive) return;
+            
+            const isMatch = item.tags.includes(state.currentHint.tag);
+            const faceEl = els.studentCard.querySelector('.student-face');
+
+            let points = 0, type = '', msg = '';
+
+            if (isMatch) {
+                audio.playCorrect(state.combo);
+                type = 'good';
+                points = 100 + (state.combo * 20);
+                if (state.currentStudent.rare) points *= 2;
+                state.combo++; state.served++;
+                msg = "OK!";
+                faceEl.textContent = state.currentStudent.face.good;
+                setTimeout(nextStudent, 400); // テンポアップ
+            } else {
+                audio.playWrong();
+                type = 'bad';
+                points = -50;
+                state.combo = 0;
+                msg = "NG";
+                els.studentCard.classList.add('shake');
+                faceEl.textContent = state.currentStudent.face.bad;
+            }
+
+            state.score += points;
+            showFloatingScore(points, btnEl);
+            updateHUD();
+
+            els.reaction.textContent = msg;
+            els.reaction.className = `reaction-msg show ${type}`;
+
+            // メニュー補充
+            const newItem = getRandomMenuItem();
+            state.hand[index] = newItem;
+            btnEl.innerHTML = `<div class="menu-icon">${newItem.icon}</div><div class="menu-text">${newItem.name}</div>`;
+            
+            // アニメーションリセット
+            btnEl.style.animation = 'none';
+            void btnEl.offsetWidth;
+            btnEl.style.animation = "popIn 0.3s ease";
+
+            btnEl.onpointerdown = (e) => { e.preventDefault(); handleInput(newItem, index, btnEl); };
+        }
+
+        els.refreshBtn.onclick = () => {
+            if (!state.gameActive) return;
+            state.time -= 5;
+            audio.playRefresh();
+            // 全入れ替え
+            for(let i=0; i<12; i++) state.hand[i] = getRandomMenuItem();
+            // 詰み防止
+            const hintTag = state.currentHint.tag;
+            if (!state.hand.some(i => i.tags.includes(hintTag))) {
+                const match = menuDatabase.filter(m => m.tags.includes(hintTag));
+                state.hand[Math.floor(Math.random()*12)] = match[Math.floor(Math.random()*match.length)];
+            }
+            renderMenu(); updateHUD();
+        };
+
+        function showFloatingScore(points, targetEl) {
+            const rect = targetEl.getBoundingClientRect();
+            const el = document.createElement('div');
+            el.className = 'float-score';
+            el.textContent = points > 0 ? `+${points}` : points;
+            el.style.color = points > 0 ? '#f1c40f' : '#e74c3c';
+            // 位置調整（タッチした指の上に出るように）
+            el.style.left = (rect.left + rect.width/2 - 30) + 'px';
+            el.style.top = (rect.top - 20) + 'px';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 600);
+        }
+
+        function updateHUD() {
+            els.score.textContent = state.score;
+            els.timer.textContent = Math.max(0, state.time);
+            els.combo.textContent = state.combo;
+        }
+
+        function endGame() {
+            state.gameActive = false;
+            audio.playBGM('result');
+            
+            let rank = 'C';
+            let pool = endingComments.low;
+            if (state.score >= 5000) { rank = 'SSS'; pool = endingComments.high; }
+            else if (state.score >= 3500) { rank = 'S'; pool = endingComments.high; }
+            else if (state.score >= 2000) { rank = 'A'; pool = endingComments.mid; }
+            else if (state.score >= 1000) { rank = 'B'; pool = endingComments.mid; }
+
+            document.getElementById('final-rank').textContent = rank;
+            document.getElementById('final-score').textContent = state.score;
+            document.getElementById('final-combo').textContent = state.combo;
+            document.getElementById('final-served').textContent = state.served;
+
+            const list = document.getElementById('result-comments-list');
+            list.innerHTML = '';
+            [...pool].sort(()=>0.5-Math.random()).slice(0,3).forEach(txt => {
+                const s = students[Math.floor(Math.random()*students.length)];
+                const div = document.createElement('div');
+                div.style.cssText = "background:#fff; padding:8px; border-radius:8px; display:flex; align-items:center; gap:10px; font-size:0.85rem; box-shadow:0 1px 2px rgba(0,0,0,0.1);";
+                div.innerHTML = `<span style="font-size:1.5rem">${s.face.normal}</span><span>${txt}</span>`;
+                list.appendChild(div);
+            });
+            switchScreen('result-screen');
+        }
+
+        els.startBtn.onclick = startGame;
+        document.getElementById('restart-btn').onclick = startGame;
+        document.getElementById('title-btn').onclick = () => { audio.stopBGM(); switchScreen('title-screen'); };
+
+        // iOS Zoom Prevent
+        document.addEventListener('dblclick', function(event) { event.preventDefault(); }, { passive: false });
+    </script>
 </body>
 </html>

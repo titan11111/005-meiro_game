@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魂の旅人 - 文学を歩く世界</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- タイトル画面 -->
+    <div id="title-screen">
+        <div class="title-content">
+            <h1 class="main-title">魂の旅人</h1>
+            <p class="subtitle">文学を歩く十一の世界</p>
+            <div class="chapter-info">
+                <p class="chapter-number" id="title-chapter-num">第一章</p>
+                <p class="chapter-name" id="title-chapter-name">無常の川</p>
+                <p class="chapter-quote" id="title-chapter-quote">「ゆく川の流れは絶えずして…」</p>
+            </div>
+            <button id="start-btn" class="game-btn">旅を始める</button>
+        </div>
+    </div>
+
+    <!-- ゲーム画面 -->
+    <div id="game-screen" style="display: none;">
+        <!-- 3D空間(Canvas) -->
+        <canvas id="game-canvas"></canvas>
+
+        <!-- UI オーバーレイ -->
+        <div id="game-ui">
+            <!-- 上部情報 -->
+            <div class="ui-top">
+                <div class="status-bar">
+                    <span class="status-item"><span id="status-label-1">記憶の断片</span>: <span id="memory-count">0</span>/<span id="memory-total">5</span></span>
+                    <span class="status-item"><span id="status-label-2">世界の変容</span>: <span id="time-flow">0</span>%</span>
+                </div>
+            </div>
+
+            <!-- 詩句表示エリア -->
+            <div id="poem-display" class="poem-display"></div>
+
+            <!-- メッセージウィンドウ -->
+            <div id="message-box" class="message-box" style="display: none;">
+                <p id="message-text"></p>
+                <button id="message-ok" class="small-btn">わかった</button>
+            </div>
+
+            <!-- 操作ガイド -->
+            <div class="controls-guide">
+                <p>📱 スマホ: 画面をスワイプして移動</p>
+                <p>🖱️ PC: 矢印キーで移動</p>
+            </div>
+
+            <!-- 章完成画面 -->
+            <div id="chapter-complete" class="chapter-complete" style="display: none;">
+                <div class="complete-content">
+                    <h2 id="complete-title">第一章 完成</h2>
+                    <p class="complete-quote" id="complete-quote">「すべては流れ、すべては変わる。<br>されど、記憶だけは永遠に残る。」</p>
+                    
+                    <!-- 文学情報 -->
+                    <div class="literature-info">
+                        <h3>作品情報</h3>
+                        <p class="lit-title" id="lit-title">『方丈記』</p>
+                        <p class="lit-author" id="lit-author">鴨長明</p>
+                        <div class="lit-quotes">
+                            <h4>登場した名言</h4>
+                            <ul id="quotes-list">
+                                <li>ゆく川の流れは絶えずして</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <button id="continue-btn" class="game-btn">次の章へ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Three.js ライブラリ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Tone.js ライブラリ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- ゲームスクリプト -->
+    <script src="script.js"></script>
+</body>
+</html>
