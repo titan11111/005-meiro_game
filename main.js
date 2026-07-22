@@ -285,12 +285,22 @@ const GameEngine = {
     const placed = [];
     GameState.treasures = [];
 
-    // ステージに応じてミミックを必ず一定数配置（1–2面でも0体にならない）
+    // 旗（ゴール）を先に確定し、宝箱抽選から除外する（絶対に重ねない）
+    const goalPos = this.pickGoalCell();
+    if (goalPos) {
+      placed.push({ x: goalPos.x, y: goalPos.y });
+    }
+
+    // ステージに応じてミミックを必ず一定数配置（後半ほど増える）
     const level = Math.max(1, GameState.level || 1);
-    const minMimics = level <= 2 ? 1 : level <= 5 ? 2 : level <= 8 ? 2 : 3;
+    const minMimics =
+      level <= 2 ? 1 :
+      level <= 4 ? 2 :
+      level <= 7 ? 3 :
+      4;
     const mimicTarget = Math.min(
       chestCount - 1, // 通常宝箱を最低1個残す
-      Math.max(minMimics, Math.round(chestCount * (0.4 + level * 0.04)))
+      Math.max(minMimics, Math.round(chestCount * (0.35 + level * 0.06)))
     );
 
     const slots = [];
@@ -305,16 +315,18 @@ const GameEngine = {
       slots[j] = tmp;
     }
 
+    const isFreeFloor = (x, y) => (
+      GameState.maze[y] && GameState.maze[y][x] === 0 &&
+      Math.abs(x - GameState.hero.x) + Math.abs(y - GameState.hero.y) > 3 &&
+      !placed.some(p => p.x === x && p.y === y)
+    );
+
     const tryPlaceAt = (maker) => {
       let attempts = 0;
       while (attempts < 120) {
         const x = Math.floor(Math.random() * (GameState.size - 2)) + 1;
         const y = Math.floor(Math.random() * (GameState.size - 2)) + 1;
-        if (
-          GameState.maze[y] && GameState.maze[y][x] === 0 &&
-          Math.abs(x - GameState.hero.x) + Math.abs(y - GameState.hero.y) > 3 &&
-          !placed.some(p => p.x === x && p.y === y)
-        ) {
+        if (isFreeFloor(x, y)) {
           const item = maker(x, y);
           GameState.treasures.push(item);
           placed.push({ x, y });
@@ -356,28 +368,48 @@ const GameEngine = {
       }
     }
 
-    let hiddenPlaced = false;
-    let hiddenAttempts = 0;
-    while (!hiddenPlaced && hiddenAttempts < 100) {
-      const x = Math.floor(Math.random() * (GameState.size - 2)) + 1;
-      const y = Math.floor(Math.random() * (GameState.size - 2)) + 1;
-      if (
-        GameState.maze[y] && GameState.maze[y][x] === 0 &&
-        Math.abs(x - GameState.hero.x) + Math.abs(y - GameState.hero.y) > 3 &&
-        !placed.some(p => p.x === x && p.y === y)
-      ) {
-        GameState.treasures.push({ x, y, isHidden: true, collectionId: 1, isMimic: false });
-        placed.push({ x, y });
-        hiddenPlaced = true;
-      }
-      hiddenAttempts++;
-    }
+    // その面の目玉強敵を最低1体保証（後半で弱敵ばかりにならない）
+    ensureFeaturedMimic(level);
 
-    const gx = GameState.size - 2;
-    const gy = GameState.size - 2;
-    if (GameState.maze[gy] && GameState.maze[gy][gx] === 0) {
-      GameState.treasures.push({ x: gx, y: gy, isMimic: false, isGoal: true });
+    tryPlaceAt((x, y) => ({ x, y, isHidden: true, collectionId: 1, isMimic: false }));
+
+    if (goalPos) {
+      GameState.treasures.push({ x: goalPos.x, y: goalPos.y, isMimic: false, isGoal: true });
     }
+  },
+
+  /** 旗マスを決める。宝箱より先に予約するため、通路かつスタートから離す。 */
+  pickGoalCell() {
+    const size = GameState.size;
+    const hx = GameState.hero.x;
+    const hy = GameState.hero.y;
+    const preferred = [
+      { x: size - 2, y: size - 2 },
+      { x: size - 2, y: size - 3 },
+      { x: size - 3, y: size - 2 },
+      { x: size - 3, y: size - 3 }
+    ];
+    for (const p of preferred) {
+      if (
+        p.x > 0 && p.y > 0 && p.x < size && p.y < size &&
+        GameState.maze[p.y] && GameState.maze[p.y][p.x] === 0 &&
+        Math.abs(p.x - hx) + Math.abs(p.y - hy) > 3
+      ) {
+        return p;
+      }
+    }
+    // フォールバック: 右下寄りの通路を走査
+    for (let y = size - 2; y >= 1; y--) {
+      for (let x = size - 2; x >= 1; x--) {
+        if (
+          GameState.maze[y] && GameState.maze[y][x] === 0 &&
+          Math.abs(x - hx) + Math.abs(y - hy) > 3
+        ) {
+          return { x, y };
+        }
+      }
+    }
+    return null;
   },
 
   startTimer() {
@@ -669,27 +701,62 @@ const TreasureChoice = {
 const MIMIC_TABLE = [
   { mimicType: "NORMAL_MIMIC", difficulty: 1, label: "普通のミミック" },
   { mimicType: "STRONG_MIMIC", difficulty: 2, label: "強いミミック" },
-  { mimicType: "ELITE_MIMIC", difficulty: 3, label: "かなり強いミミック" },
+  { mimicType: "ELITE_MIMIC", difficulty: 3, label: "エリートミミック" },
   { mimicType: "HARD_MIMIC", difficulty: 4, label: "ハードミミック" }
 ];
 
-/** 階層が上がるほど強いミミックが出やすい */
-function rollMimicForLevel(level) {
+/**
+ * ステージ別の敵バンド。
+ * min  … これ未満の弱敵は出さない
+ * featured … その面に最低1体は出す強さ
+ * weights … 抽選比率 [普通, 強い, エリート, ハード]
+ */
+function mimicBandForLevel(level) {
   const lv = Math.max(1, Math.min(10, level || 1));
-  let weights;
-  if (lv <= 2) weights = [70, 25, 5, 0];
-  else if (lv <= 4) weights = [35, 45, 15, 5];
-  else if (lv <= 6) weights = [15, 35, 35, 15];
-  else if (lv <= 8) weights = [5, 20, 40, 35];
-  else weights = [0, 10, 35, 55];
+  if (lv === 1) return { weights: [100, 0, 0, 0], min: 0, featured: 0 };
+  if (lv === 2) return { weights: [70, 30, 0, 0], min: 0, featured: 0 };
+  if (lv === 3) return { weights: [25, 60, 15, 0], min: 0, featured: 1 };
+  if (lv === 4) return { weights: [10, 50, 30, 10], min: 1, featured: 1 };
+  if (lv === 5) return { weights: [0, 30, 50, 20], min: 1, featured: 2 };
+  if (lv === 6) return { weights: [0, 15, 45, 40], min: 1, featured: 2 };
+  if (lv === 7) return { weights: [0, 5, 35, 60], min: 2, featured: 3 };
+  if (lv === 8) return { weights: [0, 0, 25, 75], min: 2, featured: 3 };
+  if (lv === 9) return { weights: [0, 0, 15, 85], min: 2, featured: 3 };
+  return { weights: [0, 0, 5, 95], min: 3, featured: 3 }; // Lv10
+}
 
+/** 階層が上がるほど強いミミックが出る（弱敵は後半で出ない） */
+function rollMimicForLevel(level) {
+  const band = mimicBandForLevel(level);
+  const weights = band.weights;
   const total = weights.reduce((a, b) => a + b, 0);
   let r = Math.random() * total;
+  let idx = 0;
   for (let i = 0; i < weights.length; i++) {
     r -= weights[i];
-    if (r <= 0) return MIMIC_TABLE[i];
+    if (r <= 0) {
+      idx = i;
+      break;
+    }
   }
-  return MIMIC_TABLE[0];
+  idx = Math.max(idx, band.min);
+  return MIMIC_TABLE[idx];
+}
+
+/** その面の「目玉強敵」が1体もいなければ、最弱ミミックを格上げする */
+function ensureFeaturedMimic(level) {
+  const band = mimicBandForLevel(level);
+  const featured = MIMIC_TABLE[band.featured];
+  const mimics = GameState.treasures.filter(t => t.isMimic);
+  if (!mimics.length) return;
+  const hasFeatured = mimics.some(t => (t.difficulty || 1) >= featured.difficulty);
+  if (hasFeatured) return;
+
+  mimics.sort((a, b) => (a.difficulty || 1) - (b.difficulty || 1));
+  const target = mimics[0];
+  target.mimicType = featured.mimicType;
+  target.difficulty = featured.difficulty;
+  target.mimicLabel = featured.label;
 }
 
 const QuizSystem = {
@@ -811,9 +878,13 @@ const QuizSystem = {
     playSound('fuseikai');
     setTimeout(() => { playSound('kamituku'); }, 250);
 
-    const dead = GameEngine.takeDamage(1, "ミミックにやられてしまった...");
+    const dead = GameEngine.takeDamage(
+      (treasure.difficulty || 1) >= 4 ? 2 : 1,
+      "ミミックにやられてしまった..."
+    );
     if (!dead) {
-      showMessage("不正解！たいりょくが1へった！");
+      const lost = (treasure.difficulty || 1) >= 4 ? 2 : 1;
+      showMessage(`不正解！たいりょくが${lost}へった！`);
       setTimeout(hideMessage, 1600);
     }
     Renderer.draw();
