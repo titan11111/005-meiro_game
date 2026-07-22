@@ -659,13 +659,13 @@ html, body {
   box-shadow: 0 4px 0 #6a2018;
 }
 
-/* ===== 操作帯：画面下25%（ボタンは帯の高さに合わせて大きく） ===== */
+/* ===== 操作帯：画面下25%／十字は左を大きく（親指操作優先） ===== */
 .controls {
   --ctrl-h: 25dvh;
   flex: 0 0 auto;
   height: calc(var(--ctrl-h) + var(--safe-bottom));
-  min-height: calc(168px + var(--safe-bottom));
-  max-height: calc(260px + var(--safe-bottom));
+  min-height: calc(176px + var(--safe-bottom));
+  max-height: calc(280px + var(--safe-bottom));
   position: relative;
   z-index: 25;
   display: flex;
@@ -673,10 +673,10 @@ html, body {
   justify-content: center;
   width: 100%;
   padding:
-    8px
-    calc(12px + var(--safe-right))
-    calc(10px + var(--safe-bottom))
-    calc(12px + var(--safe-left));
+    6px
+    calc(10px + var(--safe-right))
+    calc(8px + var(--safe-bottom))
+    calc(10px + var(--safe-left));
   background:
     linear-gradient(180deg, #1a2a2e 0%, #0e181c 100%);
   border-top: 2px solid #2f4a50;
@@ -686,23 +686,25 @@ html, body {
 
 .fc-pad {
   width: 100%;
-  max-width: 640px;
+  max-width: 720px;
   height: 100%;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  column-gap: 12px;
 }
 
-/* 左：十字キー — 操作帯の高さいっぱい近くまで拡大 */
+/* 左：十字キー — 操作帯の高さに合わせて大きく（A/B以上の存在感） */
 .fc-dpad {
   position: relative;
-  --pad: min(52vw, calc(var(--ctrl-h) - 8px), 210px);
-  width: var(--pad);
-  height: var(--pad);
-  max-width: 100%;
-  max-height: 100%;
+  justify-self: start;
+  align-self: center;
+  /* 高さ基準：帯のほぼ全域。px上限は親指が届くサイズまで上げる */
+  height: 100%;
+  width: auto;
   aspect-ratio: 1 / 1;
+  max-height: 100%;
+  max-width: min(56vw, 260px);
   flex-shrink: 0;
 }
 
@@ -720,34 +722,35 @@ html, body {
 
 .dpad-btn {
   position: absolute;
-  width: 34%;
-  height: 34%;
+  /* 各方向ボタン自体も大きく（指が当てやすい） */
+  width: 40%;
+  height: 40%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 14px;
   background: linear-gradient(180deg, #3a5258, #243840);
   color: var(--gold);
   border: 2px solid #5a747c;
   box-shadow: 0 4px 0 #0e1c20;
-  font-size: clamp(18px, 5.2vw, 26px);
+  font-size: clamp(20px, 6vw, 30px);
   font-weight: 900;
   padding: 0;
   line-height: 1;
 }
 
-.dpad-up { top: 0; left: 33%; }
-.dpad-down { bottom: 0; left: 33%; }
-.dpad-left { left: 0; top: 33%; }
-.dpad-right { right: 0; top: 33%; }
+.dpad-up { top: 0; left: 30%; }
+.dpad-down { bottom: 0; left: 30%; }
+.dpad-left { left: 0; top: 30%; }
+.dpad-right { right: 0; top: 30%; }
 
 .dpad-center {
   position: absolute;
-  left: 33%;
-  top: 33%;
-  width: 34%;
-  height: 34%;
-  border-radius: 8px;
+  left: 32%;
+  top: 32%;
+  width: 36%;
+  height: 36%;
+  border-radius: 10px;
   background: #1a2c30;
   border: 1px solid #2f454a;
   pointer-events: none;
@@ -759,20 +762,21 @@ html, body {
   box-shadow: 0 1px 0 #0e1c20;
 }
 
-/* 右：B / A */
+/* 右：B / A — 十字よりやや控えめ（移動が主操作のため） */
 .fc-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: clamp(14px, 4vw, 24px);
+  justify-self: end;
+  gap: clamp(12px, 3.5vw, 20px);
   padding-right: 2px;
-  flex-shrink: 0;
+  height: 100%;
 }
 
 .action-btn {
-  --ab: min(28vw, calc((var(--ctrl-h) - 8px) * 0.58), 118px);
-  width: var(--ab);
-  height: var(--ab);
+  width: min(24vw, 104px);
+  height: min(24vw, 104px);
+  max-height: 78%;
   border-radius: 50%;
   display: flex;
   flex-direction: column;
@@ -901,20 +905,21 @@ html, body {
   }
 }
 
-/* とても縦長（iPhone系）: 操作帯の高さをさらにボタンへ割り当て */
+/* とても縦長（iPhone系） */
 @media (max-width: 430px) and (min-height: 700px) {
   .controls {
     --ctrl-h: 26dvh;
-    min-height: calc(180px + var(--safe-bottom));
-    max-height: calc(280px + var(--safe-bottom));
+    min-height: calc(188px + var(--safe-bottom));
+    max-height: calc(300px + var(--safe-bottom));
   }
 
   .fc-dpad {
-    --pad: min(56vw, calc(var(--ctrl-h) - 4px), 230px);
+    max-width: min(60vw, 280px);
   }
 
   .action-btn {
-    --ab: min(30vw, calc((var(--ctrl-h) - 4px) * 0.6), 124px);
+    width: min(26vw, 108px);
+    height: min(26vw, 108px);
   }
 }
 
@@ -924,18 +929,19 @@ html, body {
 
   .controls {
     --ctrl-h: 24dvh;
-    min-height: calc(140px + var(--safe-bottom));
-    max-height: calc(200px + var(--safe-bottom));
-    padding-top: 6px;
-    padding-bottom: calc(8px + var(--safe-bottom));
+    min-height: calc(148px + var(--safe-bottom));
+    max-height: calc(210px + var(--safe-bottom));
+    padding-top: 4px;
+    padding-bottom: calc(6px + var(--safe-bottom));
   }
 
   .fc-dpad {
-    --pad: min(46vw, calc(var(--ctrl-h) - 8px), 170px);
+    max-width: min(52vw, 200px);
   }
 
   .action-btn {
-    --ab: min(24vw, calc((var(--ctrl-h) - 8px) * 0.55), 96px);
+    width: min(22vw, 88px);
+    height: min(22vw, 88px);
   }
 
   .title-eyebrow { margin-bottom: 6px; }
@@ -968,25 +974,24 @@ html, body {
   .mission-item { padding: 7px 10px; }
   .controls {
     --ctrl-h: 22dvh;
-    min-height: calc(120px + var(--safe-bottom));
-    max-height: calc(160px + var(--safe-bottom));
+    min-height: calc(128px + var(--safe-bottom));
+    max-height: calc(168px + var(--safe-bottom));
   }
 }
 
 @media (min-width: 769px) {
   .controls {
-    --ctrl-h: 220px;
-    min-height: 200px;
-    max-height: calc(280px + var(--safe-bottom));
+    --ctrl-h: 230px;
+    min-height: 210px;
+    max-height: calc(300px + var(--safe-bottom));
   }
 
   .fc-dpad {
-    --pad: min(42vw, 200px, 92%);
+    max-width: 240px;
   }
 
   .action-btn {
-    --ab: 110px;
-    width: 110px;
-    height: 110px;
+    width: 100px;
+    height: 100px;
   }
 }
