@@ -797,9 +797,11 @@ const QuizSystem = {
 
     if (selected === correct) {
       playSound('seikai');
+      GameState.timeLeft += 5;
+      updateTimeDisplay();
       const tip = this.currentExplanation
-        ? ("正解！ " + this.currentExplanation)
-        : "正解！ミミックをたおした！";
+        ? ("正解！ ⏱+5秒 " + this.currentExplanation)
+        : "正解！ミミックをたおした！ ⏱+5秒";
       showMessage(tip);
       setTimeout(hideMessage, tip.length > 40 ? 3200 : 1800);
       Renderer.draw();
