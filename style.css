@@ -689,23 +689,23 @@ html, body {
   max-width: 720px;
   height: 100%;
   display: grid;
-  grid-template-columns: 1.15fr 1fr;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
   align-items: center;
-  column-gap: 12px;
+  column-gap: 8px;
+  overflow: hidden;
 }
 
-/* 左：十字キー — 操作帯の高さに合わせて大きく（A/B以上の存在感） */
+/* 左：十字キー — 操作帯の高さ＝親指が当てやすい大きさ */
 .fc-dpad {
   position: relative;
   justify-self: start;
-  align-self: center;
-  /* 高さ基準：帯のほぼ全域。px上限は親指が届くサイズまで上げる */
+  align-self: stretch;
+  /* 帯の高さいっぱい（はみ出し防止つき） */
   height: 100%;
   width: auto;
   aspect-ratio: 1 / 1;
+  max-width: 100%;
   max-height: 100%;
-  max-width: min(56vw, 260px);
-  flex-shrink: 0;
 }
 
 .dpad-btn,
@@ -722,9 +722,8 @@ html, body {
 
 .dpad-btn {
   position: absolute;
-  /* 各方向ボタン自体も大きく（指が当てやすい） */
-  width: 40%;
-  height: 40%;
+  width: 42%;
+  height: 42%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -733,23 +732,23 @@ html, body {
   color: var(--gold);
   border: 2px solid #5a747c;
   box-shadow: 0 4px 0 #0e1c20;
-  font-size: clamp(20px, 6vw, 30px);
+  font-size: clamp(22px, 6.5vw, 32px);
   font-weight: 900;
   padding: 0;
   line-height: 1;
 }
 
-.dpad-up { top: 0; left: 30%; }
-.dpad-down { bottom: 0; left: 30%; }
-.dpad-left { left: 0; top: 30%; }
-.dpad-right { right: 0; top: 30%; }
+.dpad-up { top: 0; left: 29%; }
+.dpad-down { bottom: 0; left: 29%; }
+.dpad-left { left: 0; top: 29%; }
+.dpad-right { right: 0; top: 29%; }
 
 .dpad-center {
   position: absolute;
-  left: 32%;
-  top: 32%;
-  width: 36%;
-  height: 36%;
+  left: 31%;
+  top: 31%;
+  width: 38%;
+  height: 38%;
   border-radius: 10px;
   background: #1a2c30;
   border: 1px solid #2f454a;
@@ -762,21 +761,24 @@ html, body {
   box-shadow: 0 1px 0 #0e1c20;
 }
 
-/* 右：B / A — 十字よりやや控えめ（移動が主操作のため） */
+/* 右：B / A — 右列内に必ず収める */
 .fc-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  justify-self: end;
-  gap: clamp(12px, 3.5vw, 20px);
-  padding-right: 2px;
+  justify-self: stretch;
+  gap: clamp(10px, 3vw, 16px);
   height: 100%;
+  min-width: 0;
+  padding-right: 2px;
+  box-sizing: border-box;
 }
 
 .action-btn {
-  width: min(24vw, 104px);
-  height: min(24vw, 104px);
-  max-height: 78%;
+  width: min(22vw, 96px, 38%);
+  height: min(22vw, 96px, 38%);
+  max-height: 72%;
+  flex: 0 0 auto;
   border-radius: 50%;
   display: flex;
   flex-direction: column;
@@ -913,13 +915,9 @@ html, body {
     max-height: calc(300px + var(--safe-bottom));
   }
 
-  .fc-dpad {
-    max-width: min(60vw, 280px);
-  }
-
   .action-btn {
-    width: min(26vw, 108px);
-    height: min(26vw, 108px);
+    width: min(23vw, 100px);
+    height: min(23vw, 100px);
   }
 }
 
@@ -936,7 +934,7 @@ html, body {
   }
 
   .fc-dpad {
-    max-width: min(52vw, 200px);
+    max-width: 100%;
   }
 
   .action-btn {
@@ -987,11 +985,11 @@ html, body {
   }
 
   .fc-dpad {
-    max-width: 240px;
+    max-width: 100%;
   }
 
   .action-btn {
-    width: 100px;
-    height: 100px;
+    width: 96px;
+    height: 96px;
   }
 }
