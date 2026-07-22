@@ -1,0 +1,1682 @@
+// 時事ミミック用クイズパック（本番）
+const QUIZ_NEWS_PACK = {
+  "quizVersion": "2026.07.22-02",
+  "updatedAt": "2026-07-22",
+  "note": "時事ミミック用60問完成（各難易度15問）。correctAnswerは文字列固定・choicesはJS側でシャッフル。ミミックキングは別バトル想定で未収録。",
+  "categories": [
+    "国内",
+    "海外",
+    "宇宙",
+    "テクノロジー",
+    "経済",
+    "スポーツ",
+    "文化"
+  ],
+  "mimicTypes": {
+    "NORMAL_MIMIC": {
+      "difficulty": 1,
+      "label": "普通のミミック"
+    },
+    "STRONG_MIMIC": {
+      "difficulty": 2,
+      "label": "強いミミック"
+    },
+    "ELITE_MIMIC": {
+      "difficulty": 3,
+      "label": "かなり強いミミック"
+    },
+    "HARD_MIMIC": {
+      "difficulty": 4,
+      "label": "ハードミミック"
+    }
+  },
+  "questions": [
+    {
+      "id": "M001",
+      "mimicType": "NORMAL_MIMIC",
+      "difficulty": 1,
+      "newsGroup": "FIFA_WORLD_CUP_2026",
+      "category": "スポーツ",
+      "tags": [
+        "2026",
+        "サッカー",
+        "ワールドカップ"
+      ],
+      "question": "2026年のFIFAワールドカップで優勝した国はどこ？",
+      "choices": [
+        "スペイン",
+        "アルゼンチン",
+        "フランス",
+        "ブラジル"
+      ],
+      "correctAnswer": "スペイン",
+      "explanation": "2026年大会はスペインが決勝でアルゼンチンを破り、2度目のワールドカップ優勝を果たした。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "FIFA",
+        "url": "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/spain-argentina-final-report-highlights"
+      }
+    },
+    {
+      "id": "M002",
+      "mimicType": "NORMAL_MIMIC",
+      "difficulty": 1,
+      "newsGroup": "FIFA_WORLD_CUP_2026",
+      "category": "スポーツ",
+      "tags": [
+        "2026",
+        "ワールドカップ",
+        "開催国"
+      ],
+      "question": "2026年FIFAワールドカップの開催国に含まれていない国はどれ？",
+      "choices": [
+        "カナダ",
+        "メキシコ",
+        "アメリカ",
+        "ブラジル"
+      ],
+      "correctAnswer": "ブラジル",
+      "explanation": "2026年大会はカナダ・メキシコ・アメリカの3か国共同開催だった。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "FIFA",
+        "url": "https://inside.fifa.com/news/spain-crowned-world-cup-2026-champions-new-york-new-jersey"
+      }
+    },
+    {
+      "id": "M003",
+      "mimicType": "NORMAL_MIMIC",
+      "difficulty": 1,
+      "newsGroup": "ARTEMIS_II",
+      "category": "宇宙",
+      "tags": [
+        "NASA",
+        "アルテミスII",
+        "月"
+      ],
+      "question": "2026年にNASAのアルテミスIIが向かった天体はどれ？",
+      "choices": [
+        "月",
+        "火星",
+        "金星",
+        "木星"
+      ],
+      "correctAnswer": "月",
+      "explanation": "アルテミスIIは有人宇宙船Orionで月の周囲を飛行し、地球へ帰還するミッション。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "NASA",
+        "url": "https://www.nasa.gov/mission/artemis-ii/"
+      }
+    },
+    {
+      "id": "M004",
+      "mimicType": "NORMAL_MIMIC",
+      "difficulty": 1,
+      "newsGroup": "MILANO_CORTINA_2026",
+      "category": "スポーツ",
+      "tags": [
+        "冬季オリンピック",
+        "2026",
+        "イタリア"
+      ],
+      "question": "2026年冬季オリンピックが開催された国はどこ？",
+      "choices": [
+        "イタリア",
+        "フランス",
+        "スイス",
+        "カナダ"
+      ],
+      "correctAnswer": "イタリア",
+      "explanation": "2026年冬季オリンピックはミラノ・コルティナを中心にイタリアで開催された。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "Olympics.com",
+        "url": "https://www.olympics.com/en/milano-cortina-2026"
+      }
+    },
+    {
+      "id": "M005",
+      "mimicType": "NORMAL_MIMIC",
+      "difficulty": 1,
+      "newsGroup": "OPENAI_2026",
+      "category": "テクノロジー",
+      "tags": [
+        "AI",
+        "OpenAI",
+        "2026"
+      ],
+      "question": "2026年7月にOpenAIが発表したAIモデルはどれ？",
+      "choices": [
+        "GPT-5.6",
+        "GPT-2.5",
+        "GPT-3.1",
+        "GPT-4.1 Mini II"
+      ],
+      "correctAnswer": "GPT-5.6",
+      "explanation": "OpenAIは2026年7月9日にGPT-5.6ファミリーを正式発表した。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2027-07-22",
+      "status": "active",
+      "source": {
+        "name": "OpenAI",
+        "url": "https://openai.com/index/gpt-5-6"
+      }
+    },
+    {
+      "id": "M006",
+      "mimicType": "NORMAL_MIMIC",
+      "difficulty": 1,
+      "newsGroup": "EXPO_2025_OSAKA",
+      "category": "国内",
+      "tags": [
+        "大阪関西万博",
+        "2025",
+        "日本"
+      ],
+      "question": "2025年に開催された大阪・関西万博の開催地はどこ？",
+      "choices": [
+        "大阪",
+        "東京",
+        "名古屋",
+        "札幌"
+      ],
+      "correctAnswer": "大阪",
+      "explanation": "2025年日本国際博覧会（大阪・関西万博）は大阪で開催された。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "Expo 2025 Osaka, Kansai, Japan",
+        "url": "https://www.expo2025.or.jp/"
+      }
+    },
+    {
+      "id": "M101",
+      "mimicType": "STRONG_MIMIC",
+      "difficulty": 2,
+      "newsGroup": "FIFA_WORLD_CUP_2026",
+      "category": "スポーツ",
+      "tags": [
+        "2026",
+        "ワールドカップ",
+        "決勝"
+      ],
+      "question": "2026年FIFAワールドカップ決勝で、スペインと対戦した国はどこ？",
+      "choices": [
+        "アルゼンチン",
+        "ブラジル",
+        "ドイツ",
+        "ポルトガル"
+      ],
+      "correctAnswer": "アルゼンチン",
+      "explanation": "決勝はスペイン対アルゼンチン。延長の末スペインが1-0で勝利した。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "FIFA",
+        "url": "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/spain-argentina-final-report-highlights"
+      }
+    },
+    {
+      "id": "M102",
+      "mimicType": "STRONG_MIMIC",
+      "difficulty": 2,
+      "newsGroup": "FIFA_WORLD_CUP_2026",
+      "category": "スポーツ",
+      "tags": [
+        "ワールドカップ",
+        "2026",
+        "参加国"
+      ],
+      "question": "2026年FIFAワールドカップに出場したチーム数はいくつ？",
+      "choices": [
+        "32チーム",
+        "40チーム",
+        "48チーム",
+        "64チーム"
+      ],
+      "correctAnswer": "48チーム",
+      "explanation": "2026年大会からワールドカップは初の48チーム制となった。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "FIFA",
+        "url": "https://inside.fifa.com/news/spain-crowned-world-cup-2026-champions-new-york-new-jersey"
+      }
+    },
+    {
+      "id": "M103",
+      "mimicType": "STRONG_MIMIC",
+      "difficulty": 2,
+      "newsGroup": "ARTEMIS_II",
+      "category": "宇宙",
+      "tags": [
+        "NASA",
+        "アルテミスII",
+        "宇宙船"
+      ],
+      "question": "アルテミスIIで宇宙飛行士が搭乗した宇宙船の名前は？",
+      "choices": [
+        "Orion",
+        "Dragonfly",
+        "Voyager",
+        "Discovery"
+      ],
+      "correctAnswer": "Orion",
+      "explanation": "アルテミスIIではNASAのOrion宇宙船が使用された。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "NASA",
+        "url": "https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth/"
+      }
+    },
+    {
+      "id": "M104",
+      "mimicType": "STRONG_MIMIC",
+      "difficulty": 2,
+      "newsGroup": "MILANO_CORTINA_2026",
+      "category": "スポーツ",
+      "tags": [
+        "冬季オリンピック",
+        "スノーボード",
+        "日本"
+      ],
+      "question": "ミラノ・コルティナ2026の男子スノーボード・ハーフパイプで金メダルを獲得した日本選手は？",
+      "choices": [
+        "戸塚優斗",
+        "平野歩夢",
+        "堀島行真",
+        "二階堂蓮"
+      ],
+      "correctAnswer": "戸塚優斗",
+      "explanation": "戸塚優斗は男子ハーフパイプで95.00点を記録し、金メダルを獲得した。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "Olympics.com",
+        "url": "https://www.olympics.com/en/milano-cortina-2026/news/winter-olympics-2026-totsuka-yuto-men-halfpipe-gold-milano-cortina/"
+      }
+    },
+    {
+      "id": "M105",
+      "mimicType": "STRONG_MIMIC",
+      "difficulty": 2,
+      "newsGroup": "OPENAI_2026",
+      "category": "テクノロジー",
+      "tags": [
+        "OpenAI",
+        "音声AI",
+        "GPT-Live"
+      ],
+      "question": "OpenAIが2026年7月に発表した、新世代の音声モデルの名称は？",
+      "choices": [
+        "GPT-Live",
+        "GPT-Talk",
+        "Voice-X",
+        "OpenVoice Pro"
+      ],
+      "correctAnswer": "GPT-Live",
+      "explanation": "GPT-Liveは自然な対話を目指した新世代の音声モデルとして2026年7月8日に発表された。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2027-07-22",
+      "status": "active",
+      "source": {
+        "name": "OpenAI",
+        "url": "https://openai.com/index/introducing-gpt-live/"
+      }
+    },
+    {
+      "id": "M106",
+      "mimicType": "STRONG_MIMIC",
+      "difficulty": 2,
+      "newsGroup": "EXPO_2025_OSAKA",
+      "category": "国内",
+      "tags": [
+        "大阪関西万博",
+        "2025",
+        "閉幕"
+      ],
+      "question": "大阪・関西万博が閉幕した日はいつ？",
+      "choices": [
+        "2025年8月31日",
+        "2025年9月30日",
+        "2025年10月13日",
+        "2025年12月31日"
+      ],
+      "correctAnswer": "2025年10月13日",
+      "explanation": "大阪・関西万博は2025年4月13日から10月13日まで開催された。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "Expo 2025 Osaka, Kansai, Japan",
+        "url": "https://www.expo2025.or.jp/"
+      }
+    },
+    {
+      "id": "M201",
+      "mimicType": "ELITE_MIMIC",
+      "difficulty": 3,
+      "newsGroup": "FIFA_WORLD_CUP_2026",
+      "category": "スポーツ",
+      "tags": [
+        "2026",
+        "ワールドカップ",
+        "決勝"
+      ],
+      "question": "2026年FIFAワールドカップ決勝の最終スコアは？",
+      "choices": [
+        "スペイン 1-0 アルゼンチン",
+        "スペイン 2-0 アルゼンチン",
+        "スペイン 2-1 アルゼンチン",
+        "スペイン 3-2 アルゼンチン"
+      ],
+      "correctAnswer": "スペイン 1-0 アルゼンチン",
+      "explanation": "決勝は延長戦までもつれ、フェラン・トーレスの得点でスペインが1-0勝利した。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "FIFA",
+        "url": "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/spain-argentina-final-report-highlights"
+      }
+    },
+    {
+      "id": "M202",
+      "mimicType": "ELITE_MIMIC",
+      "difficulty": 3,
+      "newsGroup": "FIFA_WORLD_CUP_2026",
+      "category": "スポーツ",
+      "tags": [
+        "ワールドカップ",
+        "2026",
+        "大会形式"
+      ],
+      "question": "2026年FIFAワールドカップで行われた試合数は全部でいくつ？",
+      "choices": [
+        "64試合",
+        "80試合",
+        "96試合",
+        "104試合"
+      ],
+      "correctAnswer": "104試合",
+      "explanation": "48チーム制となった2026年大会では、合計104試合が行われた。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "FIFA",
+        "url": "https://inside.fifa.com/news/spain-crowned-world-cup-2026-champions-new-york-new-jersey"
+      }
+    },
+    {
+      "id": "M203",
+      "mimicType": "ELITE_MIMIC",
+      "difficulty": 3,
+      "newsGroup": "ARTEMIS_II",
+      "category": "宇宙",
+      "tags": [
+        "NASA",
+        "アルテミスII",
+        "2026"
+      ],
+      "question": "NASAのアルテミスIIが2026年に打ち上げられた日は？",
+      "choices": [
+        "2月1日",
+        "3月1日",
+        "4月1日",
+        "5月1日"
+      ],
+      "correctAnswer": "4月1日",
+      "explanation": "アルテミスIIは2026年4月1日、ケネディ宇宙センターから打ち上げられた。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "NASA",
+        "url": "https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth/"
+      }
+    },
+    {
+      "id": "M204",
+      "mimicType": "ELITE_MIMIC",
+      "difficulty": 3,
+      "newsGroup": "ARTEMIS_II",
+      "category": "宇宙",
+      "tags": [
+        "NASA",
+        "アルテミスII",
+        "宇宙飛行士"
+      ],
+      "question": "アルテミスIIに参加した宇宙飛行士は何人？",
+      "choices": [
+        "2人",
+        "3人",
+        "4人",
+        "6人"
+      ],
+      "correctAnswer": "4人",
+      "explanation": "NASAの3人とカナダ宇宙庁の1人、計4人がアルテミスIIに搭乗した。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "NASA",
+        "url": "https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth/"
+      }
+    },
+    {
+      "id": "M205",
+      "mimicType": "ELITE_MIMIC",
+      "difficulty": 3,
+      "newsGroup": "MILANO_CORTINA_2026",
+      "category": "スポーツ",
+      "tags": [
+        "冬季オリンピック",
+        "スキージャンプ",
+        "日本"
+      ],
+      "question": "ミラノ・コルティナ2026の男子ラージヒルで、二階堂蓮の銀に対し金メダルを獲得した選手は？",
+      "choices": [
+        "ドメン・プレヴツ",
+        "ヨハネス・クレーボ",
+        "ミカエル・キングズベリー",
+        "ロイク・メイヤール"
+      ],
+      "correctAnswer": "ドメン・プレヴツ",
+      "explanation": "スロベニアのドメン・プレヴツが金、日本の二階堂蓮が銀メダルとなった。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "The Japan News",
+        "url": "https://japannews.yomiuri.co.jp/sports/olympics-paralympics/20260215-311534/"
+      }
+    },
+    {
+      "id": "M206",
+      "mimicType": "ELITE_MIMIC",
+      "difficulty": 3,
+      "newsGroup": "MILANO_CORTINA_2026",
+      "category": "スポーツ",
+      "tags": [
+        "冬季オリンピック",
+        "モーグル",
+        "日本"
+      ],
+      "question": "ミラノ・コルティナ2026の男子デュアルモーグルで銀メダルを獲得した日本選手は？",
+      "choices": [
+        "堀島行真",
+        "戸塚優斗",
+        "二階堂蓮",
+        "山田琉聖"
+      ],
+      "correctAnswer": "堀島行真",
+      "explanation": "カナダのミカエル・キングズベリーが金、日本の堀島行真が銀メダルを獲得した。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "Olympics.com / Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Freestyle_skiing_at_the_2026_Winter_Olympics_%E2%80%93_Men%27s_dual_moguls"
+      }
+    },
+    {
+      "id": "M301",
+      "mimicType": "HARD_MIMIC",
+      "difficulty": 4,
+      "newsGroup": "FIFA_WORLD_CUP_2026",
+      "category": "スポーツ",
+      "tags": [
+        "2026",
+        "ワールドカップ",
+        "記録"
+      ],
+      "question": "2026年FIFAワールドカップは、男子FIFAワールドカップ史上何回目の大会だった？",
+      "choices": [
+        "21回目",
+        "22回目",
+        "23回目",
+        "24回目"
+      ],
+      "correctAnswer": "23回目",
+      "explanation": "2026年大会は男子FIFAワールドカップの第23回大会。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "FIFA",
+        "url": "https://inside.fifa.com/news/spain-crowned-world-cup-2026-champions-new-york-new-jersey"
+      }
+    },
+    {
+      "id": "M302",
+      "mimicType": "HARD_MIMIC",
+      "difficulty": 4,
+      "newsGroup": "FIFA_WORLD_CUP_2026",
+      "category": "スポーツ",
+      "tags": [
+        "2026",
+        "ワールドカップ",
+        "観客"
+      ],
+      "question": "FIFAによると、2026年ワールドカップの大会総入場者数として発表された数字に最も近いものは？",
+      "choices": [
+        "約381万人",
+        "約481万人",
+        "約581万人",
+        "約681万人"
+      ],
+      "correctAnswer": "約681万人",
+      "explanation": "FIFAは大会総入場者数を6,810,966人と発表した。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "FIFA",
+        "url": "https://inside.fifa.com/news/spain-crowned-world-cup-2026-champions-new-york-new-jersey"
+      }
+    },
+    {
+      "id": "M303",
+      "mimicType": "HARD_MIMIC",
+      "difficulty": 4,
+      "newsGroup": "ARTEMIS_II",
+      "category": "宇宙",
+      "tags": [
+        "NASA",
+        "アルテミスII",
+        "カナダ宇宙庁"
+      ],
+      "question": "アルテミスIIに参加したカナダ宇宙庁の宇宙飛行士は誰？",
+      "choices": [
+        "ジェレミー・ハンセン",
+        "リード・ワイズマン",
+        "ビクター・グローバー",
+        "クリスティーナ・コック"
+      ],
+      "correctAnswer": "ジェレミー・ハンセン",
+      "explanation": "ジェレミー・ハンセンはカナダ宇宙庁所属で、アルテミスIIのミッションスペシャリストとして参加した。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "NASA",
+        "url": "https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth/"
+      }
+    },
+    {
+      "id": "M304",
+      "mimicType": "HARD_MIMIC",
+      "difficulty": 4,
+      "newsGroup": "ARTEMIS_II",
+      "category": "宇宙",
+      "tags": [
+        "NASA",
+        "アルテミスII",
+        "帰還"
+      ],
+      "question": "2026年のアルテミスIIが地球へ帰還し、着水した日は？",
+      "choices": [
+        "4月7日",
+        "4月8日",
+        "4月9日",
+        "4月10日"
+      ],
+      "correctAnswer": "4月10日",
+      "explanation": "アルテミスIIは4月1日に出発し、約10日後の4月10日（太平洋時間）に太平洋へ着水した。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "NASA",
+        "url": "https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth/"
+      }
+    },
+    {
+      "id": "M305",
+      "mimicType": "HARD_MIMIC",
+      "difficulty": 4,
+      "newsGroup": "MILANO_CORTINA_2026",
+      "category": "スポーツ",
+      "tags": [
+        "冬季オリンピック",
+        "クロスカントリー",
+        "記録"
+      ],
+      "question": "ミラノ・コルティナ2026で、冬季五輪史上初めて1大会で金メダル6個を獲得した選手は？",
+      "choices": [
+        "ヨハネス・ヘスフロト・クレーボ",
+        "イェンス・ルロース・オフテブロ",
+        "ミカエル・キングズベリー",
+        "ドメン・プレヴツ"
+      ],
+      "correctAnswer": "ヨハネス・ヘスフロト・クレーボ",
+      "explanation": "ノルウェーのクレーボはクロスカントリー6種目を制し、冬季五輪1大会最多金メダル記録を樹立した。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "AP News",
+        "url": "https://apnews.com/article/klaebo-crosscrounty-skiing-winter-olympics-1ff22a6ea924b46a4cb90517f7cf0caf"
+      }
+    },
+    {
+      "id": "M306",
+      "mimicType": "HARD_MIMIC",
+      "difficulty": 4,
+      "newsGroup": "OPENAI_2026",
+      "category": "テクノロジー",
+      "tags": [
+        "OpenAI",
+        "GPT-5.6",
+        "2026"
+      ],
+      "question": "OpenAIがGPT-5.6を正式発表した日は？",
+      "choices": [
+        "2026年6月4日",
+        "2026年6月26日",
+        "2026年7月8日",
+        "2026年7月9日"
+      ],
+      "correctAnswer": "2026年7月9日",
+      "explanation": "限定プレビューは6月26日頃、一般向け正式発表は2026年7月9日。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2027-07-22",
+      "status": "active",
+      "source": {
+        "name": "OpenAI",
+        "url": "https://openai.com/index/gpt-5-6"
+      }
+    },
+    {
+      "id": "M007",
+      "mimicType": "NORMAL_MIMIC",
+      "difficulty": 1,
+      "newsGroup": "FIFA_WORLD_CUP_2026",
+      "category": "スポーツ",
+      "tags": [
+        "2026",
+        "ワールドカップ",
+        "期間"
+      ],
+      "question": "2026年FIFAワールドカップの開催期間として正しいのは？",
+      "choices": [
+        "6月11日〜7月19日",
+        "5月1日〜6月1日",
+        "7月1日〜8月15日",
+        "4月1日〜5月10日"
+      ],
+      "correctAnswer": "6月11日〜7月19日",
+      "explanation": "大会は2026年6月11日から7月19日まで行われた。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "JFA",
+        "url": "https://jfa.jp/samuraiblue/worldcup_2026/"
+      }
+    },
+    {
+      "id": "M008",
+      "mimicType": "NORMAL_MIMIC",
+      "difficulty": 1,
+      "newsGroup": "MILANO_CORTINA_2026",
+      "category": "スポーツ",
+      "tags": [
+        "冬季オリンピック",
+        "開催都市"
+      ],
+      "question": "2026年冬季オリンピックの開催都市名に含まれるのは？",
+      "choices": [
+        "ミラノ・コルティナ",
+        "パリ・リヨン",
+        "北京・上海",
+        "ソチ・モスクワ"
+      ],
+      "correctAnswer": "ミラノ・コルティナ",
+      "explanation": "大会愛称はミラノ・コルティナ2026。イタリアで開催された。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "Olympics.com",
+        "url": "https://www.olympics.com/en/milano-cortina-2026"
+      }
+    },
+    {
+      "id": "M009",
+      "mimicType": "NORMAL_MIMIC",
+      "difficulty": 1,
+      "newsGroup": "ARTEMIS_II",
+      "category": "宇宙",
+      "tags": [
+        "NASA",
+        "アルテミス",
+        "ロケット"
+      ],
+      "question": "アルテミスIIの打ち上げに使われたロケットは？",
+      "choices": [
+        "SLS",
+        "H3",
+        "ファルコン9",
+        "ソユーズ"
+      ],
+      "correctAnswer": "SLS",
+      "explanation": "アルテミスIIはNASAのSLSロケットで打ち上げられた。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "NASA",
+        "url": "https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth/"
+      }
+    },
+    {
+      "id": "M010",
+      "mimicType": "NORMAL_MIMIC",
+      "difficulty": 1,
+      "newsGroup": "OPENAI_2026",
+      "category": "テクノロジー",
+      "tags": [
+        "AI",
+        "OpenAI"
+      ],
+      "question": "GPT-5.6ファミリーに含まれない名前はどれ？",
+      "choices": [
+        "Nova",
+        "Sol",
+        "Terra",
+        "Luna"
+      ],
+      "correctAnswer": "Nova",
+      "explanation": "GPT-5.6はSol（旗艦）・Terra（バランス）・Luna（低コスト）の3段階。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2027-07-22",
+      "status": "active",
+      "source": {
+        "name": "OpenAI",
+        "url": "https://openai.com/index/gpt-5-6"
+      }
+    },
+    {
+      "id": "M011",
+      "mimicType": "NORMAL_MIMIC",
+      "difficulty": 1,
+      "newsGroup": "EXPO_2025_OSAKA",
+      "category": "国内",
+      "tags": [
+        "万博",
+        "2025"
+      ],
+      "question": "大阪・関西万博の正式名称に近いのは？",
+      "choices": [
+        "2025年日本国際博覧会",
+        "2025年東京万国博覧会",
+        "2025年アジア博覧会",
+        "2025年関西産業博"
+      ],
+      "correctAnswer": "2025年日本国際博覧会",
+      "explanation": "通称「大阪・関西万博」で、正式には2025年日本国際博覧会。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "Expo 2025",
+        "url": "https://www.expo2025.or.jp/"
+      }
+    },
+    {
+      "id": "M012",
+      "mimicType": "NORMAL_MIMIC",
+      "difficulty": 1,
+      "newsGroup": "JAPAN_WC2026",
+      "category": "スポーツ",
+      "tags": [
+        "サッカー",
+        "日本代表",
+        "ワールドカップ"
+      ],
+      "question": "2026年W杯で日本が決勝トーナメント初戦で対戦した国は？",
+      "choices": [
+        "ブラジル",
+        "ドイツ",
+        "スペイン",
+        "アルゼンチン"
+      ],
+      "correctAnswer": "ブラジル",
+      "explanation": "日本はラウンド32でブラジルと対戦し、1-2で敗れた。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "FIFA / JFA",
+        "url": "https://www.fifa.com/ja/tournaments/mens/worldcup/canadamexicousa2026/articles/brazil-japan-review-highlights-ja"
+      }
+    },
+    {
+      "id": "M013",
+      "mimicType": "NORMAL_MIMIC",
+      "difficulty": 1,
+      "newsGroup": "JAPAN_POLICY_2026",
+      "category": "国内",
+      "tags": [
+        "政治",
+        "首相",
+        "2026"
+      ],
+      "question": "2026年7月に「骨太の方針」を初めてまとめた首相は誰？",
+      "choices": [
+        "高市早苗",
+        "岸田文雄",
+        "菅義偉",
+        "安倍晋三"
+      ],
+      "correctAnswer": "高市早苗",
+      "explanation": "高市早苗政権として初めての骨太の方針が2026年7月21日に閣議決定された。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2027-07-22",
+      "status": "active",
+      "source": {
+        "name": "NHK / 時事",
+        "url": "https://www3.nhk.or.jp/nhkworld/en/news/20260722_B5/"
+      }
+    },
+    {
+      "id": "M014",
+      "mimicType": "NORMAL_MIMIC",
+      "difficulty": 1,
+      "newsGroup": "FIFA_WORLD_CUP_2026",
+      "category": "スポーツ",
+      "tags": [
+        "ワールドカップ",
+        "優勝"
+      ],
+      "question": "スペインの男子W杯優勝は、2026年大会で何回目？",
+      "choices": [
+        "2回目",
+        "1回目",
+        "3回目",
+        "4回目"
+      ],
+      "correctAnswer": "2回目",
+      "explanation": "スペインは2010年に続き、2026年が2度目の優勝。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "FIFA",
+        "url": "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/spain-argentina-final-report-highlights"
+      }
+    },
+    {
+      "id": "M015",
+      "mimicType": "NORMAL_MIMIC",
+      "difficulty": 1,
+      "newsGroup": "ARTEMIS_II",
+      "category": "宇宙",
+      "tags": [
+        "月",
+        "有人飛行"
+      ],
+      "question": "アルテミスIIは、約何年ぶりの有人月飛行だった？",
+      "choices": [
+        "約50年ぶり",
+        "約10年ぶり",
+        "約20年ぶり",
+        "約5年ぶり"
+      ],
+      "correctAnswer": "約50年ぶり",
+      "explanation": "アポロ17号（1972年）以来、約半世紀ぶりの有人月方面飛行。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "NASA",
+        "url": "https://www.nasa.gov/mission/artemis-ii/"
+      }
+    },
+    {
+      "id": "M107",
+      "mimicType": "STRONG_MIMIC",
+      "difficulty": 2,
+      "newsGroup": "JAPAN_WC2026",
+      "category": "スポーツ",
+      "tags": [
+        "日本代表",
+        "スコア"
+      ],
+      "question": "2026年W杯・日本対ブラジルの最終スコアは？",
+      "choices": [
+        "ブラジル 2-1 日本",
+        "日本 2-1 ブラジル",
+        "日本 1-0 ブラジル",
+        "ブラジル 3-0 日本"
+      ],
+      "correctAnswer": "ブラジル 2-1 日本",
+      "explanation": "日本が先制したが、ブラジルが逆転し2-1で勝利した。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "FIFA",
+        "url": "https://www.fifa.com/ja/tournaments/mens/worldcup/canadamexicousa2026/articles/brazil-japan-review-highlights-ja"
+      }
+    },
+    {
+      "id": "M108",
+      "mimicType": "STRONG_MIMIC",
+      "difficulty": 2,
+      "newsGroup": "JAPAN_WC2026",
+      "category": "スポーツ",
+      "tags": [
+        "日本代表",
+        "会場"
+      ],
+      "question": "日本対ブラジル戦が行われた都市はどこ？",
+      "choices": [
+        "ヒューストン",
+        "ニューヨーク",
+        "ロサンゼルス",
+        "トロント"
+      ],
+      "correctAnswer": "ヒューストン",
+      "explanation": "試合はアメリカ・ヒューストンのスタジアムで行われた。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "JFA",
+        "url": "https://www.jfa.jp/eng/samuraiblue/news/00036487/"
+      }
+    },
+    {
+      "id": "M109",
+      "mimicType": "STRONG_MIMIC",
+      "difficulty": 2,
+      "newsGroup": "MILANO_CORTINA_2026",
+      "category": "スポーツ",
+      "tags": [
+        "冬季オリンピック",
+        "期間"
+      ],
+      "question": "ミラノ・コルティナ2026の開催期間は？",
+      "choices": [
+        "2月6日〜2月22日",
+        "1月1日〜1月15日",
+        "3月1日〜3月20日",
+        "2月20日〜3月10日"
+      ],
+      "correctAnswer": "2月6日〜2月22日",
+      "explanation": "冬季五輪は2026年2月6日から22日までイタリアで開催された。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "Olympics.com",
+        "url": "https://www.olympics.com/en/milano-cortina-2026"
+      }
+    },
+    {
+      "id": "M110",
+      "mimicType": "STRONG_MIMIC",
+      "difficulty": 2,
+      "newsGroup": "ARTEMIS_II",
+      "category": "宇宙",
+      "tags": [
+        "NASA",
+        "船長"
+      ],
+      "question": "アルテミスIIの船長（コマンダー）は誰？",
+      "choices": [
+        "リード・ワイズマン",
+        "ジェレミー・ハンセン",
+        "ビクター・グローバー",
+        "クリスティーナ・コック"
+      ],
+      "correctAnswer": "リード・ワイズマン",
+      "explanation": "NASAのリード・ワイズマンが船長を務めた。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "NASA",
+        "url": "https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth/"
+      }
+    },
+    {
+      "id": "M111",
+      "mimicType": "STRONG_MIMIC",
+      "difficulty": 2,
+      "newsGroup": "OPENAI_2026",
+      "category": "テクノロジー",
+      "tags": [
+        "GPT-5.6",
+        "Sol"
+      ],
+      "question": "GPT-5.6ファミリーで、旗艦（いちばん高性能）とされるのは？",
+      "choices": [
+        "Sol",
+        "Terra",
+        "Luna",
+        "Mini"
+      ],
+      "correctAnswer": "Sol",
+      "explanation": "OpenAIはSolを旗艦、Terraをバランス型、Lunaを低コスト型としている。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2027-07-22",
+      "status": "active",
+      "source": {
+        "name": "OpenAI",
+        "url": "https://openai.com/index/gpt-5-6"
+      }
+    },
+    {
+      "id": "M112",
+      "mimicType": "STRONG_MIMIC",
+      "difficulty": 2,
+      "newsGroup": "FIFA_WORLD_CUP_2026",
+      "category": "スポーツ",
+      "tags": [
+        "決勝",
+        "得点者"
+      ],
+      "question": "2026年W杯決勝で決勝点を決めたスペイン選手は？",
+      "choices": [
+        "フェラン・トーレス",
+        "リオネル・メッシ",
+        "キリアン・エムバペ",
+        "ネイマール"
+      ],
+      "correctAnswer": "フェラン・トーレス",
+      "explanation": "延長106分、フェラン・トーレスが決勝点を決めた。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "FIFA",
+        "url": "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/spain-argentina-final-report-highlights"
+      }
+    },
+    {
+      "id": "M113",
+      "mimicType": "STRONG_MIMIC",
+      "difficulty": 2,
+      "newsGroup": "JAPAN_POLICY_2026",
+      "category": "経済",
+      "tags": [
+        "骨太の方針",
+        "投資"
+      ],
+      "question": "高市政権の成長戦略で、2040年度までに目指す官民投資の規模は？",
+      "choices": [
+        "370兆円超",
+        "37兆円超",
+        "7兆円超",
+        "3700兆円超"
+      ],
+      "correctAnswer": "370兆円超",
+      "explanation": "官民累計で370兆円超の投資を推進する方針が示された。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2027-07-22",
+      "status": "active",
+      "source": {
+        "name": "時事 / NHK",
+        "url": "https://www.jiji.com/jc/article?g=eco&k=2026072100546"
+      }
+    },
+    {
+      "id": "M114",
+      "mimicType": "STRONG_MIMIC",
+      "difficulty": 2,
+      "newsGroup": "MILANO_CORTINA_2026",
+      "category": "スポーツ",
+      "tags": [
+        "スノーボード",
+        "得点"
+      ],
+      "question": "戸塚優斗が金メダルを取ったハーフパイプ決勝の優勝点は？",
+      "choices": [
+        "95.00点",
+        "100.00点",
+        "88.50点",
+        "80.00点"
+      ],
+      "correctAnswer": "95.00点",
+      "explanation": "戸塚は2本目で95.00点を出し、金メダルを獲得した。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "Olympics.com",
+        "url": "https://www.olympics.com/en/milano-cortina-2026/news/winter-olympics-2026-totsuka-yuto-men-halfpipe-gold-milano-cortina/"
+      }
+    },
+    {
+      "id": "M115",
+      "mimicType": "STRONG_MIMIC",
+      "difficulty": 2,
+      "newsGroup": "OPENAI_2026",
+      "category": "テクノロジー",
+      "tags": [
+        "GPT-Live",
+        "日付"
+      ],
+      "question": "OpenAIがGPT-Liveを発表したのはGPT-5.6の何日前？",
+      "choices": [
+        "1日前",
+        "1週間前",
+        "1か月前",
+        "同日"
+      ],
+      "correctAnswer": "1日前",
+      "explanation": "GPT-Liveは7月8日、GPT-5.6は7月9日に発表された。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2027-07-22",
+      "status": "active",
+      "source": {
+        "name": "OpenAI",
+        "url": "https://openai.com/index/introducing-gpt-live/"
+      }
+    },
+    {
+      "id": "M207",
+      "mimicType": "ELITE_MIMIC",
+      "difficulty": 3,
+      "newsGroup": "JAPAN_WC2026",
+      "category": "スポーツ",
+      "tags": [
+        "日本代表",
+        "得点者"
+      ],
+      "question": "日本対ブラジル戦で、日本の先制点を決めた選手は？",
+      "choices": [
+        "佐野海舟",
+        "三笘薫",
+        "伊東純也",
+        "久保建英"
+      ],
+      "correctAnswer": "佐野海舟",
+      "explanation": "前半29分、佐野海舟が日本代表初ゴールとなる先制点を決めた。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "FIFA",
+        "url": "https://www.fifa.com/ja/tournaments/mens/worldcup/canadamexicousa2026/articles/brazil-japan-review-highlights-ja"
+      }
+    },
+    {
+      "id": "M208",
+      "mimicType": "ELITE_MIMIC",
+      "difficulty": 3,
+      "newsGroup": "JAPAN_WC2026",
+      "category": "スポーツ",
+      "tags": [
+        "ブラジル",
+        "決勝点"
+      ],
+      "question": "日本対ブラジル戦の決勝点（2点目）を決めた選手は？",
+      "choices": [
+        "ガブリエル・マルティネッリ",
+        "ネイマール",
+        "ヴィニシウス・ジュニオール",
+        "カゼミーロ"
+      ],
+      "correctAnswer": "ガブリエル・マルティネッリ",
+      "explanation": "途中出場のマルティネッリがアディショナルタイムに決勝点を決めた。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "Sky Sports / FIFA",
+        "url": "https://www.skysports.com/football/news/12098/13558811/world-cup-2026-brazil-2-1-japan-gabriel-martinelli-scores-dramatic-winner-as-carlo-ancelottis-side-advance-with-comeback-win"
+      }
+    },
+    {
+      "id": "M209",
+      "mimicType": "ELITE_MIMIC",
+      "difficulty": 3,
+      "newsGroup": "FIFA_WORLD_CUP_2026",
+      "category": "スポーツ",
+      "tags": [
+        "決勝",
+        "得点時間"
+      ],
+      "question": "2026年W杯決勝の決勝点は、延長の何分ごろに決まった？",
+      "choices": [
+        "106分",
+        "91分",
+        "120分",
+        "45分"
+      ],
+      "correctAnswer": "106分",
+      "explanation": "フェラン・トーレスが延長106分に決勝点を決めた。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "FIFA",
+        "url": "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/spain-argentina-final-report-highlights"
+      }
+    },
+    {
+      "id": "M210",
+      "mimicType": "ELITE_MIMIC",
+      "difficulty": 3,
+      "newsGroup": "ARTEMIS_II",
+      "category": "宇宙",
+      "tags": [
+        "打ち上げ場所"
+      ],
+      "question": "アルテミスIIが打ち上げられた場所は？",
+      "choices": [
+        "ケネディ宇宙センター",
+        "種子島宇宙センター",
+        "バイコヌール",
+        "ヴァンデンバーグ"
+      ],
+      "correctAnswer": "ケネディ宇宙センター",
+      "explanation": "フロリダのケネディ宇宙センター第39B発射台から打ち上げられた。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "NASA",
+        "url": "https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth/"
+      }
+    },
+    {
+      "id": "M211",
+      "mimicType": "ELITE_MIMIC",
+      "difficulty": 3,
+      "newsGroup": "MILANO_CORTINA_2026",
+      "category": "スポーツ",
+      "tags": [
+        "ハーフパイプ",
+        "銀メダル"
+      ],
+      "question": "戸塚優斗の金に対し、男子ハーフパイプ銀メダルは誰？",
+      "choices": [
+        "スコッティ・ジェームズ",
+        "平野歩夢",
+        "堀島行真",
+        "山田琉聖"
+      ],
+      "correctAnswer": "スコッティ・ジェームズ",
+      "explanation": "オーストラリアのスコッティ・ジェームズが93.50点で銀メダル。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "Olympics.com",
+        "url": "https://www.olympics.com/en/milano-cortina-2026/news/winter-olympics-2026-totsuka-yuto-men-halfpipe-gold-milano-cortina/"
+      }
+    },
+    {
+      "id": "M212",
+      "mimicType": "ELITE_MIMIC",
+      "difficulty": 3,
+      "newsGroup": "MILANO_CORTINA_2026",
+      "category": "スポーツ",
+      "tags": [
+        "ハーフパイプ",
+        "銅メダル"
+      ],
+      "question": "男子スノーボード・ハーフパイプで銅メダルの日本選手は？",
+      "choices": [
+        "山田琉聖",
+        "戸塚優斗",
+        "平野歩夢",
+        "堀島行真"
+      ],
+      "correctAnswer": "山田琉聖",
+      "explanation": "山田琉聖が92.00点で銅メダルを獲得し、日本勢が金・銅を占めた。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "Olympics.com",
+        "url": "https://www.olympics.com/en/milano-cortina-2026/news/winter-olympics-2026-totsuka-yuto-men-halfpipe-gold-milano-cortina/"
+      }
+    },
+    {
+      "id": "M213",
+      "mimicType": "ELITE_MIMIC",
+      "difficulty": 3,
+      "newsGroup": "JAPAN_POLICY_2026",
+      "category": "経済",
+      "tags": [
+        "骨太の方針",
+        "日付"
+      ],
+      "question": "高市政権初の「骨太の方針」が閣議決定された日は？",
+      "choices": [
+        "2026年7月21日",
+        "2026年6月1日",
+        "2026年7月1日",
+        "2025年10月1日"
+      ],
+      "correctAnswer": "2026年7月21日",
+      "explanation": "2026年7月21日に閣議決定された。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2027-07-22",
+      "status": "active",
+      "source": {
+        "name": "時事",
+        "url": "https://www.jiji.com/jc/article?g=eco&k=2026072100546"
+      }
+    },
+    {
+      "id": "M214",
+      "mimicType": "ELITE_MIMIC",
+      "difficulty": 3,
+      "newsGroup": "OPENAI_2026",
+      "category": "テクノロジー",
+      "tags": [
+        "GPT-5.6",
+        "Luna"
+      ],
+      "question": "GPT-5.6ファミリーで、いちばん低コスト寄りとされるのは？",
+      "choices": [
+        "Luna",
+        "Sol",
+        "Terra",
+        "Ultra"
+      ],
+      "correctAnswer": "Luna",
+      "explanation": "Lunaは高速・低コスト向け。Solが旗艦、Terraがバランス型。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2027-07-22",
+      "status": "active",
+      "source": {
+        "name": "OpenAI",
+        "url": "https://openai.com/index/gpt-5-6"
+      }
+    },
+    {
+      "id": "M215",
+      "mimicType": "ELITE_MIMIC",
+      "difficulty": 3,
+      "newsGroup": "ARTEMIS_II",
+      "category": "宇宙",
+      "tags": [
+        "着水",
+        "海域"
+      ],
+      "question": "アルテミスIIが着水した海域として正しいのは？",
+      "choices": [
+        "太平洋（サンディエゴ沖）",
+        "大西洋（フロリダ沖）",
+        "日本海",
+        "インド洋"
+      ],
+      "correctAnswer": "太平洋（サンディエゴ沖）",
+      "explanation": "2026年4月10日、カリフォルニア・サンディエゴ沖の太平洋に着水した。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "NASA",
+        "url": "https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth/"
+      }
+    },
+    {
+      "id": "M307",
+      "mimicType": "HARD_MIMIC",
+      "difficulty": 4,
+      "newsGroup": "FIFA_WORLD_CUP_2026",
+      "category": "スポーツ",
+      "tags": [
+        "記録",
+        "得点"
+      ],
+      "question": "FIFAによると、2026年W杯全体の総ゴール数はいくつ？",
+      "choices": [
+        "308ゴール",
+        "172ゴール",
+        "250ゴール",
+        "400ゴール"
+      ],
+      "correctAnswer": "308ゴール",
+      "explanation": "104試合で308ゴールが記録され、大会史上最多となった。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "FIFA",
+        "url": "https://inside.fifa.com/news/spain-crowned-world-cup-2026-champions-new-york-new-jersey"
+      }
+    },
+    {
+      "id": "M308",
+      "mimicType": "HARD_MIMIC",
+      "difficulty": 4,
+      "newsGroup": "FIFA_WORLD_CUP_2026",
+      "category": "スポーツ",
+      "tags": [
+        "決勝",
+        "会場"
+      ],
+      "question": "2026年W杯決勝が行われたスタジアムの通称に近いのは？",
+      "choices": [
+        "ニューヨーク／ニュージャージー・スタジアム",
+        "ウェンブリー",
+        "マラカナン",
+        "国立競技場"
+      ],
+      "correctAnswer": "ニューヨーク／ニュージャージー・スタジアム",
+      "explanation": "決勝はニューヨーク／ニュージャージー（メットライフ）スタジアムで行われた。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "FIFA",
+        "url": "https://inside.fifa.com/news/spain-crowned-world-cup-2026-champions-new-york-new-jersey"
+      }
+    },
+    {
+      "id": "M309",
+      "mimicType": "HARD_MIMIC",
+      "difficulty": 4,
+      "newsGroup": "ARTEMIS_II",
+      "category": "宇宙",
+      "tags": [
+        "クルー",
+        "役割"
+      ],
+      "question": "アルテミスIIでパイロットを務めた宇宙飛行士は？",
+      "choices": [
+        "ビクター・グローバー",
+        "リード・ワイズマン",
+        "ジェレミー・ハンセン",
+        "クリスティーナ・コック"
+      ],
+      "correctAnswer": "ビクター・グローバー",
+      "explanation": "ワイズマン（船長）、グローバー（パイロット）、コックとハンセン（ミッションスペシャリスト）。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "NASA",
+        "url": "https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth/"
+      }
+    },
+    {
+      "id": "M310",
+      "mimicType": "HARD_MIMIC",
+      "difficulty": 4,
+      "newsGroup": "MILANO_CORTINA_2026",
+      "category": "スポーツ",
+      "tags": [
+        "デュアルモーグル",
+        "金メダル"
+      ],
+      "question": "男子デュアルモーグル初代五輪金メダリストは？",
+      "choices": [
+        "ミカエル・キングズベリー",
+        "堀島行真",
+        "マット・グラハム",
+        "ドメン・プレヴツ"
+      ],
+      "correctAnswer": "ミカエル・キングズベリー",
+      "explanation": "カナダのキングズベリーが金、堀島行真が銀、マット・グラハムが銅。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "Wikipedia / Olympics",
+        "url": "https://en.wikipedia.org/wiki/Freestyle_skiing_at_the_2026_Winter_Olympics_%E2%80%93_Men%27s_dual_moguls"
+      }
+    },
+    {
+      "id": "M311",
+      "mimicType": "HARD_MIMIC",
+      "difficulty": 4,
+      "newsGroup": "MILANO_CORTINA_2026",
+      "category": "スポーツ",
+      "tags": [
+        "クレーボ",
+        "記録"
+      ],
+      "question": "クレーボが破った「1大会5金」の旧記録保持者は？",
+      "choices": [
+        "エリック・ハイデン",
+        "ウサイン・ボルト",
+        "マイケル・フェルプス",
+        "羽生結弦"
+      ],
+      "correctAnswer": "エリック・ハイデン",
+      "explanation": "1980年レークプラシッドで5金のハイデンの記録を、クレーボが6金で更新した。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "AP News",
+        "url": "https://apnews.com/article/klaebo-crosscrounty-skiing-winter-olympics-1ff22a6ea924b46a4cb90517f7cf0caf"
+      }
+    },
+    {
+      "id": "M312",
+      "mimicType": "HARD_MIMIC",
+      "difficulty": 4,
+      "newsGroup": "OPENAI_2026",
+      "category": "テクノロジー",
+      "tags": [
+        "API",
+        "別名"
+      ],
+      "question": "OpenAI APIで別名「gpt-5.6」が指すモデルは？",
+      "choices": [
+        "gpt-5.6-sol",
+        "gpt-5.6-terra",
+        "gpt-5.6-luna",
+        "gpt-5.5"
+      ],
+      "correctAnswer": "gpt-5.6-sol",
+      "explanation": "gpt-5.6 エイリアスは旗艦の gpt-5.6-sol にルーティングされる。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2027-07-22",
+      "status": "active",
+      "source": {
+        "name": "OpenAI API Docs",
+        "url": "https://developers.openai.com/api/docs/guides/latest-model"
+      }
+    },
+    {
+      "id": "M313",
+      "mimicType": "HARD_MIMIC",
+      "difficulty": 4,
+      "newsGroup": "JAPAN_POLICY_2026",
+      "category": "経済",
+      "tags": [
+        "骨太の方針",
+        "成長目標"
+      ],
+      "question": "骨太の方針で早期定着を目指す「名目成長率」の目安は？",
+      "choices": [
+        "名目3％超",
+        "名目0％",
+        "名目10％超",
+        "名目マイナス成長"
+      ],
+      "correctAnswer": "名目3％超",
+      "explanation": "実質1％超・名目3％超の成長の早期定着を目指すとされた。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2027-07-22",
+      "status": "active",
+      "source": {
+        "name": "NHK",
+        "url": "https://www3.nhk.or.jp/nhkworld/en/news/20260722_B5/"
+      }
+    },
+    {
+      "id": "M314",
+      "mimicType": "HARD_MIMIC",
+      "difficulty": 4,
+      "newsGroup": "JAPAN_WC2026",
+      "category": "スポーツ",
+      "tags": [
+        "日本代表",
+        "試合日"
+      ],
+      "question": "日本対ブラジル戦の現地日付は？",
+      "choices": [
+        "2026年6月29日",
+        "2026年7月19日",
+        "2026年6月11日",
+        "2026年2月6日"
+      ],
+      "correctAnswer": "2026年6月29日",
+      "explanation": "ラウンド32は現地2026年6月29日（日本時間30日）に行われた。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "JFA",
+        "url": "https://jfa.jp/samuraiblue/worldcup_2026/final/match_page/m76.html"
+      }
+    },
+    {
+      "id": "M315",
+      "mimicType": "HARD_MIMIC",
+      "difficulty": 4,
+      "newsGroup": "ARTEMIS_II",
+      "category": "宇宙",
+      "tags": [
+        "距離",
+        "記録"
+      ],
+      "question": "NASA発表で、アルテミスII乗組員が地球から最も遠ざかった距離に近いのは？",
+      "choices": [
+        "約40万km（約25万マイル）",
+        "約4000km",
+        "約4万km",
+        "約400万km"
+      ],
+      "correctAnswer": "約40万km（約25万マイル）",
+      "explanation": "NASAは最遠距離を約252,756マイル（約40万km超）と発表した。",
+      "referenceDate": "2026-07-22",
+      "expiresAt": "2030-12-31",
+      "status": "active",
+      "source": {
+        "name": "NASA",
+        "url": "https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth/"
+      }
+    }
+  ]
+};

@@ -2,8 +2,12 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>迷路クイズRPG</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>迷宮クエスト</title>
   <link rel="stylesheet" href="style.css" />
   <audio id="bgm" src="./sound/bgm2.mp3" loop></audio>
   <audio id="seikai" src="./sound/seikai.mp3"></audio>
@@ -12,68 +16,154 @@
   <audio id="kamituku" src="./sound/kamituku.mp3"></audio>
 </head>
 <body>
-  <button id="start-button" class="modal-content">🎮 スタート</button>
-  <div class="game-container">
-    <div class="header">
-      <h1>🏴‍☠️ 迷路クイズRPG 🏴‍☠️</h1>
-      <div class="info">
-        <span>🌟 レベル: <span id="level">1</span></span>
-        <span>🎯 宝物を探そう！</span>
-        <span>🗝️ 残り宝箱: <span id="treasure-count"></span></span>
-        <span>⏱️ 残り時間: <span id="time">30</span>秒</span>
+  <!-- タイトル：動機・面数・ゴールを明示 -->
+  <div id="title-screen">
+    <div class="title-card">
+      <p class="title-eyebrow">10迷宮ローグライト</p>
+      <p class="title-brand">迷宮クエスト</p>
+      <div class="title-hero-row">
+        <img class="title-hero-img" src="./images/hero.png" alt="" />
+        <p class="title-story">
+          ミミックキングに奪われた<strong>知識の宝珠</strong>を取りもどせ。
+          迷宮の宝箱を集め、旗のゴールへ進め。
+        </p>
+      </div>
+
+      <div class="title-mission">
+        <div class="mission-item">
+          <span class="mission-label">面数</span>
+          <span class="mission-value">全10迷宮</span>
+        </div>
+        <div class="mission-item">
+          <span class="mission-label">目的</span>
+          <span class="mission-value">宝箱を集めて旗へ</span>
+        </div>
+        <div class="mission-item">
+          <span class="mission-label">最終</span>
+          <span class="mission-value">Lv10 ミミックキング</span>
+        </div>
+      </div>
+
+      <ul class="title-tips">
+        <li>❤️ HPは3。クイズに負けると減る</li>
+        <li>📦 宝箱は Aで開ける / Bで無視</li>
+        <li>⏱ 時間も大事。時計を拾え</li>
+      </ul>
+
+      <button id="start-button" type="button">ぼうけんをはじめる</button>
+    </div>
+  </div>
+
+  <div class="game-container hidden" id="game-root">
+    <!-- 上80%: プレイ画面（HUD＋迷路） -->
+    <div class="play-stage">
+      <header class="hud" aria-label="ステータス">
+        <div class="hud-hp" id="hp-display" title="たいりょく"></div>
+        <div class="hud-pills">
+          <span class="hud-pill">Lv <strong id="level">1</strong><span class="hud-dim">/10</span></span>
+          <span class="hud-pill">宝 <strong id="treasure-count">0</strong></span>
+          <span class="hud-pill">⏱ <strong id="time">30</strong></span>
+        </div>
+      </header>
+
+      <div class="maze-container">
+        <canvas id="mazeCanvas"></canvas>
+
+        <div id="message" class="message hidden" role="status"></div>
+
+        <div id="treasure-choice" class="overlay-panel hidden" role="dialog" aria-modal="true">
+          <div class="panel-inner choice-panel">
+            <div class="choice-art">
+              <img id="choice-chest-img" src="./images/treasure.png" alt="宝箱" />
+            </div>
+            <p class="panel-title">たからばこを見つけた！</p>
+            <p class="panel-desc">Aで開ける / Bで無視</p>
+            <div class="choice-actions">
+              <button id="choice-open" class="game-btn btn-gold" type="button">開ける (A)</button>
+              <button id="choice-ignore" class="game-btn btn-slate" type="button">無視する (B)</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="quiz-box" class="overlay-panel battle-panel hidden" role="dialog" aria-modal="true">
+          <div class="panel-inner battle-inner">
+            <div class="battle-arena">
+              <div class="fighter hero-side">
+                <img id="battle-hero-img" src="./images/hero.png" alt="勇者" />
+                <div class="fighter-meta">
+                  <span class="fighter-name">勇者</span>
+                  <div class="fighter-hp" id="battle-hero-hp"></div>
+                </div>
+              </div>
+              <div class="battle-vs" aria-hidden="true">VS</div>
+          <div class="fighter enemy-side">
+              <img id="battle-enemy-img" src="./images/mimic_battle.png" alt="ミミック" />
+              <div class="fighter-meta">
+                <span class="fighter-name" id="battle-enemy-name">ミミック</span>
+                <div class="fighter-hp enemy" id="battle-enemy-diff">Lv.?</div>
+              </div>
+            </div>
+            </div>
+            <div class="battle-log">
+              <p class="battle-log-label">ミミックのこうげき！</p>
+              <p id="quiz-question"></p>
+            </div>
+            <div id="quiz-options" class="battle-commands"></div>
+          </div>
+        </div>
+
+        <div id="game-over-modal" class="modal hidden">
+          <div class="modal-content">
+            <h2>ゲームオーバー</h2>
+            <p id="game-over-reason"></p>
+            <button id="restart-button" class="game-btn btn-danger" type="button">もう一度チャレンジ</button>
+          </div>
+        </div>
+
+        <div id="game-clear-modal" class="modal hidden">
+          <div class="modal-content">
+            <h2>冒険クリア！</h2>
+            <p>知識の宝珠を取りもどした！</p>
+            <button id="clear-restart-button" class="game-btn btn-gold" type="button">最初から遊ぶ</button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="maze-container">
-      <canvas id="mazeCanvas"></canvas>
-      <div id="message" class="message hidden"></div>
-      <div id="quiz-box" class="quiz hidden">
-        <div id="quiz-question"></div>
-        <div id="quiz-options"></div>
-      </div>
-      <div id="game-over-modal" class="modal hidden">
-        <div class="modal-content">
-          <h2>😵 ゲームオーバー！</h2>
-          <p id="game-over-reason"></p>
-          <button id="restart-button">🔄 もう一度プレイ</button>
+    <!-- 下20%: ファミコン風コントロール -->
+    <div class="controls" aria-label="操作パネル">
+      <div class="fc-pad">
+        <div class="fc-dpad" aria-label="十字キー">
+          <button id="up" class="dpad-btn dpad-up game-btn" type="button" aria-label="上">▲</button>
+          <button id="left" class="dpad-btn dpad-left game-btn" type="button" aria-label="左">◀</button>
+          <button id="right" class="dpad-btn dpad-right game-btn" type="button" aria-label="右">▶</button>
+          <button id="down" class="dpad-btn dpad-down game-btn" type="button" aria-label="下">▼</button>
+          <div class="dpad-center" aria-hidden="true"></div>
         </div>
-      </div>
-      <div id="game-clear-modal" class="modal hidden">
-        <div class="modal-content">
-          <h2>🎉 ゲームクリア！</h2>
-          <p>🏆 全てのレベルをクリアしました！</p>
-          <button id="clear-restart-button">🔄 最初からプレイ</button>
-        </div>
-      </div>
-    </div>
 
-    <div class="controls">
-      <div class="instruction">
-        <p>🎮 操作方法：下のボタンか矢印キーで移動</p>
-      </div>
-      <div class="joystick">
-        <button id="up" class="control-btn" type="button">⬆️</button>
-        <div class="horizontal-controls">
-          <button id="left" class="control-btn" type="button">⬅️</button>
-          <button id="right" class="control-btn" type="button">➡️</button>
+        <div class="fc-actions" aria-label="アクション">
+          <button id="btn-b" class="action-btn action-b game-btn" type="button" aria-label="Bボタン">
+            <span class="action-key">B</span>
+            <span class="action-hint">無視</span>
+          </button>
+          <button id="btn-a" class="action-btn action-a game-btn" type="button" aria-label="Aボタン">
+            <span class="action-key">A</span>
+            <span class="action-hint">開ける</span>
+          </button>
         </div>
-        <button id="down" class="control-btn" type="button">⬇️</button>
       </div>
     </div>
   </div>
 
-   <!-- ローディング表示 -->
-  <div id="loading">🎮 ゲームを準備中...</div>
+  <div id="loading">迷宮を準備中...</div>
 
-  <!-- スクリプトの読み込み順（順序保証付き） -->
-  <script src="./quizData.js" defer></script>
-　<script src="./main.js" defer></script>
-
+  <script src="./quiz-engine.js" defer></script>
+  <script src="./quizNewsData.js" defer></script>
+  <script src="./main.js" defer></script>
   <script>
-    // ページ読み込み完了後にローディングを非表示
     window.addEventListener('load', () => {
       const loading = document.getElementById('loading');
-      if (loading) loading.style.display = 'none';
+      if (loading) loading.classList.add('hidden');
     });
   </script>
 </body>
